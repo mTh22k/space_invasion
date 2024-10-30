@@ -1,6 +1,14 @@
 #include <stdlib.h>
 #include "Joystick.h"
 
+typedef struct
+{						 // Definição da estrutura de um controle (!)
+	unsigned char right; // Botão de movimentação à direta (!)
+	unsigned char left;	 // Botão de movimentação à esquerda (!)
+	unsigned char up;	 // Botão de movimentação para cima (!)
+	unsigned char down;	 // Botão de movimentação para baixo (!)
+} joystick;
+
 joystick* joystick_create(){														//Implementação da função "joystick_create" (!)
 
 	joystick *element = (joystick*) malloc (sizeof(joystick));						//Aloca memória na heap para um novo controle (!)

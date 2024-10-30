@@ -4,6 +4,7 @@
 #include <allegro5/allegro_ttf.h>
 #include <allegro5/allegro_image.h>
 #include <stdlib.h>
+#include <time.h>
 
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 600
@@ -17,11 +18,17 @@
 
 typedef struct
 {
+    unsigned char right, left, up, down, fire;
+} Joystick;
+
+typedef struct
+{
     float x, y;
     int width, height;
-    int lives;                // Adicionando vidas
-    int invulnerable;         // Indica se o jogador está invulnerável
-    double invulnerable_time; // Tempo de invulnerabilidade
+    int lives;
+    int invulnerable;
+    double invulnerable_time;
+    Joystick joystick;
 } Player;
 
 typedef struct
@@ -36,7 +43,10 @@ typedef struct
     float x, y;
     int width, height;
     int active;
-    int health; // Adiciona saúde para o inimigo
+    int health;
+    float vertical_speed; // Velocidade vertical
+    float original_y;     // Posição vertical original
+    int moving_up;        // Flag para indicar se está se movendo para cima
 } Enemy;
 
 void init_player(Player *player)
@@ -45,9 +55,10 @@ void init_player(Player *player)
     player->y = SCREEN_HEIGHT / 2;
     player->width = 50;
     player->height = 30;
-    player->lives = 3;             // Inicializa com 3 vidas
-    player->invulnerable = 0;      // Não está invulnerável
-    player->invulnerable_time = 0; // Inicializa o tempo de invulnerabilidade
+    player->lives = 3;
+    player->invulnerable = 0;
+    player->invulnerable_time = 0;
+    player->joystick.right = player->joystick.left = player->joystick.up = player->joystick.down = player->joystick.fire = 0;
 }
 
 void init_bullets(Bullet bullets[], int count)
@@ -60,25 +71,25 @@ void init_enemies(Enemy enemies[], int count)
 {
     for (int i = 0; i < count; i++)
     {
-        enemies[i].active = 0; // Inicia como inativo
-        enemies[i].health = 2; // Define saúde do inimigo (2 disparos para derrotar)
+        enemies[i].active = 0;
+        enemies[i].health = 2;
+        enemies[i].vertical_speed = 1.0;                       // Velocidade vertical constante
+        enemies[i].original_y = rand() % (SCREEN_HEIGHT - 30); // Posição inicial aleatória
+        enemies[i].y = enemies[i].original_y;
+        enemies[i].moving_up = 1; // Começar movendo para cima
     }
 }
 
-void move_player(Player *player, int direction_x, int direction_y)
+void move_player(Player *player)
 {
-    player->x += direction_x * PLAYER_SPEED;
-    player->y += direction_y * PLAYER_SPEED; // Adiciona movimentação vertical
-
-    // Limita o jogador dentro da tela
-    if (player->x < 0)
-        player->x = 0;
-    if (player->x > SCREEN_WIDTH - player->width)
-        player->x = SCREEN_WIDTH - player->width;
-    if (player->y < 0)
-        player->y = 0;
-    if (player->y > SCREEN_HEIGHT - player->height)
-        player->y = SCREEN_HEIGHT - player->height;
+    if (player->joystick.up && player->y > 0)
+        player->y -= PLAYER_SPEED;
+    if (player->joystick.down && player->y < SCREEN_HEIGHT - player->height)
+        player->y += PLAYER_SPEED;
+    if (player->joystick.left && player->x > 0)
+        player->x -= PLAYER_SPEED;
+    if (player->joystick.right && player->x < SCREEN_WIDTH - player->width)
+        player->x += PLAYER_SPEED;
 }
 
 void fire_bullet(Bullet bullets[], int count, float x, float y)
@@ -87,17 +98,15 @@ void fire_bullet(Bullet bullets[], int count, float x, float y)
     {
         if (!bullets[i].active)
         {
-            bullets[i].x = x;
-            bullets[i].y = y;
+            bullets[i].x = x + 20;
+            bullets[i].y = y - 5;
             bullets[i].active = 1;
-            bullets[i].width = 45; // Defina a largura da bala
-            bullets[i].height = 25; // Defina a altura da bala
+            bullets[i].width = 45;
+            bullets[i].height = 25;
             break;
         }
     }
 }
-
-
 
 void move_bullets(Bullet bullets[], int count)
 {
@@ -118,16 +127,25 @@ void move_enemies(Enemy enemies[], int count)
     {
         if (enemies[i].active)
         {
-            enemies[i].x -= ENEMY_SPEED;
+            enemies[i].x -= ENEMY_SPEED;               // Movimento horizontal
+            enemies[i].y += enemies[i].vertical_speed; // Movimento vertical
+
+            // Limitar o movimento vertical para que os inimigos não saiam da tela
+            if (enemies[i].y < 0)
+                enemies[i].y = 0;
+            else if (enemies[i].y > SCREEN_HEIGHT - enemies[i].height)
+                enemies[i].y = SCREEN_HEIGHT - enemies[i].height;
+
+            // Reposicionar inimigos que saíram da tela à direita
             if (enemies[i].x < -enemies[i].width)
             {
                 enemies[i].x = SCREEN_WIDTH + rand() % 100;
-                enemies[i].y = rand() % SCREEN_HEIGHT;
+                enemies[i].y = rand() % (SCREEN_HEIGHT - enemies[i].height);               // Reposiciona verticalmente
+                enemies[i].vertical_speed = (rand() % 3 + 1) * (rand() % 2 == 0 ? 1 : -1); // Atualiza a velocidade vertical
             }
         }
     }
 }
-
 
 void check_collisions(Player *player, Bullet bullets[], int bullet_count, Enemy enemies[], int enemy_count, int *score, int *game_over)
 {
@@ -142,49 +160,33 @@ void check_collisions(Player *player, Bullet bullets[], int bullet_count, Enemy 
                     bullets[i].x + bullets[i].width > enemies[j].x &&
                     bullets[i].y < enemies[j].y + enemies[j].height &&
                     bullets[i].y + bullets[i].height > enemies[j].y)
-
                 {
-
-                    // Colisão entre bala e inimigo
-                    bullets[i].active = 0; // Desativa a bala
-                    enemies[j].health--;   // Reduz a saúde do inimigo
-
-                    // Aumenta a pontuação sempre que um inimigo é atingido
+                    bullets[i].active = 0;
+                    enemies[j].health--;
                     (*score)++;
-
-                    // Verifica se o inimigo foi derrotado
                     if (enemies[j].health <= 0)
-                    {
-                        enemies[j].active = 0; // Desativa o inimigo se derrotado
-                    }
+                        enemies[j].active = 0;
                 }
             }
         }
     }
 
-    // Verificação de colisão entre o jogador e inimigos
     for (int j = 0; j < enemy_count; j++)
     {
-        if(enemies[j].active &&
+        if (enemies[j].active &&
             enemies[j].x < player->x + player->width &&
             enemies[j].x + enemies[j].width > player->x &&
             enemies[j].y < player->y + player->height &&
             enemies[j].y + enemies[j].height > player->y)
-
         {
-
-            // Colisão detectada, reduz a vida do jogador
             if (!player->invulnerable)
             {
                 player->lives--;
-                player->invulnerable = 1;                  // Ativa a invulnerabilidade
-                player->invulnerable_time = al_get_time(); // Marca o tempo atual
+                player->invulnerable = 1;
+                player->invulnerable_time = al_get_time();
 
-                // Verifica se o jogador ficou sem vidas
                 if (player->lives <= 0)
-                {
-                    *game_over = 1; // Termina o jogo
-                }
+                    *game_over = 1;
             }
         }
     }
@@ -198,35 +200,12 @@ void generate_enemy(Enemy enemies[], int count, int player_width, int player_hei
         {
             enemies[i].x = SCREEN_WIDTH + rand() % 100;
             enemies[i].y = rand() % SCREEN_HEIGHT;
-            enemies[i].width = player_width;   // Define a largura do inimigo igual à largura do jogador
-            enemies[i].height = player_height; // Define a altura do inimigo igual à altura do jogador
+            enemies[i].width = player_width;
+            enemies[i].height = player_height;
             enemies[i].active = 1;
-            enemies[i].health = 2; // Reinicia a saúde do inimigo
+            enemies[i].health = 2;
             break;
         }
-    }
-}
-
-void draw_player(Player *player, ALLEGRO_BITMAP *player_sprite)
-{
-    // Calcula a posição centralizada para a hitbox em relação ao sprite
-    int sprite_width = al_get_bitmap_width(player_sprite);
-    int sprite_height = al_get_bitmap_height(player_sprite);
-
-    player->width = sprite_width; // Define a largura e altura da hitbox para coincidir com o sprite
-    player->height = sprite_height;
-
-    if (player->invulnerable)
-    {
-        // Desenha o jogador piscando
-        if (((int)(al_get_time() * 10) % 2) == 0)
-        {
-            al_draw_tinted_bitmap(player_sprite, al_map_rgba_f(1, 1, 1, 0.5), player->x, player->y, 0);
-        }
-    }
-    else
-    {
-        al_draw_bitmap(player_sprite, player->x, player->y, 0);
     }
 }
 
@@ -238,16 +217,16 @@ int main()
     al_init_ttf_addon();
     al_install_keyboard();
     al_init_image_addon();
+    srand(time(0));
 
     ALLEGRO_DISPLAY *display = al_create_display(SCREEN_WIDTH, SCREEN_HEIGHT);
     ALLEGRO_EVENT_QUEUE *event_queue = al_create_event_queue();
     ALLEGRO_TIMER *timer = al_create_timer(1.0 / 60);
     ALLEGRO_FONT *font = al_create_builtin_font();
-
     ALLEGRO_BITMAP *background = al_load_bitmap("background.jpg");
     ALLEGRO_BITMAP *player_sprite = al_load_bitmap("nave.png");
-    ALLEGRO_BITMAP *bullet_sprite = al_load_bitmap("bullet.png"); // Carregue a imagem da bala
-    ALLEGRO_BITMAP *enemy_sprite = al_load_bitmap("enemy.png");   // Carregue a imagem do inimigo
+    ALLEGRO_BITMAP *bullet_sprite = al_load_bitmap("bullet.png");
+    ALLEGRO_BITMAP *enemy_sprite = al_load_bitmap("enemy.png");
 
     al_register_event_source(event_queue, al_get_display_event_source(display));
     al_register_event_source(event_queue, al_get_keyboard_event_source());
@@ -260,7 +239,6 @@ int main()
     init_bullets(bullets, MAX_BULLETS);
     init_enemies(enemies, MAX_ENEMIES);
 
-    int direction_x = 0, direction_y = 0;
     int firing = 0;
     double last_fire_time = 0;
     int score = 0;
@@ -278,55 +256,46 @@ int main()
         {
             if (!game_over)
             {
-                move_player(&player, direction_x, direction_y);
+                move_player(&player);
                 move_bullets(bullets, MAX_BULLETS);
                 move_enemies(enemies, MAX_ENEMIES);
                 check_collisions(&player, bullets, MAX_BULLETS, enemies, MAX_ENEMIES, &score, &game_over);
 
-                // Verifica o tempo de invulnerabilidade do jogador
+                // Lógica de invulnerabilidade
                 if (player.invulnerable && (al_get_time() - player.invulnerable_time) > INVULNERABILITY_TIME)
-                {
-                    player.invulnerable = 0; // Termina a invulnerabilidade
-                }
+                    player.invulnerable = 0;
 
-                // Dispara balas de acordo com o intervalo
-                if (firing && (al_get_time() - last_fire_time) > FIRE_INTERVAL)
+                if (player.joystick.fire && (al_get_time() - last_fire_time) > FIRE_INTERVAL)
                 {
                     fire_bullet(bullets, MAX_BULLETS, player.x + player.width, player.y + player.height / 2);
                     last_fire_time = al_get_time();
                 }
 
-                // Gera inimigos aleatoriamente
                 if (rand() % 60 == 0)
-                {
                     generate_enemy(enemies, MAX_ENEMIES, player.width, player.height);
-                }
             }
-
             redraw = 1;
         }
         else if (ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE)
-        {
             break;
-        }
         else if (ev.type == ALLEGRO_EVENT_KEY_DOWN)
         {
             switch (ev.keyboard.keycode)
             {
             case ALLEGRO_KEY_W:
-                direction_y = -1;
+                player.joystick.up = 1;
                 break;
             case ALLEGRO_KEY_S:
-                direction_y = 1;
+                player.joystick.down = 1;
                 break;
             case ALLEGRO_KEY_A:
-                direction_x = -1;
+                player.joystick.left = 1;
                 break;
             case ALLEGRO_KEY_D:
-                direction_x = 1;
+                player.joystick.right = 1;
                 break;
             case ALLEGRO_KEY_ENTER:
-                firing = 1;
+                player.joystick.fire = 1;
                 break;
             }
         }
@@ -335,15 +304,19 @@ int main()
             switch (ev.keyboard.keycode)
             {
             case ALLEGRO_KEY_W:
+                player.joystick.up = 0;
+                break;
             case ALLEGRO_KEY_S:
-                direction_y = 0;
+                player.joystick.down = 0;
                 break;
             case ALLEGRO_KEY_A:
+                player.joystick.left = 0;
+                break;
             case ALLEGRO_KEY_D:
-                direction_x = 0;
+                player.joystick.right = 0;
                 break;
             case ALLEGRO_KEY_ENTER:
-                firing = 0;
+                player.joystick.fire = 0;
                 break;
             }
         }
@@ -353,30 +326,42 @@ int main()
             al_clear_to_color(al_map_rgb(0, 0, 0));
             al_draw_bitmap(background, 0, 0, 0);
 
-            draw_player(&player, player_sprite);
+            // Desenhar o jogador com efeito de piscamento se estiver invulnerável
+            if (player.invulnerable)
+            {
+                // Alternar a visibilidade a cada 0.1 segundos
+                if ((int)(al_get_time() * 10) % 2 == 0)
+                {
+                    al_draw_bitmap(player_sprite, player.x, player.y, 0);
+                }
+            }
+            else
+            {
+                al_draw_bitmap(player_sprite, player.x, player.y, 0);
+            }
 
+            // Desenhar as balas
             for (int i = 0; i < MAX_BULLETS; i++)
             {
                 if (bullets[i].active)
-                {
-                    al_draw_bitmap(bullet_sprite, bullets[i].x, bullets[i].y, 0); // Desenhe a sprite da bala
-                }
+                    al_draw_bitmap(bullet_sprite, bullets[i].x, bullets[i].y, 0);
             }
 
+            // Desenhar inimigos
             for (int i = 0; i < MAX_ENEMIES; i++)
             {
                 if (enemies[i].active)
-                {
-                    al_draw_bitmap(enemy_sprite, enemies[i].x, enemies[i].y, 0); // Desenhe a sprite do inimigo
-                }
+                    al_draw_bitmap(enemy_sprite, enemies[i].x, enemies[i].y, 0);
             }
 
+            // Desenhar o placar
             al_draw_textf(font, al_map_rgb(255, 255, 255), 10, 10, 0, "Score: %d", score);
-            al_draw_textf(font, al_map_rgb(255, 255, 255), 10, 30, 0, "Lives: %d", player.lives);
+            al_draw_textf(font, al_map_rgb(255, 0, 0), SCREEN_WIDTH - 100, 10, 0, "Lives: %d", player.lives);
 
+            // Verificar se o jogo acabou
             if (game_over)
             {
-                al_draw_text(font, al_map_rgb(255, 0, 0), SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, ALLEGRO_ALIGN_CENTRE, "Game Over");
+                al_draw_text(font, al_map_rgb(255, 0, 0), SCREEN_WIDTH / 2 - 50, SCREEN_HEIGHT / 2, ALLEGRO_ALIGN_CENTER, "Game Over!");
             }
 
             al_flip_display();
@@ -385,12 +370,12 @@ int main()
 
     al_destroy_bitmap(background);
     al_destroy_bitmap(player_sprite);
-    al_destroy_font(font);
+    al_destroy_bitmap(bullet_sprite);
+    al_destroy_bitmap(enemy_sprite);
+    al_destroy_event_queue(event_queue);
     al_destroy_timer(timer);
     al_destroy_display(display);
-    al_destroy_event_queue(event_queue);
-    al_destroy_bitmap(bullet_sprite); // Destruir a imagem da bala
-    al_destroy_bitmap(enemy_sprite);  // Destruir a imagem do inimigo
+    al_destroy_font(font);
 
     return 0;
 }
