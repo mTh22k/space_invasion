@@ -5,6 +5,7 @@
 #include <allegro5/allegro_image.h>
 #include <stdlib.h>
 #include <time.h>
+#include <stdio.h>
 
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 600
@@ -13,10 +14,12 @@
 #define ENEMY_SPEED 3
 #define MAX_BULLETS 8
 #define MAX_BULLET_COUNT 5
+#define MAX_BOSS_BULLETS 5
 #define MAX_ENEMIES 5
 #define MAX_SHOOTING_ENEMIES 2
 #define FIRE_INTERVAL 0.2        // Intervalo de disparo em segundos
 #define INVULNERABILITY_TIME 1.5 // Tempo de invulnerabilidade em segundos
+#define BOSS_SHOT_INTERVAL 0.4
 
 typedef struct
 {
@@ -64,12 +67,30 @@ typedef struct
     float x, y;
     int width, height;
     int active;
+    float speed;
+} BossBullet;
+
+typedef struct
+{
+    float x, y;
+    int width, height;
+    int active;
     int health;
     float vertical_speed;
     EnemyBullet bullets[10];
     double last_shot_time;
     int moving_up; // Flag para direção de movimento
 } ShootingEnemy;
+
+typedef struct
+{
+    float x, y;
+    int width, height;
+    int active;
+    float speed; // Velocidade de movimento vertical
+    int health;
+    double last_shot_time;
+} Boss;
 
 void init_player(Player *player)
 {
@@ -100,6 +121,18 @@ void init_enemies(Enemy enemies[], int count)
         enemies[i].y = enemies[i].original_y;
         enemies[i].moving_up = 1; // Começar movendo para cima
     }
+}
+
+void init_boss(Boss *boss)
+{
+    boss->x = SCREEN_WIDTH;      // Inicia fora da tela
+    boss->y = SCREEN_HEIGHT / 2; // Posição vertical inicial
+    boss->width = 200;           // Largura do chefe
+    boss->height = 200;          // Altura do chefe
+    boss->active = 0;            // Inicialmente inativo
+    boss->speed = 1.0;           // Velocidade do movimento vertical
+    boss->health = 10;
+    boss->last_shot_time = 0;
 }
 
 void init_shooting_enemies(ShootingEnemy *enemy)
@@ -191,6 +224,20 @@ void move_shooting_enemy(ShootingEnemy *enemy)
     }
 }
 
+void move_boss(Boss *boss)
+{
+    if (boss->active)
+    {
+        // Movimento vertical
+        boss->y += boss->speed;
+        // Inverte a direção se atingir o topo ou fundo da tela
+        if (boss->y <= 0 || boss->y >= SCREEN_HEIGHT - boss->height)
+        {
+            boss->speed = -boss->speed; // Inverte a direção
+        }
+    }
+}
+
 void move_player(Player *player)
 {
     if (player->joystick.up && player->y > 0)
@@ -253,6 +300,28 @@ void move_enemies(Enemy enemies[], int count)
                 enemies[i].x = SCREEN_WIDTH + rand() % 100;
                 enemies[i].y = rand() % (SCREEN_HEIGHT - enemies[i].height);               // Reposiciona verticalmente
                 enemies[i].vertical_speed = (rand() % 3 + 1) * (rand() % 2 == 0 ? 1 : -1); // Atualiza a velocidade vertical
+            }
+        }
+    }
+}
+
+void check_boss_collision(Player *player, Bullet bullets[], int bullet_count, Boss *boss, int *score, int *player_won)
+{
+    for (int i = 0; i < bullet_count; i++)
+    {
+        if (bullets[i].active && boss->active &&
+            bullets[i].x < boss->x + boss->width &&
+            bullets[i].x + bullets[i].width > boss->x &&
+            bullets[i].y < boss->y + boss->height &&
+            bullets[i].y + bullets[i].height > boss->y)
+        {
+            bullets[i].active = 0; // Desativa a bala do jogador
+            boss->health--;        // Diminui a vida do chefe
+            (*score)++;
+            if (boss->health <= 0)
+            {
+                boss->active = 0; // Desativa o chefe
+                *player_won = 1;  // Jogador ganhou
             }
         }
     }
@@ -391,6 +460,69 @@ void check_collisions(Player *player, Bullet bullets[], int bullet_count, Enemy 
     }
 }
 
+void init_boss_bullets(BossBullet boss_bullets[], int count)
+{
+    for (int i = 0; i < count; i++)
+        boss_bullets[i].active = 0;
+}
+// Dispara uma bala do chefe
+void shoot_boss_bullet(Boss *boss, BossBullet boss_bullets[], int *boss_bullet_count)
+{
+    double current_time = al_get_time();
+
+    if (current_time - boss->last_shot_time >= BOSS_SHOT_INTERVAL) // Verifica o intervalo
+    {
+        for (int i = 0; i < MAX_BOSS_BULLETS; i++)
+        {
+            if (!boss_bullets[i].active)
+            {
+                boss_bullets[i].x = boss->x;
+                boss_bullets[i].y = boss->y + boss->height / 2;
+                boss_bullets[i].active = 1;
+                boss_bullets[i].speed = BULLET_SPEED;
+                boss->last_shot_time = current_time; // Atualiza o último disparo do chefe
+                (*boss_bullet_count)++;
+                break;
+            }
+        }
+    }
+}
+void move_boss_bullets(BossBullet boss_bullets[], int count)
+{
+    for (int i = 0; i < count; i++)
+    {
+        if (boss_bullets[i].active)
+        {
+            boss_bullets[i].x -= boss_bullets[i].speed;
+            if (boss_bullets[i].x < 0)
+                boss_bullets[i].active = 0;
+        }
+    }
+}
+void check_boss_bullet_collisions(Player *player, BossBullet boss_bullets[], int *game_over)
+{
+    for (int i = 0; i < MAX_BOSS_BULLETS; i++)
+    {
+        if (boss_bullets[i].active &&
+            boss_bullets[i].x < player->x + player->width &&
+            boss_bullets[i].x + boss_bullets[i].width > player->x &&
+            boss_bullets[i].y < player->y + player->height &&
+            boss_bullets[i].y + boss_bullets[i].height > player->y)
+        {
+            if (!player->invulnerable)
+            {
+                player->lives--;
+                player->invulnerable = 1;
+                player->invulnerable_time = al_get_time();
+
+                if (player->lives <= 0)
+                    *game_over = 1;
+            }
+            boss_bullets[i].active = 0; // Desativa a bala do chefe
+        }
+    }
+}
+
 void generate_enemy(Enemy enemies[], int count, int player_width, int player_height)
 {
     for (int i = 0; i < count; i++)
@@ -420,6 +552,13 @@ void generate_shooting_enemy(ShootingEnemy enemies[], int count)
     }
 }
 
+void draw_timer(ALLEGRO_FONT *font, double elapsed_time)
+{
+    char timer_text[20];
+    sprintf(timer_text, "Tempo: %.1f", 10.0 - elapsed_time);
+    al_draw_text(font, al_map_rgb(255, 255, 255), SCREEN_WIDTH - 200, 10, 0, timer_text);
+}
+
 int main()
 {
     al_init();
@@ -439,7 +578,9 @@ int main()
     ALLEGRO_BITMAP *bullet_sprite = al_load_bitmap("bullet.png");
     ALLEGRO_BITMAP *enemy_sprite = al_load_bitmap("enemy.png");
     ALLEGRO_BITMAP *shooting_enemy_sprite = al_load_bitmap("enemyShoot.png");
-    ALLEGRO_BITMAP *enemy_bullet_sprite = al_load_bitmap("bulletEnemy.png"); // Substitua "enemy_bullet.png" pelo nome do seu arquivo
+    ALLEGRO_BITMAP *enemy_bullet_sprite = al_load_bitmap("bulletEnemy.png");
+    ALLEGRO_BITMAP *boss_sprite = al_load_bitmap("boss.png");
+    ALLEGRO_BITMAP *boss_bullet_sprite = al_load_bitmap("bulletEnemy.png");
 
     al_register_event_source(event_queue, al_get_display_event_source(display));
     al_register_event_source(event_queue, al_get_keyboard_event_source());
@@ -448,49 +589,101 @@ int main()
     Player player;
     Bullet bullets[MAX_BULLETS];
     Enemy enemies[MAX_ENEMIES];
+    BossBullet boss_bullets[MAX_BOSS_BULLETS];
     Bullet enemy_bullets[MAX_BULLET_COUNT]; // Adicione essa linha
     ShootingEnemy shooting_enemies[MAX_SHOOTING_ENEMIES];
+    Boss boss; // Declaração do chefe
+    init_boss(&boss);
     init_shooting_enemies(shooting_enemies); // Adicione isso no main
     init_player(&player);
     init_bullets(bullets, MAX_BULLETS);
     init_enemies(enemies, MAX_ENEMIES);
     init_enemy_bullets(enemy_bullets, MAX_BULLET_COUNT); // Adicione essa linha na função main
+    init_boss_bullets(boss_bullets, MAX_BOSS_BULLETS);
 
     int firing = 0;
     double last_fire_time = 0;
     int score = 0;
     int game_over = 0;
+    int player_won = 0; // 0 = jogo em andamento, 1 = jogador ganhou
+    int boss_bullet_count = 0;
 
     al_start_timer(timer);
+    double start_time = al_get_time(); // Tempo inicial
 
     while (1)
     {
         int redraw = 0;
         ALLEGRO_EVENT ev;
         al_wait_for_event(event_queue, &ev);
+        double current_time = al_get_time(); // Tempo atua]l
+
+        double elapsed_time = al_get_time() - start_time;
+        double remaining_time = 3 - elapsed_time;
 
         if (ev.type == ALLEGRO_EVENT_TIMER)
         {
             if (!game_over)
             {
+
+                // Gera inimigos apenas enquanto o tempo restante for maior que zero
+
+                draw_timer(font, elapsed_time);
+
+                if (remaining_time > 0)
+                {
+                    if (rand() % 200 == 0)
+                    {
+                        generate_shooting_enemy(shooting_enemies, MAX_SHOOTING_ENEMIES);
+                    }
+
+                    if (rand() % 60 == 0)
+                    {
+                        generate_enemy(enemies, MAX_ENEMIES, player.width, player.height);
+                    }
+
+                    move_enemies(enemies, MAX_ENEMIES);
+                    check_collisions(&player, bullets, MAX_BULLETS, enemies, MAX_ENEMIES, shooting_enemies, MAX_SHOOTING_ENEMIES, &score, &game_over);
+                    for (int i = 0; i < MAX_SHOOTING_ENEMIES; i++)
+                    {
+                        move_shooting_enemy(&shooting_enemies[i]);                                // Mover todos os inimigos que atiram
+                        shoot_enemy_bullet(&shooting_enemies[i], player.x, player.y);             // Cada um atira
+                        move_enemy_bullets(shooting_enemies[i].bullets, 3);                       // Move os projéteis
+                        check_enemy_bullet_collisions(&player, &shooting_enemies[i], &game_over); // Verifica colisões
+                        check_shooting_enemy_collision(&player, &shooting_enemies[i], &game_over);
+                    }
+
+                    for (int i = 0; i < MAX_SHOOTING_ENEMIES; i++)
+                    {
+                        check_shooting_enemy_collision(&player, &shooting_enemies[i], &game_over);
+                    }
+                }
+
+                if (remaining_time <= 0 && !boss.active)
+                {
+                    boss.active = 1;                    // Ativa o chefe
+                    boss.x = SCREEN_WIDTH - boss.width; // Posiciona o chefe na tela
+                }
+
+                if (boss.active)
+                {
+                    // Verificar colisões entre balas do jogador e o chefe
+                    shoot_boss_bullet(&boss, boss_bullets, &boss_bullet_count);
+                    move_boss_bullets(boss_bullets, MAX_BOSS_BULLETS);
+                    check_boss_bullet_collisions(&player, boss_bullets, &game_over);
+                    check_boss_collision(&player, bullets, MAX_BULLETS, &boss, &score, &player_won);
+                }
+
+                if (player_won)
+                {
+                    al_draw_text(font, al_map_rgb(0, 255, 0), SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, ALLEGRO_ALIGN_CENTRE, "Você ganhou! e CHUUUUUUUUUUPA");
+                    al_flip_display(); // Atualiza a tela para mostrar a mensagem
+                    al_rest(2.5);      // Pausa por 3 segundos
+                    break;             // Sai do loop principal
+                }
+
                 move_player(&player);
                 move_bullets(bullets, MAX_BULLETS);
-                move_enemies(enemies, MAX_ENEMIES);
-                check_collisions(&player, bullets, MAX_BULLETS, enemies, MAX_ENEMIES, shooting_enemies, MAX_SHOOTING_ENEMIES, &score, &game_over);
-
-                for (int i = 0; i < MAX_SHOOTING_ENEMIES; i++)
-                {
-                    move_shooting_enemy(&shooting_enemies[i]);                                // Mover todos os inimigos que atiram
-                    shoot_enemy_bullet(&shooting_enemies[i], player.x, player.y);             // Cada um atira
-                    move_enemy_bullets(shooting_enemies[i].bullets, 3);                       // Move os projéteis
-                    check_enemy_bullet_collisions(&player, &shooting_enemies[i], &game_over); // Verifica colisões
-                    check_shooting_enemy_collision(&player, &shooting_enemies[i], &game_over);
-                }
-
-                for (int i = 0; i < MAX_SHOOTING_ENEMIES; i++)
-                {
-                    check_shooting_enemy_collision(&player, &shooting_enemies[i], &game_over);
-                }
 
                 // Lógica de invulnerabilidade
                 if (player.invulnerable && (al_get_time() - player.invulnerable_time) > INVULNERABILITY_TIME)
@@ -501,14 +694,8 @@ int main()
                     fire_bullet(bullets, MAX_BULLETS, player.x + player.width, player.y + player.height / 2);
                     last_fire_time = al_get_time();
                 }
+                
 
-                if (rand() % 200 == 0)
-                { // Ajuste a frequência de geração
-                    generate_shooting_enemy(shooting_enemies, MAX_SHOOTING_ENEMIES);
-                }
-
-                if (rand() % 60 == 0)
-                    generate_enemy(enemies, MAX_ENEMIES, player.width, player.height);
             }
             redraw = 1;
         }
@@ -583,45 +770,62 @@ int main()
                     al_draw_bitmap(bullet_sprite, bullets[i].x, bullets[i].y, 0);
             }
 
-            // Desenhar inimigos
-            for (int i = 0; i < MAX_ENEMIES; i++)
+            if (remaining_time > 0)
             {
-                if (enemies[i].active)
-                    al_draw_bitmap(enemy_sprite, enemies[i].x, enemies[i].y, 0);
-            }
-
-            // Renderização dos inimigos que atiram
-            for (int i = 0; i < MAX_SHOOTING_ENEMIES; i++)
-            {
-                ShootingEnemy shooting_enemy = shooting_enemies[i]; // Obter o inimigo atual
-
-                if (shooting_enemy.active)
+                // Desenhar inimigos
+                for (int i = 0; i < MAX_ENEMIES; i++)
                 {
-                    al_draw_bitmap(shooting_enemy_sprite, shooting_enemy.x, shooting_enemy.y, 0); // Desenhar o inimigo
+                    if (enemies[i].active)
+                        al_draw_bitmap(enemy_sprite, enemies[i].x, enemies[i].y, 0);
+                }
 
-                    // Renderizar os projéteis do inimigo
-                    for (int j = 0; j < 10; j++) // Substitua 10 pelo número máximo de projéteis que cada inimigo pode ter
+                // Renderização dos inimigos que atiram
+                for (int i = 0; i < MAX_SHOOTING_ENEMIES; i++)
+                {
+                    ShootingEnemy shooting_enemy = shooting_enemies[i]; // Obter o inimigo atual
+
+                    if (shooting_enemy.active)
                     {
-                        if (shooting_enemy.bullets[j].active)
+                        al_draw_bitmap(shooting_enemy_sprite, shooting_enemy.x, shooting_enemy.y, 0); // Desenhar o inimigo
+
+                        // Renderizar os projéteis do inimigo
+                        for (int j = 0; j < 10; j++) // Substitua 10 pelo número máximo de projéteis que cada inimigo pode ter
                         {
-                            al_draw_bitmap(enemy_bullet_sprite, shooting_enemy.bullets[j].x, shooting_enemy.bullets[j].y, 0); // Desenhar o projétil
+                            if (shooting_enemy.bullets[j].active)
+                            {
+                                al_draw_bitmap(enemy_bullet_sprite, shooting_enemy.bullets[j].x, shooting_enemy.bullets[j].y, 0); // Desenhar o projétil
+                            }
                         }
                     }
                 }
             }
 
-            // Desenhar o placar
-            al_draw_textf(font, al_map_rgb(255, 255, 255), 10, 10, 0, "Score: %d", score);
-            al_draw_textf(font, al_map_rgb(255, 0, 0), SCREEN_WIDTH - 100, 10, 0, "Lives: %d", player.lives);
-
-            // Verificar se o jogo acabou
-            if (game_over)
+            if (boss.active)
             {
-                al_draw_text(font, al_map_rgb(255, 0, 0), SCREEN_WIDTH / 2 - 50, SCREEN_HEIGHT / 2, ALLEGRO_ALIGN_CENTER, "Game Over!");
+                for (int i = 0; i < MAX_BOSS_BULLETS; i++)
+                {
+                    if (boss_bullets[i].active)
+                    {
+                        al_draw_bitmap(boss_bullet_sprite, boss_bullets[i].x, boss_bullets[i].y, 0);
+                    }
+                }
+                move_boss(&boss);
+                al_draw_bitmap(boss_sprite, boss.x, boss.y, 0);
+
             }
 
-            al_flip_display();
-        }
+                // Desenhar o placar
+                al_draw_textf(font, al_map_rgb(255, 255, 255), 10, 10, 0, "Score: %d", score);
+                al_draw_textf(font, al_map_rgb(255, 0, 0), SCREEN_WIDTH - 100, 10, 0, "Lives: %d", player.lives);
+
+                // Verificar se o jogo acabou
+                if (game_over)
+                {
+                    al_draw_text(font, al_map_rgb(255, 0, 0), SCREEN_WIDTH / 2 - 50, SCREEN_HEIGHT / 2, ALLEGRO_ALIGN_CENTER, "Game Over!");
+                }
+
+                al_flip_display();
+            }
     }
 
     al_destroy_bitmap(background);
