@@ -12,7 +12,9 @@
 #define BULLET_SPEED 8
 #define ENEMY_SPEED 3
 #define MAX_BULLETS 8
+#define MAX_BULLET_COUNT 5
 #define MAX_ENEMIES 5
+#define MAX_SHOOTING_ENEMIES 2
 #define FIRE_INTERVAL 0.2        // Intervalo de disparo em segundos
 #define INVULNERABILITY_TIME 1.5 // Tempo de invulnerabilidade em segundos
 
@@ -49,6 +51,26 @@ typedef struct
     int moving_up;        // Flag para indicar se está se movendo para cima
 } Enemy;
 
+typedef struct
+{
+    float x, y;
+    int width, height;
+    int active;
+    float speed;
+} EnemyBullet;
+
+typedef struct
+{
+    float x, y;
+    int width, height;
+    int active;
+    int health;
+    float vertical_speed;
+    EnemyBullet bullets[10];
+    double last_shot_time;
+    int moving_up; // Flag para direção de movimento
+} ShootingEnemy;
+
 void init_player(Player *player)
 {
     player->x = 50;
@@ -77,6 +99,95 @@ void init_enemies(Enemy enemies[], int count)
         enemies[i].original_y = rand() % (SCREEN_HEIGHT - 30); // Posição inicial aleatória
         enemies[i].y = enemies[i].original_y;
         enemies[i].moving_up = 1; // Começar movendo para cima
+    }
+}
+
+void init_shooting_enemy(ShootingEnemy *enemy)
+{
+    enemy->x = SCREEN_WIDTH + rand() % 100;
+    enemy->y = rand() % (SCREEN_HEIGHT - 30);
+    enemy->width = 50;
+    enemy->height = 30;
+    enemy->active = 1;
+    enemy->health = 3;
+    enemy->vertical_speed = 2; // Velocidade aleatória entre 1.0 e 2.0
+    enemy->last_shot_time = 0;
+    enemy->moving_up = 1;
+
+    for (int i = 0; i < 3; i++)
+    {
+        enemy->bullets[i].active = 0;
+        enemy->bullets[i].width = 10;
+        enemy->bullets[i].height = 10;
+        enemy->bullets[i].speed = 8;
+    }
+}
+
+void init_enemy_bullets(Bullet enemy_bullets[], int count)
+{
+    for (int i = 0; i < count; i++)
+        enemy_bullets[i].active = 0;
+}
+
+void shoot_enemy_bullet(ShootingEnemy *enemy, float player_x, float player_y)
+{
+    double current_time = al_get_time();
+    if (current_time - enemy->last_shot_time >= 1.0)
+    { // Dispara a cada 1 segundo
+        for (int i = 0; i < 3; i++)
+        {
+            if (!enemy->bullets[i].active)
+            {
+                enemy->bullets[i].x = enemy->x - 20;
+                enemy->bullets[i].y = enemy->y;
+                enemy->bullets[i].active = 1;
+                enemy->last_shot_time = current_time;
+                break;
+            }
+        }
+    }
+}
+
+void move_enemy_bullets(EnemyBullet bullets[], int count)
+{
+    for (int i = 0; i < count; i++)
+    {
+        if (bullets[i].active)
+        {
+            bullets[i].x -= bullets[i].speed;
+            if (bullets[i].x < 0)
+                bullets[i].active = 0;
+        }
+    }
+}
+
+void move_shooting_enemy(ShootingEnemy *enemy)
+{
+    if (enemy->active)
+    {
+        // Movimento horizontal
+        enemy->x -= ENEMY_SPEED;
+
+        // Movimento vertical
+        if (enemy->moving_up)
+        {
+            enemy->y -= enemy->vertical_speed;
+            if (enemy->y <= 0)
+                enemy->moving_up = 0;
+        }
+        else
+        {
+            enemy->y += enemy->vertical_speed;
+            if (enemy->y >= SCREEN_HEIGHT - enemy->height)
+                enemy->moving_up = 1;
+        }
+
+        // Reposicionar se sair da tela à esquerda
+        if (enemy->x < -enemy->width)
+        {
+            enemy->x = SCREEN_WIDTH + rand() % 100;
+            enemy->y = rand() % (SCREEN_HEIGHT - enemy->height);
+        }
     }
 }
 
@@ -147,8 +258,57 @@ void move_enemies(Enemy enemies[], int count)
     }
 }
 
+void check_shooting_enemy_collision(Player *player, ShootingEnemy *enemy, int *game_over)
+{
+    if (enemy->active &&
+        player->x < enemy->x + enemy->width &&
+        player->x + player->width > enemy->x &&
+        player->y < enemy->y + enemy->height &&
+        player->y + player->height > enemy->y)
+    {
+
+        if (!player->invulnerable)
+        {
+            player->lives--;
+            player->invulnerable = 1;
+            player->invulnerable_time = al_get_time();
+
+            if (player->lives <= 0)
+            {
+                *game_over = 1;
+            }
+        }
+    }
+}
+
+void check_enemy_bullet_collisions(Player *player, ShootingEnemy *enemy, int *game_over)
+{
+    for (int i = 0; i < 3; i++)
+    {
+        if (enemy->bullets[i].active &&
+            enemy->bullets[i].x < player->x + player->width &&
+            enemy->bullets[i].x + enemy->bullets[i].width > player->x &&
+            enemy->bullets[i].y < player->y + player->height &&
+            enemy->bullets[i].y + enemy->bullets[i].height > player->y)
+        {
+
+            if (!player->invulnerable)
+            {
+                player->lives--;
+                player->invulnerable = 1;
+                player->invulnerable_time = al_get_time();
+
+                if (player->lives <= 0)
+                    *game_over = 1;
+            }
+            enemy->bullets[i].active = 0;
+        }
+    }
+}
+
 void check_collisions(Player *player, Bullet bullets[], int bullet_count, Enemy enemies[], int enemy_count, int *score, int *game_over)
 {
+    // Verificar colisões entre balas do jogador e inimigos normais
     for (int i = 0; i < bullet_count; i++)
     {
         if (bullets[i].active)
@@ -168,9 +328,11 @@ void check_collisions(Player *player, Bullet bullets[], int bullet_count, Enemy 
                         enemies[j].active = 0;
                 }
             }
+
         }
     }
 
+    // Verificar colisões entre o jogador e inimigos
     for (int j = 0; j < enemy_count; j++)
     {
         if (enemies[j].active &&
@@ -191,6 +353,13 @@ void check_collisions(Player *player, Bullet bullets[], int bullet_count, Enemy 
         }
     }
 }
+void init_shooting_enemies(ShootingEnemy enemies[], int count)
+{
+    for (int i = 0; i < count; i++)
+    {
+        init_shooting_enemy(&enemies[i]); // Use a função existente para inicializar
+    }
+}
 
 void generate_enemy(Enemy enemies[], int count, int player_width, int player_height)
 {
@@ -205,6 +374,18 @@ void generate_enemy(Enemy enemies[], int count, int player_width, int player_hei
             enemies[i].active = 1;
             enemies[i].health = 2;
             break;
+        }
+    }
+}
+
+void generate_shooting_enemy(ShootingEnemy enemies[], int count)
+{
+    for (int i = 0; i < count; i++)
+    {
+        if (!enemies[i].active)
+        {
+            init_shooting_enemy(&enemies[i]);
+            break; // Quebra para gerar apenas um por vez
         }
     }
 }
@@ -227,6 +408,8 @@ int main()
     ALLEGRO_BITMAP *player_sprite = al_load_bitmap("nave.png");
     ALLEGRO_BITMAP *bullet_sprite = al_load_bitmap("bullet.png");
     ALLEGRO_BITMAP *enemy_sprite = al_load_bitmap("enemy.png");
+    ALLEGRO_BITMAP *shooting_enemy_sprite = al_load_bitmap("enemyShoot.png");
+    ALLEGRO_BITMAP *enemy_bullet_sprite = al_load_bitmap("bulletEnemy.png"); // Substitua "enemy_bullet.png" pelo nome do seu arquivo
 
     al_register_event_source(event_queue, al_get_display_event_source(display));
     al_register_event_source(event_queue, al_get_keyboard_event_source());
@@ -235,9 +418,13 @@ int main()
     Player player;
     Bullet bullets[MAX_BULLETS];
     Enemy enemies[MAX_ENEMIES];
+    Bullet enemy_bullets[MAX_BULLET_COUNT]; // Adicione essa linha
+    ShootingEnemy shooting_enemies[MAX_SHOOTING_ENEMIES];
+    init_shooting_enemies(shooting_enemies, MAX_SHOOTING_ENEMIES); // Adicione isso no main
     init_player(&player);
     init_bullets(bullets, MAX_BULLETS);
     init_enemies(enemies, MAX_ENEMIES);
+    init_enemy_bullets(enemy_bullets, MAX_BULLET_COUNT); // Adicione essa linha na função main
 
     int firing = 0;
     double last_fire_time = 0;
@@ -260,6 +447,19 @@ int main()
                 move_bullets(bullets, MAX_BULLETS);
                 move_enemies(enemies, MAX_ENEMIES);
                 check_collisions(&player, bullets, MAX_BULLETS, enemies, MAX_ENEMIES, &score, &game_over);
+                for (int i = 0; i < MAX_SHOOTING_ENEMIES; i++)
+                {
+                    move_shooting_enemy(&shooting_enemies[i]);                                // Mover todos os inimigos que atiram
+                    shoot_enemy_bullet(&shooting_enemies[i], player.x, player.y);             // Cada um atira
+                    move_enemy_bullets(shooting_enemies[i].bullets, 3);                       // Move os projéteis
+                    check_enemy_bullet_collisions(&player, &shooting_enemies[i], &game_over); // Verifica colisões
+                    check_shooting_enemy_collision(&player, &shooting_enemies[i], &game_over);
+                }
+
+                for (int i = 0; i < MAX_SHOOTING_ENEMIES; i++)
+                {
+                    check_shooting_enemy_collision(&player, &shooting_enemies[i], &game_over);
+                }
 
                 // Lógica de invulnerabilidade
                 if (player.invulnerable && (al_get_time() - player.invulnerable_time) > INVULNERABILITY_TIME)
@@ -269,6 +469,11 @@ int main()
                 {
                     fire_bullet(bullets, MAX_BULLETS, player.x + player.width, player.y + player.height / 2);
                     last_fire_time = al_get_time();
+                }
+
+                if (rand() % 200 == 0)
+                { // Ajuste a frequência de geração
+                    generate_shooting_enemy(shooting_enemies, MAX_SHOOTING_ENEMIES);
                 }
 
                 if (rand() % 60 == 0)
@@ -352,6 +557,26 @@ int main()
             {
                 if (enemies[i].active)
                     al_draw_bitmap(enemy_sprite, enemies[i].x, enemies[i].y, 0);
+            }
+
+            // Renderização dos inimigos que atiram
+            for (int i = 0; i < MAX_SHOOTING_ENEMIES; i++)
+            {
+                ShootingEnemy shooting_enemy = shooting_enemies[i]; // Obter o inimigo atual
+
+                if (shooting_enemy.active)
+                {
+                    al_draw_bitmap(shooting_enemy_sprite, shooting_enemy.x, shooting_enemy.y, 0); // Desenhar o inimigo
+
+                    // Renderizar os projéteis do inimigo
+                    for (int j = 0; j < 10; j++) // Substitua 10 pelo número máximo de projéteis que cada inimigo pode ter
+                    {
+                        if (shooting_enemy.bullets[j].active)
+                        {
+                            al_draw_bitmap(enemy_bullet_sprite, shooting_enemy.bullets[j].x, shooting_enemy.bullets[j].y, 0); // Desenhar o projétil
+                        }
+                    }
+                }
             }
 
             // Desenhar o placar
