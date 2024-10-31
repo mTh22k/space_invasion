@@ -102,7 +102,7 @@ void init_enemies(Enemy enemies[], int count)
     }
 }
 
-void init_shooting_enemy(ShootingEnemy *enemy)
+void init_shooting_enemies(ShootingEnemy *enemy)
 {
     enemy->x = SCREEN_WIDTH + rand() % 100;
     enemy->y = rand() % (SCREEN_HEIGHT - 30);
@@ -110,11 +110,11 @@ void init_shooting_enemy(ShootingEnemy *enemy)
     enemy->height = 30;
     enemy->active = 1;
     enemy->health = 3;
-    enemy->vertical_speed = 2; // Velocidade aleatória entre 1.0 e 2.0
+    enemy->vertical_speed = 1; // Velocidade aleatória entre 1.0 e 2.0
     enemy->last_shot_time = 0;
     enemy->moving_up = 1;
 
-    for (int i = 0; i < 3; i++)
+    for (int i = 0; i < 4; i++)
     {
         enemy->bullets[i].active = 0;
         enemy->bullets[i].width = 10;
@@ -306,7 +306,7 @@ void check_enemy_bullet_collisions(Player *player, ShootingEnemy *enemy, int *ga
     }
 }
 
-void check_collisions(Player *player, Bullet bullets[], int bullet_count, Enemy enemies[], int enemy_count, int *score, int *game_over)
+void check_collisions(Player *player, Bullet bullets[], int bullet_count, Enemy enemies[], int enemy_count, ShootingEnemy shooting_enemies[], int shooting_enemy_count, int *score, int *game_over)
 {
     // Verificar colisões entre balas do jogador e inimigos normais
     for (int i = 0; i < bullet_count; i++)
@@ -329,10 +329,26 @@ void check_collisions(Player *player, Bullet bullets[], int bullet_count, Enemy 
                 }
             }
 
+            // Verificar colisões entre balas do jogador e inimigos que disparam
+            for (int k = 0; k < shooting_enemy_count; k++)
+            {
+                if (shooting_enemies[k].active &&
+                    bullets[i].x < shooting_enemies[k].x + shooting_enemies[k].width &&
+                    bullets[i].x + bullets[i].width > shooting_enemies[k].x &&
+                    bullets[i].y < shooting_enemies[k].y + shooting_enemies[k].height &&
+                    bullets[i].y + bullets[i].height > shooting_enemies[k].y)
+                {
+                    bullets[i].active = 0;        // Desativa a bala do jogador
+                    shooting_enemies[k].health--; // Diminui a vida do inimigo que dispara
+                    (*score)++;
+                    if (shooting_enemies[k].health <= 0)
+                        shooting_enemies[k].active = 0; // Desativa o inimigo se a vida for zero
+                }
+            }
         }
     }
 
-    // Verificar colisões entre o jogador e inimigos
+    // Verificar colisões entre o jogador e inimigos normais
     for (int j = 0; j < enemy_count; j++)
     {
         if (enemies[j].active &&
@@ -352,12 +368,26 @@ void check_collisions(Player *player, Bullet bullets[], int bullet_count, Enemy 
             }
         }
     }
-}
-void init_shooting_enemies(ShootingEnemy enemies[], int count)
-{
-    for (int i = 0; i < count; i++)
+
+    // Verificar colisões entre o jogador e inimigos que disparam
+    for (int k = 0; k < shooting_enemy_count; k++)
     {
-        init_shooting_enemy(&enemies[i]); // Use a função existente para inicializar
+        if (shooting_enemies[k].active &&
+            shooting_enemies[k].x < player->x + player->width &&
+            shooting_enemies[k].x + shooting_enemies[k].width > player->x &&
+            shooting_enemies[k].y < player->y + player->height &&
+            shooting_enemies[k].y + shooting_enemies[k].height > player->y)
+        {
+            if (!player->invulnerable)
+            {
+                player->lives--;
+                player->invulnerable = 1;
+                player->invulnerable_time = al_get_time();
+
+                if (player->lives <= 0)
+                    *game_over = 1;
+            }
+        }
     }
 }
 
@@ -384,7 +414,7 @@ void generate_shooting_enemy(ShootingEnemy enemies[], int count)
     {
         if (!enemies[i].active)
         {
-            init_shooting_enemy(&enemies[i]);
+            init_shooting_enemies(&enemies[i]);
             break; // Quebra para gerar apenas um por vez
         }
     }
@@ -420,7 +450,7 @@ int main()
     Enemy enemies[MAX_ENEMIES];
     Bullet enemy_bullets[MAX_BULLET_COUNT]; // Adicione essa linha
     ShootingEnemy shooting_enemies[MAX_SHOOTING_ENEMIES];
-    init_shooting_enemies(shooting_enemies, MAX_SHOOTING_ENEMIES); // Adicione isso no main
+    init_shooting_enemies(shooting_enemies); // Adicione isso no main
     init_player(&player);
     init_bullets(bullets, MAX_BULLETS);
     init_enemies(enemies, MAX_ENEMIES);
@@ -446,7 +476,8 @@ int main()
                 move_player(&player);
                 move_bullets(bullets, MAX_BULLETS);
                 move_enemies(enemies, MAX_ENEMIES);
-                check_collisions(&player, bullets, MAX_BULLETS, enemies, MAX_ENEMIES, &score, &game_over);
+                check_collisions(&player, bullets, MAX_BULLETS, enemies, MAX_ENEMIES, shooting_enemies, MAX_SHOOTING_ENEMIES, &score, &game_over);
+
                 for (int i = 0; i < MAX_SHOOTING_ENEMIES; i++)
                 {
                     move_shooting_enemy(&shooting_enemies[i]);                                // Mover todos os inimigos que atiram
