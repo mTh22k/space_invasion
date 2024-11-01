@@ -9,17 +9,20 @@
 
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 600
-#define PLAYER_SPEED 5
-#define BULLET_SPEED 8
-#define ENEMY_SPEED 3
+#define PLAYER_SPEED 6
+#define BULLET_SPEED 6
+#define ENEMY_SPEED 5
+#define ENEMY_SPEED_SHOOTING 3
 #define MAX_BULLETS 8
-#define MAX_BULLET_COUNT 5
-#define MAX_BOSS_BULLETS 5
-#define MAX_ENEMIES 5
+#define MAX_BULLET_COUNT 7
+#define MAX_BOSS_BULLETS 8
+#define MAX_ENEMIES 6
 #define MAX_SHOOTING_ENEMIES 2
 #define FIRE_INTERVAL 0.2        // Intervalo de disparo em segundos
 #define INVULNERABILITY_TIME 1.5 // Tempo de invulnerabilidade em segundos
 #define BOSS_SHOT_INTERVAL 0.4
+#define TIME_TO_BOSS 5
+#define SCROLL_SPEED 60
 
 typedef struct
 {
@@ -130,7 +133,7 @@ void init_boss(Boss *boss)
     boss->width = 200;           // Largura do chefe
     boss->height = 200;          // Altura do chefe
     boss->active = 0;            // Inicialmente inativo
-    boss->speed = 1.0;           // Velocidade do movimento vertical
+    boss->speed = 2;           // Velocidade do movimento vertical
     boss->health = 10;
     boss->last_shot_time = 0;
 }
@@ -143,7 +146,7 @@ void init_shooting_enemies(ShootingEnemy *enemy)
     enemy->height = 30;
     enemy->active = 1;
     enemy->health = 3;
-    enemy->vertical_speed = 1; // Velocidade aleatória entre 1.0 e 2.0
+    enemy->vertical_speed = 0.5; // Velocidade aleatória entre 1.0 e 2.0
     enemy->last_shot_time = 0;
     enemy->moving_up = 1;
 
@@ -199,7 +202,7 @@ void move_shooting_enemy(ShootingEnemy *enemy)
     if (enemy->active)
     {
         // Movimento horizontal
-        enemy->x -= ENEMY_SPEED;
+        enemy->x -= ENEMY_SPEED_SHOOTING;
 
         // Movimento vertical
         if (enemy->moving_up)
@@ -288,13 +291,13 @@ void move_enemies(Enemy enemies[], int count)
             enemies[i].x -= ENEMY_SPEED;               // Movimento horizontal
             enemies[i].y += enemies[i].vertical_speed; // Movimento vertical
 
-            // Limitar o movimento vertical para que os inimigos não saiam da tela
-            if (enemies[i].y < 0)
-                enemies[i].y = 0;
-            else if (enemies[i].y > SCREEN_HEIGHT - enemies[i].height)
-                enemies[i].y = SCREEN_HEIGHT - enemies[i].height;
+            // Inverte a direção vertical ao encontrar as bordas superior ou inferior da tela
+            if (enemies[i].y <= 0 || enemies[i].y >= SCREEN_HEIGHT - enemies[i].height)
+            {
+                enemies[i].vertical_speed *= -1; // Inverte a direção
+            }
 
-            // Reposicionar inimigos que saíram da tela à direita
+            // Reposicionar inimigos que saíram da tela à esquerda
             if (enemies[i].x < -enemies[i].width)
             {
                 enemies[i].x = SCREEN_WIDTH + rand() % 100;
@@ -304,9 +307,9 @@ void move_enemies(Enemy enemies[], int count)
         }
     }
 }
-
-void check_boss_collision(Player *player, Bullet bullets[], int bullet_count, Boss *boss, int *score, int *player_won)
+void check_boss_collision(Player *player, Bullet bullets[], int bullet_count, Boss *boss, int *score, int *player_won, int *game_over)
 {
+    // Verificar colisão entre balas do jogador e o chefe
     for (int i = 0; i < bullet_count; i++)
     {
         if (bullets[i].active && boss->active &&
@@ -322,6 +325,27 @@ void check_boss_collision(Player *player, Bullet bullets[], int bullet_count, Bo
             {
                 boss->active = 0; // Desativa o chefe
                 *player_won = 1;  // Jogador ganhou
+            }
+        }
+    }
+
+    // Verificar colisão entre o jogador e o chefe
+    if (boss->active &&
+        player->x < boss->x + boss->width &&
+        player->x + player->width > boss->x &&
+        player->y < boss->y + boss->height &&
+        player->y + player->height > boss->y)
+    {
+        // Verifica se o jogador não está invulnerável
+        if (!player->invulnerable)
+        {
+            player->lives--;          // Diminui a vida do jogador
+            player->invulnerable = 1; // Ativa o estado de invulnerabilidade temporária
+            player->invulnerable_time = al_get_time();
+
+            if (player->lives <= 0)
+            {
+                *game_over = 1; // Fim de jogo caso as vidas cheguem a zero
             }
         }
     }
@@ -477,7 +501,7 @@ void shoot_boss_bullet(Boss *boss, BossBullet boss_bullets[], int *boss_bullet_c
             if (!boss_bullets[i].active)
             {
                 boss_bullets[i].x = boss->x;
-                boss_bullets[i].y = boss->y + boss->height / 2;
+                boss_bullets[i].y = boss->y + boss->height / 2 - 20;
                 boss_bullets[i].active = 1;
                 boss_bullets[i].speed = BULLET_SPEED;
                 boss->last_shot_time = current_time; // Atualiza o último disparo do chefe
@@ -573,13 +597,13 @@ int main()
     ALLEGRO_EVENT_QUEUE *event_queue = al_create_event_queue();
     ALLEGRO_TIMER *timer = al_create_timer(1.0 / 60);
     ALLEGRO_FONT *font = al_create_builtin_font();
-    ALLEGRO_BITMAP *background = al_load_bitmap("background.jpg");
+    ALLEGRO_BITMAP *background = al_load_bitmap("background.png");
     ALLEGRO_BITMAP *player_sprite = al_load_bitmap("nave.png");
     ALLEGRO_BITMAP *bullet_sprite = al_load_bitmap("bullet.png");
     ALLEGRO_BITMAP *enemy_sprite = al_load_bitmap("enemy.png");
     ALLEGRO_BITMAP *shooting_enemy_sprite = al_load_bitmap("enemyShoot.png");
     ALLEGRO_BITMAP *enemy_bullet_sprite = al_load_bitmap("bulletEnemy.png");
-    ALLEGRO_BITMAP *boss_sprite = al_load_bitmap("boss.png");
+    ALLEGRO_BITMAP *boss_sprite = al_load_bitmap("ship_1.png");
     ALLEGRO_BITMAP *boss_bullet_sprite = al_load_bitmap("bulletEnemy.png");
 
     al_register_event_source(event_queue, al_get_display_event_source(display));
@@ -607,6 +631,7 @@ int main()
     int game_over = 0;
     int player_won = 0; // 0 = jogo em andamento, 1 = jogador ganhou
     int boss_bullet_count = 0;
+    float background_x = 0;
 
     al_start_timer(timer);
     double start_time = al_get_time(); // Tempo inicial
@@ -619,10 +644,16 @@ int main()
         double current_time = al_get_time(); // Tempo atua]l
 
         double elapsed_time = al_get_time() - start_time;
-        double remaining_time = 3 - elapsed_time;
+        double remaining_time = TIME_TO_BOSS - elapsed_time;
 
         if (ev.type == ALLEGRO_EVENT_TIMER)
+
         {
+            background_x -= 2; // Controla a velocidade de rolagem do fundo
+            if (background_x <= -al_get_bitmap_width(background))
+            {
+                background_x = 0;
+            }
             if (!game_over)
             {
 
@@ -671,7 +702,7 @@ int main()
                     shoot_boss_bullet(&boss, boss_bullets, &boss_bullet_count);
                     move_boss_bullets(boss_bullets, MAX_BOSS_BULLETS);
                     check_boss_bullet_collisions(&player, boss_bullets, &game_over);
-                    check_boss_collision(&player, bullets, MAX_BULLETS, &boss, &score, &player_won);
+                    check_boss_collision(&player, bullets, MAX_BULLETS, &boss, &score, &player_won, &game_over);
                 }
 
                 if (player_won)
@@ -747,7 +778,8 @@ int main()
         if (redraw && al_is_event_queue_empty(event_queue))
         {
             al_clear_to_color(al_map_rgb(0, 0, 0));
-            al_draw_bitmap(background, 0, 0, 0);
+            al_draw_bitmap(background, background_x, 0, 0);
+            al_draw_bitmap(background, background_x + al_get_bitmap_width(background), 0, 0);
 
             // Desenhar o jogador com efeito de piscamento se estiver invulnerável
             if (player.invulnerable)
