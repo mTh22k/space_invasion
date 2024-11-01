@@ -23,6 +23,7 @@
 #define BOSS_SHOT_INTERVAL 0.4
 #define TIME_TO_BOSS 5
 #define SCROLL_SPEED 60
+#define EXPLOSION_FRAME_COUNT 6
 
 typedef struct
 {
@@ -583,6 +584,17 @@ void draw_timer(ALLEGRO_FONT *font, double elapsed_time)
     al_draw_text(font, al_map_rgb(255, 255, 255), SCREEN_WIDTH - 200, 10, 0, timer_text);
 }
 
+void play_explosion(int x, int y, ALLEGRO_BITMAP *explosion_bitmaps[], ALLEGRO_BITMAP *background)
+{
+    for (int i = 0; i < EXPLOSION_FRAME_COUNT; i++)
+    {
+        al_draw_bitmap(background, 0, 0, 0); // Desenhar o fundo antes da explosão
+        al_draw_bitmap(explosion_bitmaps[i], x, y, 0);
+        al_flip_display();
+        al_rest(0.3); // Duração de cada frame
+    }
+}
+
 int main()
 {
     al_init();
@@ -632,6 +644,26 @@ int main()
     int player_won = 0; // 0 = jogo em andamento, 1 = jogador ganhou
     int boss_bullet_count = 0;
     float background_x = 0;
+    int victory_state = 0; // 0 = sem vitória, 1 = animação de explosão, 2 = tela de vitória
+
+    const char *explosion_frames[EXPLOSION_FRAME_COUNT] = {
+        "frame1.png",
+        "frame2.png",
+        "frame3.png",
+        "frame4.png",
+        "frame5.png",
+        "frame6.png"};
+
+    ALLEGRO_BITMAP *explosion_bitmaps[EXPLOSION_FRAME_COUNT];
+    for (int i = 0; i < EXPLOSION_FRAME_COUNT; i++)
+    {
+        explosion_bitmaps[i] = al_load_bitmap(explosion_frames[i]);
+        if (!explosion_bitmaps[i])
+        {
+            fprintf(stderr, "Erro ao carregar o frame de explosão: %s\n", explosion_frames[i]);
+            return -1;
+        }
+    }
 
     al_start_timer(timer);
     double start_time = al_get_time(); // Tempo inicial
@@ -707,10 +739,14 @@ int main()
 
                 if (player_won)
                 {
+                    // Posicione a explosão nas coordenadas do chefe derrotado
+                    play_explosion(boss.x, boss.y, explosion_bitmaps, background);
+
+                    // Exibir mensagem de vitória
                     al_draw_text(font, al_map_rgb(0, 255, 0), SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, ALLEGRO_ALIGN_CENTRE, "Você ganhou! e CHUUUUUUUUUUPA");
-                    al_flip_display(); // Atualiza a tela para mostrar a mensagem
-                    al_rest(2.5);      // Pausa por 3 segundos
-                    break;             // Sai do loop principal
+                    al_flip_display();
+                    al_rest(2.5);
+                    break;
                 }
 
                 move_player(&player);
