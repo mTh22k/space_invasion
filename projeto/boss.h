@@ -25,29 +25,29 @@
 #define MAX_BULLETS 8
 #define MAX_BULLET_COUNT 7
 #define MAX_BOSS_BULLETS 8
-#define MAX_ENEMIES 6
-#define MAX_SHOOTING_ENEMIES 2
+#define MAX_ENEMIES 4
+#define MAX_SHOOTING_ENEMIES 1
 #define FIRE_INTERVAL 0.2
 #define INVULNERABILITY_TIME 1.5
 #define BOSS_SHOT_INTERVAL 0.4
-#define TIME_TO_BOSS 5
+#define TIME_TO_BOSS 15
 #define SCROLL_SPEED 60
 #define EXPLOSION_FRAME_COUNT 6
 
 void init_boss(Boss *boss);
 
-void move_boss(Boss *boss);
+void move_boss(Boss *boss, int game_phase);
 
 // Inicializa as balas do chefe
 void init_boss_bullets(BossBullet boss_bullets[], int count);
 
 // Dispara uma bala do chefe
-void shoot_boss_bullet(Boss *boss, BossBullet boss_bullets[], int *boss_bullet_count);
+void shoot_boss_bullet(Boss *boss, BossBullet boss_bullets[], int *boss_bullet_count, int game_phase);
 
 // Move as balas do chefe
 void move_boss_bullets(BossBullet boss_bullets[], int count);
 
 // Verifica colisões entre as balas do chefe e o jogador
-void check_boss_bullet_collisions(Player *player, BossBullet boss_bullets[], int *game_over);
+void check_boss_bullet_collisions(Player *player, BossBullet boss_bullets[], int *game_over, int game_phase);
 
 #endif // BOSS_H

@@ -25,12 +25,12 @@
 #define MAX_BULLETS 8
 #define MAX_BULLET_COUNT 7
 #define MAX_BOSS_BULLETS 8
-#define MAX_ENEMIES 6
-#define MAX_SHOOTING_ENEMIES 2
+#define MAX_ENEMIES 4
+#define MAX_SHOOTING_ENEMIES 1
 #define FIRE_INTERVAL 0.2
 #define INVULNERABILITY_TIME 1.5
 #define BOSS_SHOT_INTERVAL 0.4
-#define TIME_TO_BOSS 5
+#define TIME_TO_BOSS 15
 #define SCROLL_SPEED 60
 #define EXPLOSION_FRAME_COUNT 6
 
@@ -47,6 +47,7 @@ typedef struct
     int invulnerable;
     double invulnerable_time;
     Joystick joystick;
+    int paused;
 } Player;
 
 typedef struct
@@ -102,6 +103,7 @@ typedef struct
     int active;
     float speed;
     int health;
+    int horizontal_speed;
     double last_shot_time;
 } Boss;
 

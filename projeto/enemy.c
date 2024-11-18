@@ -1,5 +1,6 @@
 #include "enemy.h"
 #include <stdlib.h>
+#include <stdio.h>
 
 void init_enemies(Enemy enemies[], int count)
 {
@@ -14,33 +15,64 @@ void init_enemies(Enemy enemies[], int count)
     }
 }
 
-void move_enemies(Enemy enemies[], int count)
+void move_enemies(Enemy enemies[], int count, int game_phase)
 {
-    for (int i = 0; i < count; i++)
+
+    if (game_phase == 1)
     {
-        if (enemies[i].active)
+        for (int i = 0; i < count; i++)
         {
-            enemies[i].x -= ENEMY_SPEED;               // Movimento horizontal
-            enemies[i].y += enemies[i].vertical_speed; // Movimento vertical
-
-            // Inverte a direção vertical ao encontrar as bordas superior ou inferior da tela
-            if (enemies[i].y <= 0 || enemies[i].y >= SCREEN_HEIGHT - enemies[i].height)
+            if (enemies[i].active)
             {
-                enemies[i].vertical_speed *= -1; // Inverte a direção
-            }
+                enemies[i].x -= ENEMY_SPEED;               // Movimento horizontal
+                enemies[i].y += enemies[i].vertical_speed; // Movimento vertical
 
-            // Reposicionar inimigos que saíram da tela à esquerda
-            if (enemies[i].x < -enemies[i].width)
-            {
-                enemies[i].x = SCREEN_WIDTH + rand() % 100;
-                enemies[i].y = rand() % (SCREEN_HEIGHT - enemies[i].height);               // Reposiciona verticalmente
-                enemies[i].vertical_speed = (rand() % 3 + 1) * (rand() % 2 == 0 ? 1 : -1); // Atualiza a velocidade vertical
+                // Inverte a direção vertical ao encontrar as bordas superior ou inferior da tela
+                if (enemies[i].y <= 0 || enemies[i].y >= SCREEN_HEIGHT - enemies[i].height)
+                {
+                    enemies[i].vertical_speed *= -1; // Inverte a direção
+                }
+
+                // Reposicionar inimigos que saíram da tela à esquerda
+                if (enemies[i].x < -enemies[i].width)
+                {
+                    enemies[i].x = SCREEN_WIDTH + rand() % 100;
+                    enemies[i].y = rand() % (SCREEN_HEIGHT - enemies[i].height);               // Reposiciona verticalmente
+                    enemies[i].vertical_speed = (rand() % 3 + 1) * (rand() % 2 == 0 ? 1 : -1); // Atualiza a velocidade vertical
+                }
             }
         }
     }
+    else if (game_phase == 2)
+    {
+        
+            for (int i = 0; i < count; i++)
+            {
+                if (enemies[i].active)
+                {
+                    enemies[i].x -= 8;                         // Movimento horizontal mais lento
+                    enemies[i].y += enemies[i].vertical_speed; // Movimento vertical mais lento
+
+                    // Inverte a direção vertical ao encontrar as bordas superior ou inferior da tela
+                    if (enemies[i].y <= 0 || enemies[i].y >= SCREEN_HEIGHT - enemies[i].height)
+                    {
+                        enemies[i].vertical_speed *= -1; // Inverte a direção
+                    }
+
+                    // Reposicionar inimigos que saíram da tela à esquerda
+                    if (enemies[i].x < -enemies[i].width)
+                    {
+                        enemies[i].x = SCREEN_WIDTH + rand() % 50; // Menos aleatoriedade no reposicionamento
+                        enemies[i].y = rand() % (SCREEN_HEIGHT - enemies[i].height);
+                        enemies[i].vertical_speed = rand() % 2 + 1; // Velocidade vertical mais lenta e menos aleatória
+                    }
+                }
+            }
+        
+    }
 }
 
-void init_shooting_enemies(ShootingEnemy *enemy)
+void init_shooting_enemies(ShootingEnemy *enemy, int game_phase)
 {
     enemy->x = SCREEN_WIDTH + rand() % 100;
     enemy->y = rand() % (SCREEN_HEIGHT - 30);
@@ -52,14 +84,16 @@ void init_shooting_enemies(ShootingEnemy *enemy)
     enemy->last_shot_time = 0;
     enemy->moving_up = 1;
 
-    for (int i = 0; i < 4; i++)
-    {
-        enemy->bullets[i].active = 0;
-        enemy->bullets[i].width = 10;
-        enemy->bullets[i].height = 10;
-        enemy->bullets[i].speed = 8;
+        for (int i = 0; i < 4; i++)
+        {
+            enemy->bullets[i].active = 0;
+            enemy->bullets[i].width = 10;
+            enemy->bullets[i].height = 10;
+            enemy->bullets[i].speed = 8;
+            
+           
+        }
     }
-}
 
 void move_shooting_enemy(ShootingEnemy *enemy)
 {
@@ -91,23 +125,44 @@ void move_shooting_enemy(ShootingEnemy *enemy)
     }
 }
 
-void shoot_enemy_bullet(ShootingEnemy *enemy, float player_x, float player_y)
+void shoot_enemy_bullet(ShootingEnemy *enemy, float player_x, float player_y, int game_phase)
 {
     double current_time = al_get_time();
-    if (current_time - enemy->last_shot_time >= 1.0)
-    { // Dispara a cada 1 segundo
-        for (int i = 0; i < 3; i++)
-        {
-            if (!enemy->bullets[i].active)
+    if (game_phase == 1) 
+    {
+
+        if (current_time - enemy->last_shot_time >= 1.0)
+        { // Dispara a cada 1 segundo
+            for (int i = 0; i < 3; i++)
             {
-                enemy->bullets[i].x = enemy->x - 20;
-                enemy->bullets[i].y = enemy->y;
-                enemy->bullets[i].active = 1;
-                enemy->last_shot_time = current_time;
-                break;
+                if (!enemy->bullets[i].active)
+                {
+                    enemy->bullets[i].x = enemy->x - 20;
+                    enemy->bullets[i].y = enemy->y;
+                    enemy->bullets[i].active = 1;
+                    enemy->last_shot_time = current_time;
+                    break;
+                }
             }
         }
-    }
+    } else if (game_phase == 2)
+            {
+
+                if (current_time - enemy->last_shot_time >= 0.1)
+                { // Dispara a cada 1 segundo
+                    for (int i = 0; i < 3; i++)
+                    {
+                        if (!enemy->bullets[i].active)
+                        {
+                            enemy->bullets[i].x = enemy->x - 20;
+                            enemy->bullets[i].y = enemy->y;
+                            enemy->bullets[i].active = 1;
+                            enemy->last_shot_time = current_time;
+                            break;
+                        }
+                    }
+                }
+            }
 }
 
 void move_enemy_bullets(EnemyBullet bullets[], int count)
@@ -146,13 +201,13 @@ void generate_enemy(Enemy enemies[], int count, int player_width, int player_hei
     }
 }
 
-void generate_shooting_enemy(ShootingEnemy enemies[], int count)
+void generate_shooting_enemy(ShootingEnemy enemies[], int count, int game_phase)
 {
     for (int i = 0; i < count; i++)
     {
         if (!enemies[i].active)
         {
-            init_shooting_enemies(&enemies[i]);
+            init_shooting_enemies(&enemies[i], game_phase);
             break; // Quebra para gerar apenas um por vez
         }
     }
