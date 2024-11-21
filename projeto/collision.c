@@ -11,8 +11,10 @@ void check_boss_collision(Player *player, Bullet bullets[], int bullet_count, Bo
             bullets[i].y < boss->y + boss->height &&
             bullets[i].y + bullets[i].height > boss->y)
         {
-            bullets[i].active = 0; // Desativa a bala do jogador
-            boss->health--;        // Diminui a vida do chefe
+            bullets[i].active = 0;              // Desativa a bala do jogador
+            boss->health--;                     // Diminui a vida do chefe
+            boss->damaged = 1;                  // Marca o chefe como danificado
+            boss->damaged_time = al_get_time(); // Registra o tempo da colisão
             (*score)++;
             if (boss->health <= 0)
             {
@@ -52,7 +54,6 @@ void check_shooting_enemy_collision(Player *player, ShootingEnemy *enemy, int *g
         player->y < enemy->y + enemy->height &&
         player->y + player->height > enemy->y)
     {
-
         if (!player->invulnerable)
         {
             player->lives--;
@@ -77,7 +78,6 @@ void check_enemy_bullet_collisions(Player *player, ShootingEnemy *enemy, int *ga
             enemy->bullets[i].y < player->y + player->height &&
             enemy->bullets[i].y + enemy->bullets[i].height > player->y)
         {
-
             if (!player->invulnerable)
             {
                 player->lives--;
@@ -107,11 +107,13 @@ void check_collisions(Player *player, Bullet bullets[], int bullet_count, Enemy 
                     bullets[i].y < enemies[j].y + enemies[j].height &&
                     bullets[i].y + bullets[i].height > enemies[j].y)
                 {
-                    bullets[i].active = 0;
-                    enemies[j].health--;
+                    bullets[i].active = 0;                   // Desativa a bala
+                    enemies[j].health--;                     // Diminui a vida
+                    enemies[j].damaged = 1;                  // Marca como danificado
+                    enemies[j].damaged_time = al_get_time(); // Registra o tempo
                     (*score)++;
                     if (enemies[j].health <= 0)
-                        enemies[j].active = 0;
+                        enemies[j].active = 0; // Desativa o inimigo
                 }
             }
 
@@ -124,11 +126,13 @@ void check_collisions(Player *player, Bullet bullets[], int bullet_count, Enemy 
                     bullets[i].y < shooting_enemies[k].y + shooting_enemies[k].height &&
                     bullets[i].y + bullets[i].height > shooting_enemies[k].y)
                 {
-                    bullets[i].active = 0;        // Desativa a bala do jogador
-                    shooting_enemies[k].health--; // Diminui a vida do inimigo que dispara
+                    bullets[i].active = 0;                            // Desativa a bala
+                    shooting_enemies[k].health--;                     // Diminui a vida
+                    shooting_enemies[k].damaged = 1;                  // Marca como danificado
+                    shooting_enemies[k].damaged_time = al_get_time(); // Registra o tempo
                     (*score)++;
                     if (shooting_enemies[k].health <= 0)
-                        shooting_enemies[k].active = 0; // Desativa o inimigo se a vida for zero
+                        shooting_enemies[k].active = 0; // Desativa o inimigo
                 }
             }
         }

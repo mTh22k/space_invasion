@@ -30,7 +30,7 @@
 #define FIRE_INTERVAL 0.2
 #define INVULNERABILITY_TIME 1.5
 #define BOSS_SHOT_INTERVAL 0.4
-#define TIME_TO_BOSS 15
+#define TIME_TO_BOSS 30
 #define SCROLL_SPEED 60
 #define EXPLOSION_FRAME_COUNT 6
 
@@ -66,6 +66,8 @@ typedef struct
     float vertical_speed;
     float original_y;
     int moving_up;
+    int damaged;         // Flag indicando se está piscando
+    double damaged_time; // Tempo em que começou o piscamento
 } Enemy;
 
 typedef struct
@@ -94,6 +96,8 @@ typedef struct
     EnemyBullet bullets[10];
     double last_shot_time;
     int moving_up;
+    int damaged;         // Flag indicando se está piscando
+    double damaged_time; // Tempo em que começou o piscamento
 } ShootingEnemy;
 
 typedef struct
@@ -105,6 +109,15 @@ typedef struct
     int health;
     int horizontal_speed;
     double last_shot_time;
+    int damaged;         // Flag indicando se está piscando
+    double damaged_time; // Tempo em que começou o piscamento
 } Boss;
+
+typedef struct ImpactMark
+{
+    float x, y; // Posição da marca de impacto
+    float time; // Tempo em que a marca foi criada
+    int active; // Se a marca de impacto ainda está ativa
+} ImpactMark;
 
 #endif // STRUCTS_H

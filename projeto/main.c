@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
+#include <stdbool.h>
 
 #include "player.h"
 #include "bullet.h"
@@ -29,9 +30,10 @@
 #define FIRE_INTERVAL 0.2        // Intervalo de disparo em segundos
 #define INVULNERABILITY_TIME 1.5 // Tempo de invulnerabilidade em segundos
 #define BOSS_SHOT_INTERVAL 0.4
-#define TIME_TO_BOSS 15
+#define TIME_TO_BOSS 30
 #define SCROLL_SPEED 60
 #define EXPLOSION_FRAME_COUNT 6
+
 
 int main()
 {
@@ -40,10 +42,13 @@ int main()
     ALLEGRO_DISPLAY *display = al_create_display(SCREEN_WIDTH, SCREEN_HEIGHT);
     ALLEGRO_EVENT_QUEUE *event_queue = al_create_event_queue();
     ALLEGRO_TIMER *timer = al_create_timer(1.0 / 60);
-    ALLEGRO_FONT *font = al_create_builtin_font();
+    ALLEGRO_FONT *font = al_load_ttf_font("fonts/ATC.ttf", 12, 0);
+    ALLEGRO_FONT *font_menu = al_load_ttf_font("fonts/menu_f.ttf", 50, 0);
     ALLEGRO_BITMAP *background = al_load_bitmap("imagens/background.png");
     ALLEGRO_BITMAP *background_2 = al_load_bitmap("imagens/background_2.png");
     ALLEGRO_BITMAP *player_sprite = al_load_bitmap("imagens/nave.png");
+    ALLEGRO_BITMAP *player_sprite_dir = al_load_bitmap("imagens/nave_dir.png");
+    ALLEGRO_BITMAP *player_sprite_esq = al_load_bitmap("imagens/nave_esq.png");
     ALLEGRO_BITMAP *bullet_sprite = al_load_bitmap("imagens/bullet.png");
     ALLEGRO_BITMAP *enemy_sprite = al_load_bitmap("imagens/enemy.png");
     ALLEGRO_BITMAP *enemy_sprite_2 = al_load_bitmap("imagens/enemy_2.png");
@@ -74,6 +79,8 @@ int main()
     init_enemies(enemies, MAX_ENEMIES);
     init_enemy_bullets(enemy_bullets, MAX_BULLET_COUNT); // Adicione essa linha na função main
     init_boss_bullets(boss_bullets, MAX_BOSS_BULLETS);
+    ImpactMark impact_marks[MAX_ENEMIES]; // Para inimigos normais
+    ImpactMark shooting_enemy_impact_marks[MAX_SHOOTING_ENEMIES];
 
     int firing = 0;
     int paused = 0;
@@ -101,44 +108,13 @@ int main()
         explosion_bitmaps[i] = al_load_bitmap(explosion_frames[i]);
     }
 
-    // Inicializa os recursos do menu
-    init_menu_resources();
-
-    // Variável para controlar o loop do menu
-    int menu_running = 1;
-
-    // Loop do menu
-    while (menu_running)
-    {
-        draw_menu();
-
-        ALLEGRO_EVENT ev;
-        al_wait_for_event(event_queue, &ev);
-
-        if (ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE)
-        {
-            menu_running = 0;
-        }
-        else if (ev.type == ALLEGRO_EVENT_KEY_DOWN)
-        {
-            switch (ev.keyboard.keycode)
-            {
-            case ALLEGRO_KEY_1: // Inicia o jogo ao pressionar 1
-                menu_running = 0;
-                break;
-            case ALLEGRO_KEY_2: // Fecha o jogo ao pressionar 2
-                cleanup_menu_resources();
-                al_destroy_display(display);
-                al_destroy_event_queue(event_queue);
-                return 0;
-            }
-        }
-    }
-
     al_start_timer(timer);
-    double start_time = al_get_time(); // Tempo inicial
+    // Loop do menu
+    run_menu(font_menu, background, event_queue, display);
 
-    cleanup_menu_resources();
+    al_flush_event_queue(event_queue);
+
+    double start_time = al_get_time(); // Tempo inicial
 
     while (1)
     {
@@ -236,11 +212,11 @@ int main()
 
                         if (game_phase < 2)
                         {
-                            show_transition_menu(display, event_queue, font, &continue_game, &exit_game);
+                            show_transition_menu(display, event_queue, font_menu, &continue_game, &exit_game);
                         }
                         else
                         {
-                            show_victory_message(font);
+                            show_victory_message(font_menu, &exit_game);
                         }
                         // Checar a escolha do jogador
                         if (exit_game)
@@ -300,7 +276,7 @@ int main()
                 player.paused = !player.paused;
                 if (player.paused)
                 {
-                    draw_pause_message(font, display);
+                    draw_pause_message(font_menu, background, event_queue, display, &player, &exit_game);
                 }
                 break;
             }
@@ -308,7 +284,7 @@ int main()
         else if (game_over)
         {
             // Exibe o menu de fim de jogo
-            show_game_over_menu(display, event_queue, font, &restart_game, &exit_game);
+            show_game_over_menu(display, event_queue, font_menu, &restart_game, &exit_game);
 
             if (exit_game)
             {
@@ -355,7 +331,11 @@ int main()
 
         if (player.paused)
         {
-            draw_pause_message(font, display); // Mostra a mensagem de pausa
+            draw_pause_message(font_menu, background, event_queue, display, &player, &exit_game); // Mostra a mensagem de pausa
+        }
+        if (exit_game)
+        {
+            break; // Finaliza o jogo
         }
 
         if (redraw && al_is_event_queue_empty(event_queue))
@@ -373,13 +353,36 @@ int main()
                 al_draw_bitmap(background_2, background_x + al_get_bitmap_width(background_2), 0, 0);
             }
             // Desenhar o jogador com efeito de piscamento se estiver invulnerável
+
             if (player.invulnerable && ((int)(al_get_time() * 10) % 2 == 0))
             {
-                al_draw_bitmap(player_sprite, player.x, player.y, 0);
+                if (player.joystick.down)
+                {
+                    al_draw_bitmap(player_sprite_dir, player.x, player.y, 0); // Desenha a sprite para a direita
+                }
+                else if (player.joystick.up)
+                {
+                    al_draw_bitmap(player_sprite_esq, player.x, player.y, 0); // Desenha a sprite para a esquerda
+                }
+                else
+                {
+                    al_draw_bitmap(player_sprite, player.x, player.y, 0); // Desenha a sprite padrão
+                }
             }
             else if (!player.invulnerable)
             {
-                al_draw_bitmap(player_sprite, player.x, player.y, 0);
+                if (player.joystick.down)
+                {
+                    al_draw_bitmap(player_sprite_dir, player.x, player.y, 0); // Desenha a sprite para a direita
+                }
+                else if (player.joystick.up)
+                {
+                    al_draw_bitmap(player_sprite_esq, player.x, player.y, 0); // Desenha a sprite para a esquerda
+                }
+                else
+                {
+                    al_draw_bitmap(player_sprite, player.x, player.y, 0); // Desenha a sprite padrão
+                }
             }
 
             // Chamar a função para desenhar a vida do jogador
@@ -389,7 +392,7 @@ int main()
             for (int i = 0; i < MAX_BULLETS; i++)
             {
                 if (bullets[i].active)
-                    al_draw_bitmap(bullet_sprite, bullets[i].x, bullets[i].y, 0);
+                    al_draw_bitmap(bullet_sprite, bullets[i].x + 50, bullets[i].y + 20, 0);
             }
 
             if (remaining_time > 0)
