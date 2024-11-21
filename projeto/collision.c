@@ -92,8 +92,10 @@ void check_enemy_bullet_collisions(Player *player, ShootingEnemy *enemy, int *ga
     }
 }
 
-void check_collisions(Player *player, Bullet bullets[], int bullet_count, Enemy enemies[], int enemy_count, ShootingEnemy shooting_enemies[], int shooting_enemy_count, int *score, int *game_over)
+void check_collisions(Player *player, Bullet bullets[], int bullet_count, Enemy enemies[], int enemy_count, ShootingEnemy shooting_enemies[], int shooting_enemy_count, Item *item, int *score, int *game_over)
 {
+    static int enemy_destroyed_count = 0;
+
     // Verificar colisões entre balas do jogador e inimigos normais
     for (int i = 0; i < bullet_count; i++)
     {
@@ -108,12 +110,25 @@ void check_collisions(Player *player, Bullet bullets[], int bullet_count, Enemy 
                     bullets[i].y + bullets[i].height > enemies[j].y)
                 {
                     bullets[i].active = 0;                   // Desativa a bala
-                    enemies[j].health--;                     // Diminui a vida
+                    enemies[j].health--;                     // Diminui a vida do inimigo
                     enemies[j].damaged = 1;                  // Marca como danificado
                     enemies[j].damaged_time = al_get_time(); // Registra o tempo
                     (*score)++;
+
+                    // Se o inimigo é destruído, conta e gera o item
                     if (enemies[j].health <= 0)
+                    {
                         enemies[j].active = 0; // Desativa o inimigo
+                        enemy_destroyed_count++;
+
+                        // Se for o terceiro inimigo destruído, gera o item
+                        if (enemy_destroyed_count == 3 && !item->active)
+                        {
+                            item->x = enemies[j].x;
+                            item->y = enemies[j].y;
+                            item->active = true;
+                        }
+                    }
                 }
             }
 
@@ -135,6 +150,18 @@ void check_collisions(Player *player, Bullet bullets[], int bullet_count, Enemy 
                         shooting_enemies[k].active = 0; // Desativa o inimigo
                 }
             }
+
+            if (item->active &&
+                player->x < item->x + 40 && // Supondo que o tamanho do item seja 32x32
+                player->x + player->width > item->x &&
+                player->y < item->y + 40 &&
+                player->y + player->height > item->y)
+            {
+                item->active = false; // O item é consumido quando o jogador colide com ele
+                player->special_attack_start_time = al_get_time();
+                player->special_attack_active = true;
+            }
+
         }
     }
 

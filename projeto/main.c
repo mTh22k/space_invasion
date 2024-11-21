@@ -34,7 +34,6 @@
 #define SCROLL_SPEED 60
 #define EXPLOSION_FRAME_COUNT 6
 
-
 int main()
 {
     init_allegro();
@@ -44,12 +43,14 @@ int main()
     ALLEGRO_TIMER *timer = al_create_timer(1.0 / 60);
     ALLEGRO_FONT *font = al_load_ttf_font("fonts/ATC.ttf", 12, 0);
     ALLEGRO_FONT *font_menu = al_load_ttf_font("fonts/menu_f.ttf", 50, 0);
+    ALLEGRO_FONT *font_warn = al_load_ttf_font("fonts/menu_f.ttf", 12, 0);
     ALLEGRO_BITMAP *background = al_load_bitmap("imagens/background.png");
     ALLEGRO_BITMAP *background_2 = al_load_bitmap("imagens/background_2.png");
     ALLEGRO_BITMAP *player_sprite = al_load_bitmap("imagens/nave.png");
     ALLEGRO_BITMAP *player_sprite_dir = al_load_bitmap("imagens/nave_dir.png");
     ALLEGRO_BITMAP *player_sprite_esq = al_load_bitmap("imagens/nave_esq.png");
     ALLEGRO_BITMAP *bullet_sprite = al_load_bitmap("imagens/bullet.png");
+    ALLEGRO_BITMAP *bullet_sprite_2 = al_load_bitmap("imagens/bullet_2.png");
     ALLEGRO_BITMAP *enemy_sprite = al_load_bitmap("imagens/enemy.png");
     ALLEGRO_BITMAP *enemy_sprite_2 = al_load_bitmap("imagens/enemy_2.png");
     ALLEGRO_BITMAP *shooting_enemy_sprite = al_load_bitmap("imagens/enemyShoot.png");
@@ -65,6 +66,8 @@ int main()
 
     int game_phase = 1;
 
+    
+
     Player player;
     Bullet bullets[MAX_BULLETS];
     Enemy enemies[MAX_ENEMIES];
@@ -79,8 +82,9 @@ int main()
     init_enemies(enemies, MAX_ENEMIES);
     init_enemy_bullets(enemy_bullets, MAX_BULLET_COUNT); // Adicione essa linha na função main
     init_boss_bullets(boss_bullets, MAX_BOSS_BULLETS);
-    ImpactMark impact_marks[MAX_ENEMIES]; // Para inimigos normais
-    ImpactMark shooting_enemy_impact_marks[MAX_SHOOTING_ENEMIES];
+
+    ALLEGRO_BITMAP *item_sprite = al_load_bitmap("imagens/item.png");
+    Item item = {0, 0, false, item_sprite}; // item_sprite é o sprite do item
 
     int firing = 0;
     int paused = 0;
@@ -169,7 +173,8 @@ int main()
                         }
 
                         move_enemies(enemies, MAX_ENEMIES, game_phase);
-                        check_collisions(&player, bullets, MAX_BULLETS, enemies, MAX_ENEMIES, shooting_enemies, MAX_SHOOTING_ENEMIES, &score, &game_over);
+                        check_collisions(&player, bullets, MAX_BULLETS, enemies, MAX_ENEMIES, shooting_enemies, MAX_SHOOTING_ENEMIES, &item, &score, &game_over);
+
                         for (int i = 0; i < MAX_SHOOTING_ENEMIES; i++)
                         {
                             move_shooting_enemy(&shooting_enemies[i]);                                // Mover todos os inimigos que atiram
@@ -236,7 +241,7 @@ int main()
                     }
 
                     move_player(&player);
-                    move_bullets(bullets, MAX_BULLETS);
+                    move_bullets(bullets, MAX_BULLETS, &player, font_menu);
 
                     // Lógica de invulnerabilidade
                     if (player.invulnerable && (al_get_time() - player.invulnerable_time) > INVULNERABILITY_TIME)
@@ -392,7 +397,17 @@ int main()
             for (int i = 0; i < MAX_BULLETS; i++)
             {
                 if (bullets[i].active)
-                    al_draw_bitmap(bullet_sprite, bullets[i].x + 50, bullets[i].y + 20, 0);
+
+                    if (player.special_attack_active == true)
+                    {
+                        al_draw_bitmap(bullet_sprite_2, bullets[i].x + 50, bullets[i].y + 20, 0);
+
+                    } else 
+                    {
+                        al_draw_bitmap(bullet_sprite, bullets[i].x + 50, bullets[i].y + 20, 0);
+                    }
+                    
+    
             }
 
             if (remaining_time > 0)
@@ -411,32 +426,47 @@ int main()
                         }
                 }
 
-                // Renderização dos inimigos que atiram
-                for (int i = 0; i < MAX_SHOOTING_ENEMIES; i++)
+                if (item.active)
                 {
-                    ShootingEnemy shooting_enemy = shooting_enemies[i]; // Obter o inimigo atual
+                    al_draw_bitmap(item.sprite, item.x, item.y, 0); // Desenha o item no lugar onde ele foi gerado
+                }
 
-                    if (shooting_enemy.active)
+                if (player.special_attack_active == true)
+                {
+                    al_draw_text(font_warn, al_map_rgb(255, 255, 255), 400, 550, ALLEGRO_ALIGN_CENTRE, "Voce pegou disparos rapidos por 6 segundos!");
+                }
+
+                    // Renderização dos inimigos que atiram
+                    for (int i = 0; i < MAX_SHOOTING_ENEMIES; i++)
                     {
-                        if (game_phase == 1)
-                        {
-                            al_draw_bitmap(shooting_enemy_sprite, shooting_enemy.x, shooting_enemy.y, 0); // Desenhar o inimigo
-                        }
-                        else if (game_phase == 2)
-                        {
-                            al_draw_bitmap(shooting_enemy_sprite_2, shooting_enemy.x, shooting_enemy.y, 0); // Desenhar o inimigo
-                        }
+                        ShootingEnemy shooting_enemy = shooting_enemies[i]; // Obter o inimigo atual
 
-                        // Renderizar os projéteis do inimigo
-                        for (int j = 0; j < 10; j++) // Substitua 10 pelo número máximo de projéteis que cada inimigo pode ter
+                        if (shooting_enemy.active)
                         {
-                            if (shooting_enemy.bullets[j].active)
+                            if (game_phase == 1)
                             {
-                                al_draw_bitmap(enemy_bullet_sprite, shooting_enemy.bullets[j].x, shooting_enemy.bullets[j].y, 0); // Desenhar o projétil
+                                al_draw_bitmap(shooting_enemy_sprite, shooting_enemy.x, shooting_enemy.y, 0); // Desenhar o inimigo
+                            }
+                            else if (game_phase == 2)
+                            {
+                                al_draw_bitmap(shooting_enemy_sprite_2, shooting_enemy.x, shooting_enemy.y, 0); // Desenhar o inimigo
+                            }
+
+                            // Renderizar os projéteis do inimigo
+                            for (int j = 0; j < 10; j++) // Substitua 10 pelo número máximo de projéteis que cada inimigo pode ter
+                            {
+                                if (shooting_enemy.bullets[j].active)
+                                {
+                                    al_draw_bitmap(enemy_bullet_sprite, shooting_enemy.bullets[j].x, shooting_enemy.bullets[j].y, 0); // Desenhar o projétil
+                                }
                             }
                         }
                     }
                 }
+
+            if (item.active)
+            {
+                al_draw_bitmap(item.sprite, item.x, item.y, 0); // Desenha o item no lugar onde ele foi gerado
             }
 
             if (boss.active)

@@ -48,6 +48,8 @@ typedef struct
     double invulnerable_time;
     Joystick joystick;
     int paused;
+    bool special_attack_active;
+    float special_attack_start_time;
 } Player;
 
 typedef struct
@@ -113,11 +115,11 @@ typedef struct
     double damaged_time; // Tempo em que começou o piscamento
 } Boss;
 
-typedef struct ImpactMark
+typedef struct
 {
-    float x, y; // Posição da marca de impacto
-    float time; // Tempo em que a marca foi criada
-    int active; // Se a marca de impacto ainda está ativa
-} ImpactMark;
+    int x, y;
+    bool active;
+    ALLEGRO_BITMAP *sprite; // Ponteiro para o sprite
+} Item;
 
 #endif // STRUCTS_H

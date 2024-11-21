@@ -11,6 +11,7 @@ void init_player(Player *player)
     player->invulnerable_time = 0;
     player->joystick.right = player->joystick.left = player->joystick.up = player->joystick.down = player->joystick.fire = 0;
     player->paused = 0;
+    player->special_attack_active = false;
 }
 
 void move_player(Player *player)
