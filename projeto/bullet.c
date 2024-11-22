@@ -4,8 +4,9 @@
 
 void init_bullets(Bullet bullets[], int count)
 {
-    for (int i = 0; i < count; i++)
+    for (int i = 0; i < count; i++) {
         bullets[i].active = 0;
+    }
 }
 
 void move_bullets(Bullet bullets[], int count, Player *player, ALLEGRO_FONT *font)
@@ -52,8 +53,8 @@ void fire_bullet(Bullet bullets[], int count, float x, float y)
             bullets[i].x = x + 20;
             bullets[i].y = y - 5;
             bullets[i].active = 1;
-            bullets[i].width = 45;
-            bullets[i].height = 25;
+            bullets[i].width = 50;
+            bullets[i].height = 30;
             break;
         }
     }

@@ -30,7 +30,7 @@
 #define FIRE_INTERVAL 0.2        // Intervalo de disparo em segundos
 #define INVULNERABILITY_TIME 1.5 // Tempo de invulnerabilidade em segundos
 #define BOSS_SHOT_INTERVAL 0.4
-#define TIME_TO_BOSS 5
+#define TIME_TO_BOSS 15
 #define SCROLL_SPEED 60
 #define EXPLOSION_FRAME_COUNT 6
 
@@ -377,14 +377,26 @@ int main()
                 if (player.joystick.down)
                 {
                     al_draw_bitmap(player_sprite_dir, player.x, player.y, 0); // Desenha a sprite para a direita
+                     al_draw_rectangle(player.x, player.y, 
+                      player.x + al_get_bitmap_width(player_sprite_dir), 
+                      player.y + al_get_bitmap_height(player_sprite_dir), 
+                      al_map_rgb(0, 255, 0), 2);
                 }
                 else if (player.joystick.up)
                 {
                     al_draw_bitmap(player_sprite_esq, player.x, player.y, 0); // Desenha a sprite para a esquerda
+                     al_draw_rectangle(player.x, player.y, 
+                      player.x + al_get_bitmap_width(player_sprite_esq), 
+                      player.y + al_get_bitmap_height(player_sprite_esq), 
+                      al_map_rgb(0, 255, 0), 2);
                 }
                 else
                 {
                     al_draw_bitmap(player_sprite, player.x, player.y, 0); // Desenha a sprite padrão
+                     al_draw_rectangle(player.x, player.y, 
+                      player.x + al_get_bitmap_width(player_sprite), 
+                      player.y + al_get_bitmap_height(player_sprite), 
+                      al_map_rgb(0, 255, 0), 2);
                 }
             }
             else if (!player.invulnerable)
@@ -392,14 +404,26 @@ int main()
                 if (player.joystick.down)
                 {
                     al_draw_bitmap(player_sprite_dir, player.x, player.y, 0); // Desenha a sprite para a direita
+                     al_draw_rectangle(player.x, player.y, 
+                      player.x + al_get_bitmap_width(player_sprite_dir), 
+                      player.y + al_get_bitmap_height(player_sprite_dir), 
+                      al_map_rgb(0, 255, 0), 2);
                 }
                 else if (player.joystick.up)
                 {
                     al_draw_bitmap(player_sprite_esq, player.x, player.y, 0); // Desenha a sprite para a esquerda
+                     al_draw_rectangle(player.x, player.y, 
+                      player.x + al_get_bitmap_width(player_sprite_esq), 
+                      player.y + al_get_bitmap_height(player_sprite_esq), 
+                      al_map_rgb(0, 255, 0), 2);
                 }
                 else
                 {
                     al_draw_bitmap(player_sprite, player.x, player.y, 0); // Desenha a sprite padrão
+                     al_draw_rectangle(player.x, player.y, 
+                      player.x + al_get_bitmap_width(player_sprite), 
+                      player.y + al_get_bitmap_height(player_sprite), 
+                      al_map_rgb(0, 255, 0), 2);
                 }
             }
 
@@ -414,7 +438,7 @@ int main()
                     // Desenhando o retângulo em volta da hitbox
                     al_draw_rectangle(bullets[i].x + 10, bullets[i].y + 5,
                                       bullets[i].x + 10 + bullet_sprite_width, bullets[i].y + 5 + bullet_sprite_height,
-                                      al_map_rgb(255, 0, 0), 2); // cor vermelha e largura de linha 2
+                                      al_map_rgb(0, 255, 0), 2); // cor vermelha e largura de linha 2
 
                     // Desenhando a bala
                     if (player.special_attack_active == true)
@@ -436,10 +460,16 @@ int main()
                     if (enemies[i].active)
                         if (game_phase == 1)
                         {
-                            al_draw_bitmap(enemy_sprite, enemies[i].x, enemies[i].y, 0);
+                            al_draw_rectangle(enemies[i].x, enemies[i].y,
+                                              enemies[i].x + enemies[i].width, enemies[i].y + enemies[i].height,
+                                              al_map_rgb(255, 0, 0), 2);
+                            al_draw_bitmap(enemy_sprite, enemies[i].x, enemies[i].y + 0, 0);
                         }
                         else if (game_phase == 2)
                         {
+                             al_draw_rectangle(enemies[i].x, enemies[i].y,
+                          enemies[i].x + enemies[i].width, enemies[i].y + enemies[i].height,
+                          al_map_rgb(255, 0, 0), 2);
                             al_draw_bitmap(enemy_sprite_2, enemies[i].x, enemies[i].y, 0);
                         }
                 }
@@ -463,10 +493,16 @@ int main()
                     {
                         if (game_phase == 1)
                         {
+                            al_draw_rectangle(shooting_enemies[i].x, shooting_enemies[i].y,
+                          shooting_enemies[i].x + shooting_enemies[i].width, shooting_enemies[i].y + shooting_enemies[i].height,
+                          al_map_rgb(0, 255, 0), 2);
                             al_draw_bitmap(shooting_enemy_sprite, shooting_enemy.x, shooting_enemy.y, 0); // Desenhar o inimigo
                         }
                         else if (game_phase == 2)
                         {
+                            al_draw_rectangle(shooting_enemies[i].x, shooting_enemies[i].y,
+                          shooting_enemies[i].x + shooting_enemies[i].width, shooting_enemies[i].y + shooting_enemies[i].height,
+                          al_map_rgb(0, 255, 0), 2);
                             al_draw_bitmap(shooting_enemy_sprite_2, shooting_enemy.x, shooting_enemy.y, 0); // Desenhar o inimigo
                         }
 
@@ -490,6 +526,10 @@ int main()
 
             if (item.active)
             {
+                al_draw_rectangle(item.x, item.y,
+                                  item.x + al_get_bitmap_width(item.sprite),
+                                  item.y + al_get_bitmap_height(item.sprite),
+                                  al_map_rgb(255, 0, 0), 2);
                 al_draw_bitmap(item.sprite, item.x, item.y, 0); // Desenha o item no lugar onde ele foi gerado
             }
 
@@ -515,10 +555,16 @@ int main()
                 move_boss(&boss, game_phase);
                 if (game_phase == 1)
                 {
+                    al_draw_rectangle(boss.x, boss.y,
+                      boss.x + boss.width, boss.y + boss.height,
+                      al_map_rgb(0, 0, 255), 2);
                     al_draw_bitmap(boss_sprite, boss.x, boss.y, 0); // Desenhar o inimigo
                 }
                 else if (game_phase == 2)
                 {
+                    al_draw_rectangle(boss.x, boss.y,
+                                      boss.x + boss.width, boss.y + boss.height,
+                                      al_map_rgb(0, 0, 255), 2);
                     al_draw_bitmap(boss_sprite_2, boss.x, boss.y, 0); // Desenhar o inimigo
                 }
             }

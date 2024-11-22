@@ -76,8 +76,8 @@ void init_shooting_enemies(ShootingEnemy *enemy, int game_phase)
 {
     enemy->x = SCREEN_WIDTH + rand() % 100;
     enemy->y = rand() % (SCREEN_HEIGHT - 30);
-    enemy->width = 50;
-    enemy->height = 30;
+    enemy->width = 100;
+    enemy->height = 50;
     enemy->active = 1;
     enemy->health = 3;
     enemy->vertical_speed = 0.5; // Velocidade aleatória entre 1.0 e 2.0
@@ -192,8 +192,8 @@ void generate_enemy(Enemy enemies[], int count, int player_width, int player_hei
         {
             enemies[i].x = SCREEN_WIDTH + rand() % 100;
             enemies[i].y = rand() % SCREEN_HEIGHT;
-            enemies[i].width = player_width;
-            enemies[i].height = player_height;
+            enemies[i].width = 70;
+            enemies[i].height = 40;
             enemies[i].active = 1;
             enemies[i].health = 2;
             break;
