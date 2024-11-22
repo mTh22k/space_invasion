@@ -30,7 +30,7 @@
 #define FIRE_INTERVAL 0.2
 #define INVULNERABILITY_TIME 1.5
 #define BOSS_SHOT_INTERVAL 0.4
-#define TIME_TO_BOSS 30
+#define TIME_TO_BOSS 5
 #define SCROLL_SPEED 60
 #define EXPLOSION_FRAME_COUNT 6
 
@@ -113,6 +113,8 @@ typedef struct
     double last_shot_time;
     int damaged;         // Flag indicando se está piscando
     double damaged_time; // Tempo em que começou o piscamento
+    double last_special_attack_time; // Tempo do último ataque especial
+    int special_attack_active;       // Indica se o ataque especial está ativo
 } Boss;
 
 typedef struct

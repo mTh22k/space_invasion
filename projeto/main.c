@@ -30,7 +30,7 @@
 #define FIRE_INTERVAL 0.2        // Intervalo de disparo em segundos
 #define INVULNERABILITY_TIME 1.5 // Tempo de invulnerabilidade em segundos
 #define BOSS_SHOT_INTERVAL 0.4
-#define TIME_TO_BOSS 30
+#define TIME_TO_BOSS 5
 #define SCROLL_SPEED 60
 #define EXPLOSION_FRAME_COUNT 6
 
@@ -59,6 +59,7 @@ int main()
     ALLEGRO_BITMAP *boss_sprite = al_load_bitmap("imagens/ship_1.png");
     ALLEGRO_BITMAP *boss_sprite_2 = al_load_bitmap("imagens/ship_6.png");
     ALLEGRO_BITMAP *boss_bullet_sprite = al_load_bitmap("imagens/bulletEnemy.png");
+    ALLEGRO_BITMAP *boss_bullet_special = al_load_bitmap("imagens/bullet_boss1.png");
 
     al_register_event_source(event_queue, al_get_display_event_source(display));
     al_register_event_source(event_queue, al_get_keyboard_event_source());
@@ -66,7 +67,13 @@ int main()
 
     int game_phase = 1;
 
-    
+    int bullet_sprite_width = al_get_bitmap_width(bullet_sprite);
+    int bullet_sprite_height = al_get_bitmap_height(bullet_sprite);
+
+    int bullet_sprite_2_width = al_get_bitmap_width(bullet_sprite_2);
+    int bullet_sprite_2_height = al_get_bitmap_height(bullet_sprite_2);
+    int enemy_bullet_width = al_get_bitmap_width(enemy_bullet_sprite);
+    int enemy_bullet_height = al_get_bitmap_height(enemy_bullet_sprite);
 
     Player player;
     Bullet bullets[MAX_BULLETS];
@@ -97,6 +104,7 @@ int main()
     int victory_state = 0; // 0 = sem vitória, 1 = animação de explosão, 2 = tela de vitória
     int restart_game = 0;
     int exit_game = 0;
+    float background_speed = 2.0; // Velocidade padrão do plano de fundo
 
     const char *explosion_frames[EXPLOSION_FRAME_COUNT] = {
         "imagens/frame1.png",
@@ -134,7 +142,8 @@ int main()
         {
             if (!game_over)
             {
-                background_x -= 2; // Controla a velocidade de rolagem do fundo
+                background_x -= background_speed;
+                // Controla a velocidade de rolagem do fundo
                 if (background_x <= -al_get_bitmap_width(background))
                 {
                     background_x = 0;
@@ -199,7 +208,7 @@ int main()
                     if (boss.active)
                     {
                         // Verificar colisões entre balas do jogador e o chefe
-                        shoot_boss_bullet(&boss, boss_bullets, &boss_bullet_count, game_phase);
+                        shoot_boss_bullet(&boss, boss_bullets, &boss_bullet_count);
                         move_boss_bullets(boss_bullets, MAX_BOSS_BULLETS);
                         check_boss_bullet_collisions(&player, boss_bullets, &game_over, game_phase);
                         check_boss_collision(&player, bullets, MAX_BULLETS, &boss, &score, &player_won, &game_over);
@@ -270,9 +279,11 @@ int main()
                 break;
             case ALLEGRO_KEY_A:
                 player.joystick.left = 1;
+                background_speed = 0.5;
                 break;
             case ALLEGRO_KEY_D:
                 player.joystick.right = 1;
+                background_speed = 4.0;
                 break;
             case ALLEGRO_KEY_ENTER:
                 player.joystick.fire = 1;
@@ -324,9 +335,11 @@ int main()
                 break;
             case ALLEGRO_KEY_A:
                 player.joystick.left = 0;
+                background_speed = 2.0;
                 break;
             case ALLEGRO_KEY_D:
                 player.joystick.right = 0;
+                background_speed = 2.0;
                 break;
             case ALLEGRO_KEY_ENTER:
                 player.joystick.fire = 0;
@@ -397,17 +410,22 @@ int main()
             for (int i = 0; i < MAX_BULLETS; i++)
             {
                 if (bullets[i].active)
+                {
+                    // Desenhando o retângulo em volta da hitbox
+                    al_draw_rectangle(bullets[i].x + 10, bullets[i].y + 5,
+                                      bullets[i].x + 10 + bullet_sprite_width, bullets[i].y + 5 + bullet_sprite_height,
+                                      al_map_rgb(255, 0, 0), 2); // cor vermelha e largura de linha 2
 
+                    // Desenhando a bala
                     if (player.special_attack_active == true)
                     {
-                        al_draw_bitmap(bullet_sprite_2, bullets[i].x + 50, bullets[i].y + 20, 0);
-
-                    } else 
-                    {
-                        al_draw_bitmap(bullet_sprite, bullets[i].x + 50, bullets[i].y + 20, 0);
+                        al_draw_bitmap(bullet_sprite_2, bullets[i].x + 15, bullets[i].y + 10, 0);
                     }
-                    
-    
+                    else
+                    {
+                        al_draw_bitmap(bullet_sprite, bullets[i].x + 15, bullets[i].y + 10, 0);
+                    }
+                }
             }
 
             if (remaining_time > 0)
@@ -436,33 +454,39 @@ int main()
                     al_draw_text(font_warn, al_map_rgb(255, 255, 255), 400, 550, ALLEGRO_ALIGN_CENTRE, "Voce pegou disparos rapidos por 6 segundos!");
                 }
 
-                    // Renderização dos inimigos que atiram
-                    for (int i = 0; i < MAX_SHOOTING_ENEMIES; i++)
+                // Renderização dos inimigos que atiram
+                for (int i = 0; i < MAX_SHOOTING_ENEMIES; i++)
+                {
+                    ShootingEnemy shooting_enemy = shooting_enemies[i]; // Obter o inimigo atual
+
+                    if (shooting_enemy.active)
                     {
-                        ShootingEnemy shooting_enemy = shooting_enemies[i]; // Obter o inimigo atual
-
-                        if (shooting_enemy.active)
+                        if (game_phase == 1)
                         {
-                            if (game_phase == 1)
-                            {
-                                al_draw_bitmap(shooting_enemy_sprite, shooting_enemy.x, shooting_enemy.y, 0); // Desenhar o inimigo
-                            }
-                            else if (game_phase == 2)
-                            {
-                                al_draw_bitmap(shooting_enemy_sprite_2, shooting_enemy.x, shooting_enemy.y, 0); // Desenhar o inimigo
-                            }
+                            al_draw_bitmap(shooting_enemy_sprite, shooting_enemy.x, shooting_enemy.y, 0); // Desenhar o inimigo
+                        }
+                        else if (game_phase == 2)
+                        {
+                            al_draw_bitmap(shooting_enemy_sprite_2, shooting_enemy.x, shooting_enemy.y, 0); // Desenhar o inimigo
+                        }
 
-                            // Renderizar os projéteis do inimigo
-                            for (int j = 0; j < 10; j++) // Substitua 10 pelo número máximo de projéteis que cada inimigo pode ter
+                        // Renderizar os projéteis do inimigo
+                        for (int j = 0; j < 10; j++) // Substitua 10 pelo número máximo de projéteis que cada inimigo pode ter
+                        {
+                            if (shooting_enemy.bullets[j].active)
                             {
-                                if (shooting_enemy.bullets[j].active)
-                                {
-                                    al_draw_bitmap(enemy_bullet_sprite, shooting_enemy.bullets[j].x, shooting_enemy.bullets[j].y, 0); // Desenhar o projétil
-                                }
+                                // Desenhando o retângulo em volta da hitbox do projétil do inimigo
+                                al_draw_rectangle(shooting_enemy.bullets[j].x - 30, shooting_enemy.bullets[j].y + 20,
+                                                  shooting_enemy.bullets[j].x - 30 + enemy_bullet_width, shooting_enemy.bullets[j].y + 20 + enemy_bullet_height,
+                                                  al_map_rgb(0, 255, 0), 2); // cor verde e largura de linha 2
+
+                                // Desenhando o projétil do inimigo
+                                al_draw_bitmap(enemy_bullet_sprite, shooting_enemy.bullets[j].x - 30, shooting_enemy.bullets[j].y + 20, 0);
                             }
                         }
                     }
                 }
+            }
 
             if (item.active)
             {
@@ -475,7 +499,17 @@ int main()
                 {
                     if (boss_bullets[i].active)
                     {
-                        al_draw_bitmap(boss_bullet_sprite, boss_bullets[i].x, boss_bullets[i].y, 0);
+                    
+                            // Caso contrário, desenha a sprite normal das balas
+                            al_draw_bitmap(boss_bullet_sprite, boss_bullets[i].x, boss_bullets[i].y, 0);
+                            al_draw_rectangle(
+                                boss_bullets[i].x,                          // X inicial da bala
+                                boss_bullets[i].y,                          // Y inicial da bala
+                                boss_bullets[i].x + boss_bullets[i].width,  // X final da bala (X + largura)
+                                boss_bullets[i].y + boss_bullets[i].height, // Y final da bala (Y + altura)
+                                al_map_rgb(255, 0, 0),                      // Cor do retângulo (vermelho, por exemplo)
+                                2.0                                         // Largura da linha do retângulo
+                            );
                     }
                 }
                 move_boss(&boss, game_phase);
