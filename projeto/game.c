@@ -143,11 +143,26 @@ void draw_pause_message(ALLEGRO_FONT *font, ALLEGRO_BITMAP *background, ALLEGRO_
     }
 }
 
-void draw_player_life(ALLEGRO_FONT *font, Player *player)
+
+void draw_player_life(ALLEGRO_BITMAP *heart_full, ALLEGRO_BITMAP *heart_empty, Player *player)
 {
-    char life_text[20];
-    sprintf(life_text, "Vida: %d", player->lives);
-    al_draw_text(font, al_map_rgb(255, 255, 255), 400, 10, 0, life_text);
+    // Coordenadas para posicionar os corações
+    float x_start = 90; // Posição inicial no eixo X
+    float y_start = 10;  // Posição no eixo Y
+    float spacing = 40;  // Espaçamento entre os corações
+
+    // Desenha um coração cheio ou vazio para cada vida
+    for (int i = 0; i < 4; i++)
+    { // Assumindo que o jogador tem no máximo 4 vidas
+        if (i < player->lives)
+        {
+            al_draw_bitmap(heart_full, x_start + i * spacing, y_start, 0); // Desenhar coração cheio
+        }
+        else
+        {
+            al_draw_bitmap(heart_empty, x_start + i * spacing, y_start, 0); // Desenhar coração vazio
+        }
+    }
 }
 
 void draw_timer(ALLEGRO_FONT *font, double elapsed_time)
@@ -427,7 +442,7 @@ void show_transition_menu(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_q
     al_destroy_bitmap(background);
 }
 
-void init_second_phase(Player *player, Enemy enemies[], Bullet bullets[], ShootingEnemy shooting_enemies[], Boss *boss, int *victory_state, int *player_won, double *start_time, int game_phase)
+void init_second_phase(Player *player, Enemy enemies[], Bullet bullets[], ShootingEnemy shooting_enemies[], Boss *boss, int *victory_state, int *player_won, double *start_time, int *enemy_destroyed_count, int game_phase)
 {
     boss->health = 23;
     boss->speed = 6;             // Velocidade vertical
@@ -438,6 +453,7 @@ void init_second_phase(Player *player, Enemy enemies[], Bullet bullets[], Shooti
     *player_won = 0;
     *start_time = al_get_time(); // Reinicia o tempo
     game_phase = 2;
+    *enemy_destroyed_count = 0;
 
     for (int i = 0; i < MAX_SHOOTING_ENEMIES; i++)
     {
@@ -608,9 +624,8 @@ void exibir_texto_gradualmente(const char *texto, ALLEGRO_FONT *fonte, float x, 
                 al_draw_text(font, al_map_rgb(0, 255, 255), 400, 20, ALLEGRO_ALIGN_CENTER, "CONTROLES");
                 al_draw_text(font, al_map_rgb(255, 255, 255), 400, 120, ALLEGRO_ALIGN_CENTER, "MOVER: W, A, S, D");
                 al_draw_text(font, al_map_rgb(255, 255, 255), 400, 220, ALLEGRO_ALIGN_CENTER, "ATIRAR: ENTER");
-                al_draw_text(font, al_map_rgb(255, 255, 255), 400, 320, ALLEGRO_ALIGN_CENTER, "HABILIDADE ESPECIAL: E");
-                al_draw_text(font, al_map_rgb(255, 255, 255), 400, 420, ALLEGRO_ALIGN_CENTER, "PAUSAR: P");
-                al_draw_text(font, al_map_rgb(255, 255, 255), 400, 520, ALLEGRO_ALIGN_CENTER, "VOLTAR: ENTER");
+                al_draw_text(font, al_map_rgb(255, 255, 255), 400, 320, ALLEGRO_ALIGN_CENTER, "PAUSAR: P");
+                al_draw_text(font, al_map_rgb(0, 255, 255), 400, 520, ALLEGRO_ALIGN_CENTER, "VOLTAR: ENTER");
 
                 al_flip_display(); // Atualiza a tela
             }

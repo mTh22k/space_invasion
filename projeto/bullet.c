@@ -9,7 +9,7 @@ void init_bullets(Bullet bullets[], int count)
     }
 }
 
-void move_bullets(Bullet bullets[], int count, Player *player, ALLEGRO_FONT *font)
+void move_bullets(Bullet bullets[], int count, Player *player, ALLEGRO_FONT *font, int game_phase)
 {
     // Verifica o tempo do ataque especial
     if (player->special_attack_active)
@@ -25,22 +25,32 @@ void move_bullets(Bullet bullets[], int count, Player *player, ALLEGRO_FONT *fon
     // Movimento das balas
     for (int i = 0; i < count; i++)
     {
-        if (bullets[i].active)
-        {
-            if (player->special_attack_active == false)
-            {
-                bullets[i].x += BULLET_SPEED;
-            }
-            else
-            {
-                bullets[i].x += BULLET_SPEED * 4; // Tiro mais rápido durante o ataque especial
-            }
-            // Desativa a bala se ela sair da tela
-            if (bullets[i].x > SCREEN_WIDTH)
-            {
-                bullets[i].active = 0;
-            }
-        }
+       if (bullets[i].active)
+{
+    // Verificar se o jogador tem o ataque especial ativo
+    if (player->special_attack_active == false)
+    {
+        // Normal: velocidade padrão de disparo
+        bullets[i].x += BULLET_SPEED;
+    }
+    else if (game_phase == 1 && player->special_attack_active == true)
+    {
+        // Fase 1: ataque especial aumenta a velocidade do disparo
+        bullets[i].x += BULLET_SPEED * 4; // Tiro mais rápido durante o ataque especial
+    }
+    else if (game_phase == 2 && player->special_attack_active == true)
+    {
+        // Fase 2: ataque especial diminui a velocidade do disparo pela metade
+        bullets[i].x += BULLET_SPEED * 1.5; // Tiro mais lento durante o ataque especial da fase 2
+    }
+
+    // Desativa a bala se ela sair da tela
+    if (bullets[i].x > SCREEN_WIDTH)
+    {
+        bullets[i].active = 0;
+    }
+}
+
     }
 }
 

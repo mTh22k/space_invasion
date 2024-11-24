@@ -36,6 +36,6 @@
 
 void init_bullets(Bullet bullets[], int count);
 void fire_bullet(Bullet bullets[], int count, float x, float y);
-void move_bullets(Bullet bullets[], int count, Player *player, ALLEGRO_FONT *font);
+void move_bullets(Bullet bullets[], int count, Player *player, ALLEGRO_FONT *font, int game_phase);
 
 #endif // BULLET_H

@@ -34,9 +34,9 @@
 #define SCROLL_SPEED 60
 #define EXPLOSION_FRAME_COUNT 6
 
-void check_boss_collision(Player *player, Bullet bullets[], int bullet_count, Boss *boss, int *score, int *player_won, int *game_over);
+void check_boss_collision(Player *player, Bullet bullets[], int bullet_count, Boss *boss, int *score, int *player_won, int *game_over, int game_phase);
 void check_shooting_enemy_collision(Player *player, ShootingEnemy *enemy, int *game_over);
 void check_enemy_bullet_collisions(Player *player, ShootingEnemy *enemy, int *game_over);
-void check_collisions(Player *player, Bullet bullets[], int bullet_count, Enemy enemies[], int enemy_count, ShootingEnemy shooting_enemies[], int shooting_enemy_count, Item *item, int *score, int *game_over);
+void check_collisions(Player *player, Bullet bullets[], int bullet_count, Enemy enemies[], int enemy_count, ShootingEnemy shooting_enemies[], int shooting_enemy_count, Item *item_phase1, Item *item_phase2, int *score, int *game_over, int *enemy_destroyed_count, int game_phase);
 
 #endif // COLLISION_H

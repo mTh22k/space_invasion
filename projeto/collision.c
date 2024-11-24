@@ -1,6 +1,8 @@
 #include "collision.h"
 
-void check_boss_collision(Player *player, Bullet bullets[], int bullet_count, Boss *boss, int *score, int *player_won, int *game_over)
+#include <stdio.h>
+
+void check_boss_collision(Player *player, Bullet bullets[], int bullet_count, Boss *boss, int *score, int *player_won, int *game_over, int game_phase)
 {
     // Verificar colisão entre balas do jogador e o chefe
     for (int i = 0; i < bullet_count; i++)
@@ -11,11 +13,21 @@ void check_boss_collision(Player *player, Bullet bullets[], int bullet_count, Bo
             bullets[i].y < boss->y + boss->height &&
             bullets[i].y + bullets[i].height > boss->y)
         {
-            bullets[i].active = 0;              // Desativa a bala do jogador
-            boss->health--;                     // Diminui a vida do chefe
+            bullets[i].active = 0; // Desativa a bala do jogador
+
+            if (game_phase == 2 && player->special_attack_active)
+            {
+                boss->health -= 2; // Aplica dano dobrado na fase 2 se o item foi consumido
+            }
+            else
+            {
+                boss->health--; // Aplica dano normal
+            }
+
             boss->damaged = 1;                  // Marca o chefe como danificado
             boss->damaged_time = al_get_time(); // Registra o tempo da colisão
             (*score)++;
+
             if (boss->health <= 0)
             {
                 boss->active = 0; // Desativa o chefe
@@ -92,9 +104,14 @@ void check_enemy_bullet_collisions(Player *player, ShootingEnemy *enemy, int *ga
     }
 }
 
-void check_collisions(Player *player, Bullet bullets[], int bullet_count, Enemy enemies[], int enemy_count, ShootingEnemy shooting_enemies[], int shooting_enemy_count, Item *item, int *score, int *game_over)
+void check_collisions(Player *player, Bullet bullets[], int bullet_count, Enemy enemies[], int enemy_count, ShootingEnemy shooting_enemies[], int shooting_enemy_count, Item *item_phase1, Item *item_phase2, int *score, int *game_over, int *enemy_destroyed_count, int game_phase)
 {
-    static int enemy_destroyed_count = 0;
+    // Reiniciar a contagem de inimigos destruídos ao começar a fase 2
+    // if (game_phase == 2)
+    // {
+    //     printf("atualizou pra 0\n");
+    //     enemy_destroyed_count = 0;
+    // }
 
     // Verificar colisões entre balas do jogador e inimigos normais
     for (int i = 0; i < bullet_count; i++)
@@ -110,23 +127,39 @@ void check_collisions(Player *player, Bullet bullets[], int bullet_count, Enemy 
                     bullets[i].y + bullets[i].height > enemies[j].y)
                 {
                     bullets[i].active = 0;                   // Desativa a bala
-                    enemies[j].health--;                     // Diminui a vida do inimigo
+                    // Aplica dano dobrado na fase 2 se o item foi consumido
+                    if (game_phase == 2 && player->special_attack_active)
+                    {
+                        enemies[j].health -= 2;
+                    }
+                    else
+                    {
+                        enemies[j].health--;
+                    } // Diminui a vida do inimigo
                     enemies[j].damaged = 1;                  // Marca como danificado
                     enemies[j].damaged_time = al_get_time(); // Registra o tempo
                     (*score)++;
 
-                    // Se o inimigo é destruído, conta e gera o item
+                    // Se o inimigo é destruído, conta e gera itens
                     if (enemies[j].health <= 0)
                     {
-                        enemies[j].active = 0; // Desativa o inimigo
-                        enemy_destroyed_count++;
+                        enemies[j].active = 0;      // Desativa o inimigo
+                        (*enemy_destroyed_count)++; // Dereferenciado o ponteiro
+                        printf("Inimigos destruídos: %d\n", *enemy_destroyed_count);
 
-                        // Se for o terceiro inimigo destruído, gera o item
-                        if (enemy_destroyed_count == 3 && !item->active)
+                        if (game_phase == 1 && item_phase1 != NULL && !item_phase1->active && *enemy_destroyed_count == 3)
                         {
-                            item->x = enemies[j].x;
-                            item->y = enemies[j].y;
-                            item->active = true;
+                            item_phase1->x = enemies[j].x;
+                            item_phase1->y = enemies[j].y;
+                            item_phase1->active = true;                                                  // Gera o item da fase 1
+                            printf("Item fase 1 gerado em (%d, %d)!\n", item_phase1->x, item_phase1->y); // Log de geração
+                        }
+                        else if (game_phase == 2 && item_phase2 != NULL && !item_phase2->active && *enemy_destroyed_count == 1) // Alterado para 5 para garantir que a fase 2 esteja bem avançada
+                        {
+                            item_phase2->x = enemies[j].x;
+                            item_phase2->y = enemies[j].y;
+                            item_phase2->active = true;                                                  // Gera o item da fase 2
+                            printf("Item fase 2 gerado em (%d, %d)!\n", item_phase2->x, item_phase2->y); // Log de geração
                         }
                     }
                 }
@@ -142,7 +175,14 @@ void check_collisions(Player *player, Bullet bullets[], int bullet_count, Enemy 
                     bullets[i].y + bullets[i].height > shooting_enemies[k].y)
                 {
                     bullets[i].active = 0;                            // Desativa a bala
-                    shooting_enemies[k].health--;                     // Diminui a vida
+                    if (game_phase == 2 && player->special_attack_active)
+                    {
+                        shooting_enemies[k].health -= 2;
+                    }
+                    else
+                    {
+                        shooting_enemies[k].health--;
+                    }
                     shooting_enemies[k].damaged = 1;                  // Marca como danificado
                     shooting_enemies[k].damaged_time = al_get_time(); // Registra o tempo
                     (*score)++;
@@ -151,17 +191,31 @@ void check_collisions(Player *player, Bullet bullets[], int bullet_count, Enemy 
                 }
             }
 
-            if (item->active &&
-                player->x < item->x + 40 && // Supondo que o tamanho do item seja 32x32
-                player->x + player->width > item->x &&
-                player->y < item->y + 40 &&
-                player->y + player->height > item->y)
+            // Verificar colisão com o item da fase 1
+            if (item_phase1 != NULL && item_phase1->active &&
+                player->x < item_phase1->x + 40 &&
+                player->x + player->width > item_phase1->x &&
+                player->y < item_phase1->y + 40 &&
+                player->y + player->height > item_phase1->y)
             {
-                item->active = false; // O item é consumido quando o jogador colide com ele
+                item_phase1->active = false; // Consome o item da fase 1
                 player->special_attack_start_time = al_get_time();
                 player->special_attack_active = true;
+                printf("Item fase 1 consumido!\n"); // Log para depuração
             }
 
+            // Verificar colisão com o item da fase 2
+            if (item_phase2 != NULL && item_phase2->active &&
+                player->x < item_phase2->x + 40 &&
+                player->x + player->width > item_phase2->x &&
+                player->y < item_phase2->y + 40 &&
+                player->y + player->height > item_phase2->y)
+            {
+                item_phase2->active = false; // Consome o item da fase 2
+                player->special_attack_start_time = al_get_time();
+                player->special_attack_active = true;
+                printf("Item fase 2 consumido!\n"); // Log para depuração
+            }
         }
     }
 

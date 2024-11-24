@@ -6,7 +6,7 @@ void init_player(Player *player)
     player->y = SCREEN_HEIGHT / 2;
     player->width = 50;
     player->height = 30;
-    player->lives = 3;
+    player->lives = 4;
     player->invulnerable = 0;
     player->invulnerable_time = 0;
     player->joystick.right = player->joystick.left = player->joystick.up = player->joystick.down = player->joystick.fire = 0;
