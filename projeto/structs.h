@@ -30,7 +30,7 @@
 #define FIRE_INTERVAL 0.2
 #define INVULNERABILITY_TIME 1.5
 #define BOSS_SHOT_INTERVAL 0.4
-#define TIME_TO_BOSS 15
+#define TIME_TO_BOSS 2
 #define SCROLL_SPEED 60
 #define EXPLOSION_FRAME_COUNT 6
 
@@ -86,6 +86,8 @@ typedef struct
     int width, height;
     int active;
     float speed;
+    double vx, vy;
+    double spawn_time;
 } BossBullet;
 
 typedef struct
@@ -111,8 +113,8 @@ typedef struct
     int health;
     int horizontal_speed;
     double last_shot_time;
-    int damaged;         // Flag indicando se está piscando
-    double damaged_time; // Tempo em que começou o piscamento
+    int damaged;                     // Flag indicando se está piscando
+    double damaged_time;             // Tempo em que começou o piscamento
     double last_special_attack_time; // Tempo do último ataque especial
     int special_attack_active;       // Indica se o ataque especial está ativo
 } Boss;

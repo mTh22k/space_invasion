@@ -3,6 +3,8 @@
 #include <allegro5/allegro_font.h>
 #include <allegro5/allegro_ttf.h>
 #include <allegro5/allegro_image.h>
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
@@ -30,7 +32,7 @@
 #define FIRE_INTERVAL 0.2        // Intervalo de disparo em segundos
 #define INVULNERABILITY_TIME 1.5 // Tempo de invulnerabilidade em segundos
 #define BOSS_SHOT_INTERVAL 0.4
-#define TIME_TO_BOSS 15
+#define TIME_TO_BOSS 2
 #define SCROLL_SPEED 60
 #define EXPLOSION_FRAME_COUNT 6
 
@@ -65,6 +67,37 @@ int main()
     ALLEGRO_BITMAP *heart_full = al_load_bitmap("imagens/heart_full.png");
     ALLEGRO_BITMAP *heart_null = al_load_bitmap("imagens/heart_null.png");
     ALLEGRO_BITMAP *icon = al_load_bitmap("imagens/icon.png");
+
+    if (!al_install_audio())
+    {
+        fprintf(stderr, "Falha ao inicializar o sistema de áudio.\n");
+        return -1;
+    }
+
+    if (!al_init_acodec_addon())
+    {
+        fprintf(stderr, "Falha ao inicializar os codecs de áudio.\n");
+        return -1;
+    }
+
+    if (!al_reserve_samples(1))
+    {
+        fprintf(stderr, "Falha ao reservar canais de áudio.\n");
+        return -1;
+    }
+
+    ALLEGRO_AUDIO_STREAM *music = al_load_audio_stream("musica_fundo.ogg", 4, 1024);
+    if (!music)
+    {
+        fprintf(stderr, "Falha ao carregar a música de fundo.\n");
+        return -1;
+    }
+    ALLEGRO_AUDIO_STREAM *music_menu = al_load_audio_stream("musica_menu.ogg", 4, 1024);
+    if (!music)
+    {
+        fprintf(stderr, "Falha ao carregar a música de menu.\n");
+        return -1;
+    }
 
     al_register_event_source(event_queue, al_get_display_event_source(display));
     al_register_event_source(event_queue, al_get_keyboard_event_source());
@@ -113,14 +146,19 @@ int main()
     int exit_game = 0;
     float background_speed = 2.0; // Velocidade padrão do plano de fundo
     int enemy_destroyed_count = 0;
+    double boss_start_time = 0; // Armazena o tempo em que a espera para o boss começa
+    int boss_waiting = 0;
+    double boss_shoot_delay = 0; // Variável para controlar o tempo de ativação do boss
+    bool boss_can_shoot = false;
+    double boss_shoot_start_time = 0;
 
-        const char *explosion_frames[EXPLOSION_FRAME_COUNT] = {
-            "imagens/frame1.png",
-            "imagens/frame2.png",
-            "imagens/frame3.png",
-            "imagens/frame4.png",
-            "imagens/frame5.png",
-            "imagens/frame6.png"};
+    const char *explosion_frames[EXPLOSION_FRAME_COUNT] = {
+        "imagens/frame1.png",
+        "imagens/frame2.png",
+        "imagens/frame3.png",
+        "imagens/frame4.png",
+        "imagens/frame5.png",
+        "imagens/frame6.png"};
 
     ALLEGRO_BITMAP *explosion_bitmaps[EXPLOSION_FRAME_COUNT];
     for (int i = 0; i < EXPLOSION_FRAME_COUNT; i++)
@@ -130,11 +168,21 @@ int main()
 
     al_start_timer(timer);
     // Loop do menu
-    run_menu(font_menu, background, event_queue, display);
+    run_menu(font_menu, background, event_queue, display, music_menu);
+
+    // Para parar a música
+    al_detach_audio_stream(music_menu);
+
+    // Opcional: destruir a música para liberar memória
+    al_destroy_audio_stream(music_menu);
+    music_menu = NULL;
 
     al_flush_event_queue(event_queue);
 
     double start_time = al_get_time(); // Tempo inicial
+
+    al_set_audio_stream_playmode(music, ALLEGRO_PLAYMODE_LOOP);
+    al_attach_audio_stream_to_mixer(music, al_get_default_mixer());
 
     while (1)
     {
@@ -207,18 +255,34 @@ int main()
                         }
                     }
 
-                    if (remaining_time <= 0 && !boss.active)
+                    // Verifique se o boss deve começar a esperar
+                    if (remaining_time <= 0 && !boss_waiting && !boss.active)
                     {
-                        boss.active = 1;                    // Ativa o chefe
-                        boss.x = SCREEN_WIDTH - boss.width; // Posiciona o chefe na tela
+                        boss_waiting = 1;               // Marca que estamos aguardando
+                        boss_start_time = current_time; // Registra o tempo inicial da espera
+                    }
+
+                    // Aguarda os 3 segundos antes de ativar o boss
+                    if (boss_waiting && (current_time - boss_start_time >= 2.0))
+                    {
+                        boss_waiting = 0;                     // Reseta o estado de espera
+                        boss.active = 1;                      // Ativa o boss
+                        boss.x = SCREEN_WIDTH - boss.width;   // Posiciona o boss
+                        boss_shoot_start_time = current_time; // Define o tempo inicial para começar a disparar
                     }
 
                     if (boss.active)
                     {
-                        // Verificar colisões entre balas do jogador e o chefe
-                        shoot_boss_bullet(&boss, boss_bullets, &boss_bullet_count);
-                        move_boss_bullets(boss_bullets, MAX_BOSS_BULLETS);
-                        check_boss_bullet_collisions(&player, boss_bullets, &game_over, game_phase);
+                        // Aguarda 2 segundos antes de o boss começar a disparar
+                        if (current_time - boss_shoot_start_time >= 1.0)
+                        {
+                            // Verificar colisões entre balas do jogador e o chefe
+                            shoot_boss_bullet(&boss, boss_bullets, &boss_bullet_count, game_phase);
+                            move_boss_bullets(boss_bullets, MAX_BOSS_BULLETS);
+                            check_boss_bullet_collisions(&player, boss_bullets, &game_over, game_phase);
+                        }
+
+                        // Checar colisão direta com o boss
                         check_boss_collision(&player, bullets, MAX_BULLETS, &boss, &score, &player_won, &game_over, game_phase);
                     }
 
@@ -400,17 +464,14 @@ int main()
                 if (player.joystick.down)
                 {
                     al_draw_bitmap(player_sprite_dir, player.x, player.y, 0); // Desenha a sprite para a direita
-
                 }
                 else if (player.joystick.up)
                 {
                     al_draw_bitmap(player_sprite_esq, player.x, player.y, 0); // Desenha a sprite para a esquerda
-                     
                 }
                 else
                 {
                     al_draw_bitmap(player_sprite, player.x, player.y, 0); // Desenha a sprite padrão
-                    
                 }
             }
 
@@ -435,7 +496,8 @@ int main()
                         {
                             al_draw_bitmap(bullet_sprite, bullets[i].x + 15, bullets[i].y + 10, 0);
                         }
-                    } else if (game_phase == 2)
+                    }
+                    else if (game_phase == 2)
                     {
                         if (player.special_attack_active == true)
                         {
@@ -446,8 +508,6 @@ int main()
                             al_draw_bitmap(bullet_sprite, bullets[i].x + 15, bullets[i].y + 10, 0);
                         }
                     }
-                    
-                    
                 }
             }
 
@@ -459,12 +519,12 @@ int main()
                     if (enemies[i].active)
                         if (game_phase == 1)
                         {
-                           
+
                             al_draw_bitmap(enemy_sprite, enemies[i].x, enemies[i].y + 0, 0);
                         }
                         else if (game_phase == 2)
                         {
-                           
+
                             al_draw_bitmap(enemy_sprite_2, enemies[i].x, enemies[i].y, 0);
                         }
                 }
@@ -477,8 +537,8 @@ int main()
                 if (game_phase == 1 && player.special_attack_active == true)
                 {
                     al_draw_text(font_warn, al_map_rgb(255, 255, 255), 400, 550, ALLEGRO_ALIGN_CENTRE, "Voce pegou disparos rapidos por 6 segundos!");
-
-                } else if (game_phase == 2 && player.special_attack_active == true)
+                }
+                else if (game_phase == 2 && player.special_attack_active == true)
                 {
                     al_draw_text(font_warn, al_map_rgb(255, 255, 255), 400, 550, ALLEGRO_ALIGN_CENTRE, "Voce pegou disparos com 2x de dano por 6 segundos!");
                 }
@@ -492,12 +552,12 @@ int main()
                     {
                         if (game_phase == 1)
                         {
-                           
+
                             al_draw_bitmap(shooting_enemy_sprite, shooting_enemy.x, shooting_enemy.y, 0); // Desenhar o inimigo
                         }
                         else if (game_phase == 2)
                         {
-                          
+
                             al_draw_bitmap(shooting_enemy_sprite_2, shooting_enemy.x, shooting_enemy.y, 0); // Desenhar o inimigo
                         }
 
@@ -507,7 +567,6 @@ int main()
                             if (shooting_enemy.bullets[j].active)
                             {
                                 // Desenhando o retângulo em volta da hitbox do projétil do inimigo
-                               
 
                                 // Desenhando o projétil do inimigo
                                 al_draw_bitmap(enemy_bullet_sprite, shooting_enemy.bullets[j].x - 30, shooting_enemy.bullets[j].y + 20, 0);
@@ -519,12 +578,12 @@ int main()
 
             if (item.active)
             {
-               
+
                 al_draw_bitmap(item.sprite, item.x, item.y, 0); // Desenha o item no lugar onde ele foi gerado
             }
             if (item_phase2.active)
             {
-               
+
                 al_draw_bitmap(item_phase2.sprite, item_phase2.x, item_phase2.y, 0);
             }
 
@@ -534,21 +593,20 @@ int main()
                 {
                     if (boss_bullets[i].active)
                     {
-                    
-                            // Caso contrário, desenha a sprite normal das balas
-                            al_draw_bitmap(boss_bullet_sprite, boss_bullets[i].x, boss_bullets[i].y, 0);
-                           
+
+                        // Caso contrário, desenha a sprite normal das balas
+                        al_draw_bitmap(boss_bullet_sprite, boss_bullets[i].x, boss_bullets[i].y, 0);
                     }
                 }
                 move_boss(&boss, game_phase);
                 if (game_phase == 1)
                 {
-                   
+
                     al_draw_bitmap(boss_sprite, boss.x, boss.y, 0); // Desenhar o inimigo
                 }
                 else if (game_phase == 2)
                 {
-                   
+
                     al_draw_bitmap(boss_sprite_2, boss.x, boss.y, 0); // Desenhar o inimigo
                 }
             }
@@ -562,6 +620,10 @@ int main()
             al_flip_display();
         }
     }
+
+    al_destroy_audio_stream(music);
+    al_destroy_audio_stream(music_menu);
+    al_uninstall_audio();
 
     cleanup(background, player_sprite, bullet_sprite, enemy_sprite, shooting_enemy_sprite, enemy_bullet_sprite,
             boss_sprite, boss_bullet_sprite, event_queue, timer, display, font, explosion_bitmaps);

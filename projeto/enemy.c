@@ -79,7 +79,7 @@ void init_shooting_enemies(ShootingEnemy *enemy, int game_phase)
     enemy->width = 100;
     enemy->height = 50;
     enemy->active = 1;
-    enemy->health = 3;
+    enemy->health = 2;
     enemy->vertical_speed = 0.5; // Velocidade aleatória entre 1.0 e 2.0
     enemy->last_shot_time = 0;
     enemy->moving_up = 1;

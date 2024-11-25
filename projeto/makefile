@@ -8,7 +8,8 @@ CC = gcc
 CFLAGS = $(shell pkg-config --cflags allegro-5 allegro_dialog-5 allegro_primitives-5 allegro_font-5 allegro_ttf-5 allegro_image-5 allegro_audio-5)
 
 # Bibliotecas necessárias
-LDFLAGS = $(shell pkg-config --libs allegro-5 allegro_dialog-5 allegro_primitives-5 allegro_font-5 allegro_ttf-5 allegro_image-5 allegro_audio-5) -lm
+LDFLAGS = $(shell pkg-config --libs allegro-5 allegro_dialog-5 allegro_primitives-5 allegro_font-5 allegro_ttf-5 allegro_image-5 allegro_audio-5 allegro_acodec-5) -lm
+
 
 # Arquivos-fonte
 SRCS = main.c game.c boss.c bullet.c collision.c enemy.c player.c

@@ -30,7 +30,7 @@
 #define FIRE_INTERVAL 0.2
 #define INVULNERABILITY_TIME 1.5
 #define BOSS_SHOT_INTERVAL 0.4
-#define TIME_TO_BOSS 15
+#define TIME_TO_BOSS 2
 #define SCROLL_SPEED 60
 #define EXPLOSION_FRAME_COUNT 6
 #define BULLET_WIDTH 50  // Substitua pelo valor correto da largura da bala
@@ -45,9 +45,9 @@ void init_boss_bullets(BossBullet boss_bullets[], int count);
 
 // Dispara uma bala do chefe
 
-void shoot_boss_bullet(Boss *boss, BossBullet boss_bullets[], int *boss_bullet_count);
-
-    void shoot_boss_special_attack(Boss *boss, BossBullet boss_bullets[], int *boss_bullet_count);
+void shoot_boss_bullet(Boss *boss, BossBullet boss_bullets[], int *boss_bullet_count, int game_phase);
+void shoot_boss_special_attack_2(Boss *boss, BossBullet boss_bullets[], int *boss_bullet_count);
+void shoot_boss_special_attack(Boss *boss, BossBullet boss_bullets[], int *boss_bullet_count);
 
 // Move as balas do chefe
 void move_boss_bullets(BossBullet boss_bullets[], int count);

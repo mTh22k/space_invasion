@@ -164,10 +164,12 @@ void check_collisions(Player *player, Bullet bullets[], int bullet_count, Enemy 
                     }
                 }
             }
-
+        
+             
             // Verificar colisões entre balas do jogador e inimigos que disparam
             for (int k = 0; k < shooting_enemy_count; k++)
             {
+                
                 if (shooting_enemies[k].active &&
                     bullets[i].x < shooting_enemies[k].x + shooting_enemies[k].width &&
                     bullets[i].x + bullets[i].width > shooting_enemies[k].x &&
@@ -183,12 +185,15 @@ void check_collisions(Player *player, Bullet bullets[], int bullet_count, Enemy 
                     {
                         shooting_enemies[k].health--;
                     }
-                    shooting_enemies[k].damaged = 1;                  // Marca como danificado
-                    shooting_enemies[k].damaged_time = al_get_time(); // Registra o tempo
                     (*score)++;
-                    if (shooting_enemies[k].health <= 0)
+                    printf("Enemy %d hit! Health=%d\n", k, shooting_enemies[k].health);
+                    if (shooting_enemies[k].health <= 0) {
+                        printf("Enemy %d defeated!\n", k);
                         shooting_enemies[k].active = 0; // Desativa o inimigo
+                    }
+        
                 }
+               
             }
 
             // Verificar colisão com o item da fase 1

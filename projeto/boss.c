@@ -18,7 +18,8 @@ void init_boss(Boss *boss)
 void move_boss(Boss *boss, int game_phase)
 {
 
-    if (game_phase == 1) {
+    if (game_phase == 1)
+    {
 
         if (boss->active)
         {
@@ -30,8 +31,9 @@ void move_boss(Boss *boss, int game_phase)
                 boss->speed = -boss->speed; // Inverte a direção
             }
         }
-
-    } else if (game_phase == 2) {
+    }
+    else if (game_phase == 2)
+    {
 
         if (boss->active)
         {
@@ -101,7 +103,42 @@ void shoot_boss_special_attack(Boss *boss, BossBullet boss_bullets[], int *boss_
     }
 }
 
-void shoot_boss_bullet(Boss *boss, BossBullet boss_bullets[], int *boss_bullet_count)
+void shoot_boss_special_attack_2(Boss *boss, BossBullet boss_bullets[], int *boss_bullet_count)
+{
+    double current_time = al_get_time();
+
+    // Verifica se é hora de iniciar o ataque especial
+    if (!boss->special_attack_active && current_time - boss->last_special_attack_time >= 2.0)
+    {
+        boss->special_attack_active = 1; // Ativa o ataque especial
+        boss->last_special_attack_time = current_time;
+
+        // Dispara 6 balas em posições espaçadas verticalmente
+        for (int i = 0; i < 4; i++)
+        {
+            for (int j = 0; j < MAX_BOSS_BULLETS; j++)
+            {
+                if (!boss_bullets[j].active)
+                {
+                    boss_bullets[j].x = boss->x;
+                    boss_bullets[j].y = boss->y - 10 + i * 100; // Posições espaçadas verticalmente
+                    boss_bullets[j].active = 1;
+                    boss_bullets[j].speed = BULLET_SPEED * 1.5; // Velocidade aumentada
+                    (*boss_bullet_count)++;
+                    break;
+                }
+            }
+        }
+    }
+
+    // Desativa o ataque especial após o intervalo
+    if (boss->special_attack_active && current_time - boss->last_special_attack_time >= 0.5)
+    {
+        boss->special_attack_active = 0; // Desativa após meio segundo
+    }
+}
+
+void shoot_boss_bullet(Boss *boss, BossBullet boss_bullets[], int *boss_bullet_count, int game_phase)
 {
     double current_time = al_get_time();
 
@@ -124,7 +161,14 @@ void shoot_boss_bullet(Boss *boss, BossBullet boss_bullets[], int *boss_bullet_c
     }
 
     // Ataque especial
-    shoot_boss_special_attack(boss, boss_bullets, boss_bullet_count);
+    if (game_phase == 1)
+    {
+        shoot_boss_special_attack_2(boss, boss_bullets, boss_bullet_count);
+    } else if (game_phase == 2)
+    {
+        shoot_boss_special_attack(boss, boss_bullets, boss_bullet_count);
+    }
+    
 }
 
 void move_boss_bullets(BossBullet boss_bullets[], int count)
@@ -164,4 +208,3 @@ void check_boss_bullet_collisions(Player *player, BossBullet boss_bullets[], int
         }
     }
 }
-  

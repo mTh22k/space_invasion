@@ -645,12 +645,15 @@ void exibir_texto_gradualmente(const char *texto, ALLEGRO_FONT *fonte, float x, 
         }
     }
 
-    void run_menu(ALLEGRO_FONT * font_menu, ALLEGRO_BITMAP * background, ALLEGRO_EVENT_QUEUE * event_queue, ALLEGRO_DISPLAY * display)
+    void run_menu(ALLEGRO_FONT *font_menu, ALLEGRO_BITMAP *background, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_DISPLAY *display, ALLEGRO_AUDIO_STREAM *music_menu)
     {
         int menu_running = 1;
         int selected_option = 0;
         float background_x = 0;
         float background_speed = 1.0;
+
+        al_set_audio_stream_playmode(music_menu, ALLEGRO_PLAYMODE_LOOP);
+        al_attach_audio_stream_to_mixer(music_menu, al_get_default_mixer());
 
         // Carregar uma fonte maior para o título
         ALLEGRO_FONT *font_title = al_load_ttf_font("fonts/game_f.ttf", 72, 0);
