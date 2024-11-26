@@ -32,9 +32,9 @@
 #define FIRE_INTERVAL 0.2        // Intervalo de disparo em segundos
 #define INVULNERABILITY_TIME 1.5 // Tempo de invulnerabilidade em segundos
 #define BOSS_SHOT_INTERVAL 0.4
-#define TIME_TO_BOSS 2
+#define TIME_TO_BOSS 15
 #define SCROLL_SPEED 60
-#define EXPLOSION_FRAME_COUNT 6
+#define EXPLOSION_FRAME_COUNT 5
 
 int main()
 {
@@ -67,6 +67,8 @@ int main()
     ALLEGRO_BITMAP *heart_full = al_load_bitmap("imagens/heart_full.png");
     ALLEGRO_BITMAP *heart_null = al_load_bitmap("imagens/heart_null.png");
     ALLEGRO_BITMAP *icon = al_load_bitmap("imagens/icon.png");
+    ALLEGRO_BITMAP *explosion_sprite = al_load_bitmap("imagens/frame5.png");
+    ALLEGRO_BITMAP *explosion_boss = al_load_bitmap("imagens/frame4.png");
 
     if (!al_install_audio())
     {
@@ -152,13 +154,15 @@ int main()
     bool boss_can_shoot = false;
     double boss_shoot_start_time = 0;
 
+    int explosion_frame = 0;
+    float explosion_timer = 0.0;
+
     const char *explosion_frames[EXPLOSION_FRAME_COUNT] = {
         "imagens/frame1.png",
         "imagens/frame2.png",
         "imagens/frame3.png",
         "imagens/frame4.png",
-        "imagens/frame5.png",
-        "imagens/frame6.png"};
+        "imagens/frame5.png"};
 
     ALLEGRO_BITMAP *explosion_bitmaps[EXPLOSION_FRAME_COUNT];
     for (int i = 0; i < EXPLOSION_FRAME_COUNT; i++)
@@ -513,6 +517,8 @@ int main()
 
             if (remaining_time > 0)
             {
+                float last_time = al_get_time();
+                float delta_time = al_get_time() - last_time;
                 // Desenhar inimigos
                 for (int i = 0; i < MAX_ENEMIES; i++)
                 {
@@ -527,6 +533,8 @@ int main()
 
                             al_draw_bitmap(enemy_sprite_2, enemies[i].x, enemies[i].y, 0);
                         }
+
+                        draw_explosion(&enemies[i], explosion_sprite, 0.1);
                 }
 
                 if (item.active)
@@ -561,6 +569,7 @@ int main()
                             al_draw_bitmap(shooting_enemy_sprite_2, shooting_enemy.x, shooting_enemy.y, 0); // Desenhar o inimigo
                         }
 
+
                         // Renderizar os projéteis do inimigo
                         for (int j = 0; j < 10; j++) // Substitua 10 pelo número máximo de projéteis que cada inimigo pode ter
                         {
@@ -572,6 +581,7 @@ int main()
                                 al_draw_bitmap(enemy_bullet_sprite, shooting_enemy.bullets[j].x - 30, shooting_enemy.bullets[j].y + 20, 0);
                             }
                         }
+                        draw_explosion_shoot(&shooting_enemies[i], explosion_sprite, 0.1);
                     }
                 }
             }
@@ -609,6 +619,7 @@ int main()
 
                     al_draw_bitmap(boss_sprite_2, boss.x, boss.y, 0); // Desenhar o inimigo
                 }
+                draw_explosion_boss(&boss, explosion_boss, 0.1);
             }
 
             // Desenhar o placar
@@ -625,8 +636,18 @@ int main()
     al_destroy_audio_stream(music_menu);
     al_uninstall_audio();
 
-    cleanup(background, player_sprite, bullet_sprite, enemy_sprite, shooting_enemy_sprite, enemy_bullet_sprite,
-            boss_sprite, boss_bullet_sprite, event_queue, timer, display, font, explosion_bitmaps);
+    cleanup_resources(
+        display, event_queue, timer,
+        font, font_menu, font_warn, font_info,
+        background, background_2,
+        player_sprite, player_sprite_dir, player_sprite_esq,
+        bullet_sprite, bullet_sprite_2, bullet_sprite_3,
+        enemy_sprite, enemy_sprite_2,
+        shooting_enemy_sprite, shooting_enemy_sprite_2,
+        enemy_bullet_sprite, boss_sprite, boss_sprite_2,
+        boss_bullet_sprite, boss_bullet_special,
+        heart_full, heart_null, icon,
+        item_sprite, item_sprite_2);
 
     return 0;
 }

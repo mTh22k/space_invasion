@@ -12,6 +12,8 @@ void init_enemies(Enemy enemies[], int count)
         enemies[i].original_y = rand() % (SCREEN_HEIGHT - 30); // Posição inicial aleatória
         enemies[i].y = enemies[i].original_y;
         enemies[i].moving_up = 1; // Começar movendo para cima
+        enemies[i].exploding = 0;
+        enemies[i].explosion_time = 0;
     }
 }
 
@@ -83,13 +85,15 @@ void init_shooting_enemies(ShootingEnemy *enemy, int game_phase)
     enemy->vertical_speed = 0.5; // Velocidade aleatória entre 1.0 e 2.0
     enemy->last_shot_time = 0;
     enemy->moving_up = 1;
+    enemy->explosion_time = 0;
+    enemy->exploding = 0;
 
-        for (int i = 0; i < 4; i++)
-        {
-            enemy->bullets[i].active = 0;
-            enemy->bullets[i].width = 10;
-            enemy->bullets[i].height = 10;
-            enemy->bullets[i].speed = 8;
+    for (int i = 0; i < 4; i++)
+    {
+        enemy->bullets[i].active = 0;
+        enemy->bullets[i].width = 10;
+        enemy->bullets[i].height = 10;
+        enemy->bullets[i].speed = 8;
             
            
         }

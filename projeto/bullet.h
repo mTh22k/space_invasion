@@ -30,9 +30,9 @@
 #define FIRE_INTERVAL 0.2
 #define INVULNERABILITY_TIME 1.5
 #define BOSS_SHOT_INTERVAL 0.4
-#define TIME_TO_BOSS 2
+#define TIME_TO_BOSS 15
 #define SCROLL_SPEED 60
-#define EXPLOSION_FRAME_COUNT 6
+#define EXPLOSION_FRAME_COUNT 5
 
 void init_bullets(Bullet bullets[], int count);
 void fire_bullet(Bullet bullets[], int count, float x, float y);

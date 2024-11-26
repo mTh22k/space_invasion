@@ -30,13 +30,15 @@
 #define FIRE_INTERVAL 0.2
 #define INVULNERABILITY_TIME 1.5
 #define BOSS_SHOT_INTERVAL 0.4
-#define TIME_TO_BOSS 2
+#define TIME_TO_BOSS 15
 #define SCROLL_SPEED 60
-#define EXPLOSION_FRAME_COUNT 6
+#define EXPLOSION_FRAME_COUNT 5
 
 void check_boss_collision(Player *player, Bullet bullets[], int bullet_count, Boss *boss, int *score, int *player_won, int *game_over, int game_phase);
 void check_shooting_enemy_collision(Player *player, ShootingEnemy *enemy, int *game_over);
 void check_enemy_bullet_collisions(Player *player, ShootingEnemy *enemy, int *game_over);
 void check_collisions(Player *player, Bullet bullets[], int bullet_count, Enemy enemies[], int enemy_count, ShootingEnemy shooting_enemies[], int shooting_enemy_count, Item *item_phase1, Item *item_phase2, int *score, int *game_over, int *enemy_destroyed_count, int game_phase);
-
+void draw_explosion(Enemy *enemy, ALLEGRO_BITMAP *explosion_sprite, double explosion_duration);
+void draw_explosion_shoot(ShootingEnemy *shooting_enemy, ALLEGRO_BITMAP *explosion_sprite, double explosion_duration);
+void draw_explosion_boss(Boss *boss, ALLEGRO_BITMAP *explosion_sprite, double explosion_duration);
 #endif // COLLISION_H

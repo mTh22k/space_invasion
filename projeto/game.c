@@ -11,35 +11,53 @@ void init_allegro()
     al_init_image_addon();
     srand(time(0));
 }
-
-void cleanup(ALLEGRO_BITMAP *background, ALLEGRO_BITMAP *player_sprite, ALLEGRO_BITMAP *bullet_sprite,
-             ALLEGRO_BITMAP *enemy_sprite, ALLEGRO_BITMAP *shooting_enemy_sprite, ALLEGRO_BITMAP *enemy_bullet_sprite,
-             ALLEGRO_BITMAP *boss_sprite, ALLEGRO_BITMAP *boss_bullet_sprite, ALLEGRO_EVENT_QUEUE *event_queue,
-             ALLEGRO_TIMER *timer, ALLEGRO_DISPLAY *display, ALLEGRO_FONT *font, ALLEGRO_BITMAP *explosion_bitmaps[])
+void cleanup_resources(
+    ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_TIMER *timer,
+    ALLEGRO_FONT *font, ALLEGRO_FONT *font_menu, ALLEGRO_FONT *font_warn, ALLEGRO_FONT *font_info,
+    ALLEGRO_BITMAP *background, ALLEGRO_BITMAP *background_2,
+    ALLEGRO_BITMAP *player_sprite, ALLEGRO_BITMAP *player_sprite_dir, ALLEGRO_BITMAP *player_sprite_esq,
+    ALLEGRO_BITMAP *bullet_sprite, ALLEGRO_BITMAP *bullet_sprite_2, ALLEGRO_BITMAP *bullet_sprite_3,
+    ALLEGRO_BITMAP *enemy_sprite, ALLEGRO_BITMAP *enemy_sprite_2,
+    ALLEGRO_BITMAP *shooting_enemy_sprite, ALLEGRO_BITMAP *shooting_enemy_sprite_2,
+    ALLEGRO_BITMAP *enemy_bullet_sprite, ALLEGRO_BITMAP *boss_sprite, ALLEGRO_BITMAP *boss_sprite_2,
+    ALLEGRO_BITMAP *boss_bullet_sprite, ALLEGRO_BITMAP *boss_bullet_special,
+    ALLEGRO_BITMAP *heart_full, ALLEGRO_BITMAP *heart_null, ALLEGRO_BITMAP *icon,
+    ALLEGRO_BITMAP *item_sprite, ALLEGRO_BITMAP *item_sprite_2)
 {
-
+    // Libera bitmaps
     al_destroy_bitmap(background);
+    al_destroy_bitmap(background_2);
     al_destroy_bitmap(player_sprite);
+    al_destroy_bitmap(player_sprite_dir);
+    al_destroy_bitmap(player_sprite_esq);
     al_destroy_bitmap(bullet_sprite);
+    al_destroy_bitmap(bullet_sprite_2);
+    al_destroy_bitmap(bullet_sprite_3);
     al_destroy_bitmap(enemy_sprite);
+    al_destroy_bitmap(enemy_sprite_2);
     al_destroy_bitmap(shooting_enemy_sprite);
+    al_destroy_bitmap(shooting_enemy_sprite_2);
     al_destroy_bitmap(enemy_bullet_sprite);
     al_destroy_bitmap(boss_sprite);
+    al_destroy_bitmap(boss_sprite_2);
     al_destroy_bitmap(boss_bullet_sprite);
+    al_destroy_bitmap(boss_bullet_special);
+    al_destroy_bitmap(heart_full);
+    al_destroy_bitmap(heart_null);
+    al_destroy_bitmap(icon);
+    al_destroy_bitmap(item_sprite);
+    al_destroy_bitmap(item_sprite_2);
 
-    // Liberação dos bitmaps de explosão
-    for (int i = 0; i < EXPLOSION_FRAME_COUNT; i++)
-    {
-        if (explosion_bitmaps[i])
-        {
-            al_destroy_bitmap(explosion_bitmaps[i]);
-        }
-    }
-
-    al_destroy_event_queue(event_queue);
-    al_destroy_timer(timer);
-    al_destroy_display(display);
+    // Libera fontes
     al_destroy_font(font);
+    al_destroy_font(font_menu);
+    al_destroy_font(font_warn);
+    al_destroy_font(font_info);
+
+    // Libera outros recursos
+    al_destroy_timer(timer);
+    al_destroy_event_queue(event_queue);
+    al_destroy_display(display);
 }
 
 #include <stdbool.h>
