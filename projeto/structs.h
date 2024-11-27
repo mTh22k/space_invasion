@@ -50,6 +50,8 @@ typedef struct
     int paused;
     bool special_attack_active;
     float special_attack_start_time;
+    float speed_multiplier; // Multiplicador de velocidade
+    double slow_effect_end_time;
 } Player;
 
 typedef struct

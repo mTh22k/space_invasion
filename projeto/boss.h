@@ -53,6 +53,6 @@ void shoot_boss_special_attack(Boss *boss, BossBullet boss_bullets[], int *boss_
 void move_boss_bullets(BossBullet boss_bullets[], int count);
 
 // Verifica colisões entre as balas do chefe e o jogador
-void check_boss_bullet_collisions(Player *player, BossBullet boss_bullets[], int *game_over, int game_phase);
+void check_boss_bullet_collisions(Player *player, Boss *boss, BossBullet boss_bullets[], int *game_over, int game_phase);
 
 #endif // BOSS_H

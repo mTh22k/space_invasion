@@ -22,7 +22,7 @@ void cleanup_resources(
     ALLEGRO_BITMAP *enemy_bullet_sprite, ALLEGRO_BITMAP *boss_sprite, ALLEGRO_BITMAP *boss_sprite_2,
     ALLEGRO_BITMAP *boss_bullet_sprite, ALLEGRO_BITMAP *boss_bullet_special,
     ALLEGRO_BITMAP *heart_full, ALLEGRO_BITMAP *heart_null, ALLEGRO_BITMAP *icon,
-    ALLEGRO_BITMAP *item_sprite, ALLEGRO_BITMAP *item_sprite_2)
+    ALLEGRO_BITMAP *item_sprite, ALLEGRO_BITMAP *item_sprite_2, ALLEGRO_BITMAP *bulletEnemy_boss2)
 {
     // Libera bitmaps
     al_destroy_bitmap(background);
@@ -47,8 +47,9 @@ void cleanup_resources(
     al_destroy_bitmap(icon);
     al_destroy_bitmap(item_sprite);
     al_destroy_bitmap(item_sprite_2);
+    al_destroy_bitmap(bulletEnemy_boss2);
 
-    // Libera fontes
+        // Libera fontes
     al_destroy_font(font);
     al_destroy_font(font_menu);
     al_destroy_font(font_warn);

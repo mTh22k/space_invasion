@@ -69,7 +69,7 @@ int main()
     ALLEGRO_BITMAP *icon = al_load_bitmap("imagens/icon.png");
     ALLEGRO_BITMAP *explosion_sprite = al_load_bitmap("imagens/frame5.png");
     ALLEGRO_BITMAP *explosion_boss = al_load_bitmap("imagens/frame4.png");
-
+    ALLEGRO_BITMAP *bulletEnemy_boss2 = al_load_bitmap("imagens/bulletEnemy_boss2.png");
     if (!al_install_audio())
     {
         fprintf(stderr, "Falha ao inicializar o sistema de áudio.\n");
@@ -277,14 +277,24 @@ int main()
 
                     if (boss.active)
                     {
-                        // Aguarda 2 segundos antes de o boss começar a disparar
-                        if (current_time - boss_shoot_start_time >= 1.0)
+                        if (game_phase == 1)
                         {
-                            // Verificar colisões entre balas do jogador e o chefe
+                            // Aguarda 2 segundos antes de o boss começar a disparar
+                            if (current_time - boss_shoot_start_time >= 1.0)
+                            {
+                                // Verificar colisões entre balas do jogador e o chefe
+                                shoot_boss_bullet(&boss, boss_bullets, &boss_bullet_count, game_phase);
+                                move_boss_bullets(boss_bullets, MAX_BOSS_BULLETS);
+                                check_boss_bullet_collisions(&player,&boss, boss_bullets, &game_over, game_phase);
+                            }
+                        } else 
+                        {
                             shoot_boss_bullet(&boss, boss_bullets, &boss_bullet_count, game_phase);
                             move_boss_bullets(boss_bullets, MAX_BOSS_BULLETS);
-                            check_boss_bullet_collisions(&player, boss_bullets, &game_over, game_phase);
+                            check_boss_bullet_collisions(&player,&boss ,boss_bullets, &game_over, game_phase);
                         }
+                        
+                
 
                         // Checar colisão direta com o boss
                         check_boss_collision(&player, bullets, MAX_BULLETS, &boss, &score, &player_won, &game_over, game_phase);
@@ -603,9 +613,21 @@ int main()
                 {
                     if (boss_bullets[i].active)
                     {
-
-                        // Caso contrário, desenha a sprite normal das balas
-                        al_draw_bitmap(boss_bullet_sprite, boss_bullets[i].x, boss_bullets[i].y, 0);
+                        if (game_phase == 2)
+                        {
+                            if (boss.special_attack_active == 1)
+                            {
+                                al_draw_bitmap(bulletEnemy_boss2, boss_bullets[i].x, boss_bullets[i].y, 0);
+                            }
+                            else
+                            {
+                                al_draw_bitmap(boss_bullet_sprite, boss_bullets[i].x, boss_bullets[i].y, 0);
+                            }
+                        } else 
+                        {
+                            al_draw_bitmap(boss_bullet_sprite, boss_bullets[i].x, boss_bullets[i].y, 0);
+                        }
+                        
                     }
                 }
                 move_boss(&boss, game_phase);
@@ -647,7 +669,7 @@ int main()
         enemy_bullet_sprite, boss_sprite, boss_sprite_2,
         boss_bullet_sprite, boss_bullet_special,
         heart_full, heart_null, icon,
-        item_sprite, item_sprite_2);
+        item_sprite, item_sprite_2, bulletEnemy_boss2);
 
     return 0;
 }
