@@ -108,6 +108,7 @@ typedef struct
     double damaged_time; // Tempo em que começou o piscamento
     double explosion_time;
     int exploding;
+    bool ready_to_shoot;
 } ShootingEnemy;
 
 typedef struct

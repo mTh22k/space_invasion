@@ -132,41 +132,46 @@ void move_shooting_enemy(ShootingEnemy *enemy)
 void shoot_enemy_bullet(ShootingEnemy *enemy, float player_x, float player_y, int game_phase)
 {
     double current_time = al_get_time();
-    if (game_phase == 1) 
+
+    if (enemy->ready_to_shoot)
     {
+        if (game_phase == 1)
+        {
 
-        if (current_time - enemy->last_shot_time >= 1.0)
-        { // Dispara a cada 1 segundo
-            for (int i = 0; i < 3; i++)
-            {
-                if (!enemy->bullets[i].active)
+            if (current_time - enemy->last_shot_time >= 1.0)
+            { // Dispara a cada 1 segundo
+                for (int i = 0; i < 3; i++)
                 {
-                    enemy->bullets[i].x = enemy->x - 20;
-                    enemy->bullets[i].y = enemy->y;
-                    enemy->bullets[i].active = 1;
-                    enemy->last_shot_time = current_time;
-                    break;
-                }
-            }
-        }
-    } else if (game_phase == 2)
-            {
-
-                if (current_time - enemy->last_shot_time >= 0.1)
-                { // Dispara a cada 1 segundo
-                    for (int i = 0; i < 3; i++)
+                    if (!enemy->bullets[i].active)
                     {
-                        if (!enemy->bullets[i].active)
-                        {
-                            enemy->bullets[i].x = enemy->x - 20;
-                            enemy->bullets[i].y = enemy->y;
-                            enemy->bullets[i].active = 1;
-                            enemy->last_shot_time = current_time;
-                            break;
-                        }
+                        enemy->bullets[i].x = enemy->x - 20;
+                        enemy->bullets[i].y = enemy->y;
+                        enemy->bullets[i].active = 1;
+                        enemy->last_shot_time = current_time;
+                        break;
                     }
                 }
             }
+        }
+        else if (game_phase == 2)
+        {
+
+            if (current_time - enemy->last_shot_time >= 0.1)
+            { // Dispara a cada 1 segundo
+                for (int i = 0; i < 3; i++)
+                {
+                    if (!enemy->bullets[i].active)
+                    {
+                        enemy->bullets[i].x = enemy->x - 20;
+                        enemy->bullets[i].y = enemy->y;
+                        enemy->bullets[i].active = 1;
+                        enemy->last_shot_time = current_time;
+                        break;
+                    }
+                }
+            }
+        }
+    }
 }
 
 void move_enemy_bullets(EnemyBullet bullets[], int count)

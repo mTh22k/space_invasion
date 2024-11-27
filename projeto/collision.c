@@ -48,6 +48,7 @@ void check_boss_collision(Player *player, Bullet bullets[], int bullet_count, Bo
         if (!player->invulnerable)
         {
             player->lives--;          // Diminui a vida do jogador
+            printf("Colisão com o chefe! Perdeu uma vida. Vidas restantes: %d\n", player->lives);
             player->invulnerable = 1; // Ativa o estado de invulnerabilidade temporária
             player->invulnerable_time = al_get_time();
 
@@ -59,27 +60,6 @@ void check_boss_collision(Player *player, Bullet bullets[], int bullet_count, Bo
     }
 }
 
-void check_shooting_enemy_collision(Player *player, ShootingEnemy *enemy, int *game_over)
-{
-    if (enemy->active &&
-        player->x < enemy->x + enemy->width &&
-        player->x + player->width > enemy->x &&
-        player->y < enemy->y + enemy->height &&
-        player->y + player->height > enemy->y)
-    {
-        if (!player->invulnerable)
-        {
-            player->lives--;
-            player->invulnerable = 1;
-            player->invulnerable_time = al_get_time();
-
-            if (player->lives <= 0)
-            {
-                *game_over = 1;
-            }
-        }
-    }
-}
 
 void check_enemy_bullet_collisions(Player *player, ShootingEnemy *enemy, int *game_over)
 {
@@ -94,6 +74,7 @@ void check_enemy_bullet_collisions(Player *player, ShootingEnemy *enemy, int *ga
             if (!player->invulnerable)
             {
                 player->lives--;
+                printf("Colisão com a bala do inimigo! Perdeu uma vida. Vidas restantes: %d\n", player->lives);
                 player->invulnerable = 1;
                 player->invulnerable_time = al_get_time();
 
@@ -243,6 +224,7 @@ void check_collisions(Player *player, Bullet bullets[], int bullet_count, Enemy 
             if (!player->invulnerable)
             {
                 player->lives--;
+                printf("Colisão com inimigo normal! Perdeu uma vida. Vidas restantes: %d\n", player->lives);
                 player->invulnerable = 1;
                 player->invulnerable_time = al_get_time();
 
@@ -264,6 +246,7 @@ void check_collisions(Player *player, Bullet bullets[], int bullet_count, Enemy 
             if (!player->invulnerable)
             {
                 player->lives--;
+                printf("Colisão com o inimigo atirador! Perdeu uma vida. Vidas restantes: %d\n", player->lives);
                 player->invulnerable = 1;
                 player->invulnerable_time = al_get_time();
 

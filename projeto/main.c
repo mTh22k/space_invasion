@@ -212,11 +212,13 @@ int main()
                 {
                     draw_timer(font, elapsed_time);
 
+                    static double phase2_start_time = -1.0;
+                    static bool phase2_started = false;
+
                     if (remaining_time > 0)
                     {
                         if (game_phase == 1)
                         {
-
                             if (rand() % 200 == 0)
                             {
                                 generate_shooting_enemy(shooting_enemies, MAX_SHOOTING_ENEMIES, game_phase);
@@ -229,15 +231,26 @@ int main()
                         }
                         else if (game_phase == 2)
                         {
-
-                            if (rand() % 100 == 0)
+                            // Inicializa o tempo quando a fase 2 começa
+                            if (!phase2_started)
                             {
-                                generate_shooting_enemy(shooting_enemies, MAX_SHOOTING_ENEMIES, game_phase);
+                                phase2_start_time = al_get_time();
+                                phase2_started = true;
                             }
 
-                            if (rand() % 30 == 0)
+                            // Verifica se passou 1 segundo desde o início da fase 2
+                            if (al_get_time() - phase2_start_time >= 1.0)
                             {
-                                generate_enemy(enemies, MAX_ENEMIES, player.width, player.height);
+                                // Gerar inimigos após 1 segundo
+                                if (rand() % 100 == 0)
+                                {
+                                    generate_shooting_enemy(shooting_enemies, MAX_SHOOTING_ENEMIES, game_phase);
+                                }
+
+                                if (rand() % 30 == 0)
+                                {
+                                    generate_enemy(enemies, MAX_ENEMIES, player.width, player.height);
+                                }
                             }
                         }
 
@@ -250,13 +263,13 @@ int main()
                             shoot_enemy_bullet(&shooting_enemies[i], player.x, player.y, game_phase); // Cada um atira
                             move_enemy_bullets(shooting_enemies[i].bullets, 3);                       // Move os projéteis
                             check_enemy_bullet_collisions(&player, &shooting_enemies[i], &game_over); // Verifica colisões
-                            check_shooting_enemy_collision(&player, &shooting_enemies[i], &game_over);
+                            // check_shooting_enemy_collision(&player, &shooting_enemies[i], &game_over);
                         }
 
-                        for (int i = 0; i < MAX_SHOOTING_ENEMIES; i++)
-                        {
-                            check_shooting_enemy_collision(&player, &shooting_enemies[i], &game_over);
-                        }
+                        // for (int i = 0; i < MAX_SHOOTING_ENEMIES; i++)
+                        // {
+                        //     check_shooting_enemy_collision(&player, &shooting_enemies[i], &game_over);
+                        // }
                     }
 
                     // Verifique se o boss deve começar a esperar
@@ -332,6 +345,7 @@ int main()
                             item_phase2.active = false; // Assegura que o item da fase 2 está desativado quando a fase 2 começa
                             printf("Iniciando fase 2...\n");
                             player_won = 0; // Reinicia a condição de vitória
+                        
                         }
                     }
 
@@ -401,6 +415,9 @@ int main()
                 init_boss(&boss);
                 init_enemies(enemies, MAX_ENEMIES);
                 init_bullets(bullets, MAX_BULLETS);
+
+                player.invulnerable = 1;
+                player.invulnerable_time = al_get_time();
 
                 // Zera o estado do jogo e reinicia o loop principal
                 game_over = 0;
@@ -570,11 +587,19 @@ int main()
                     {
                         if (game_phase == 1)
                         {
+                            if (!shooting_enemy.ready_to_shoot)
+                            {
+                                shooting_enemy.ready_to_shoot = true;
+                            }
 
                             al_draw_bitmap(shooting_enemy_sprite, shooting_enemy.x, shooting_enemy.y, 0); // Desenhar o inimigo
                         }
                         else if (game_phase == 2)
                         {
+                            if (!shooting_enemy.ready_to_shoot)
+                            {
+                                shooting_enemy.ready_to_shoot = true;
+                            }
 
                             al_draw_bitmap(shooting_enemy_sprite_2, shooting_enemy.x, shooting_enemy.y, 0); // Desenhar o inimigo
                         }
@@ -654,9 +679,6 @@ int main()
         }
     }
 
-    al_destroy_audio_stream(music);
-    al_destroy_audio_stream(music_menu);
-    al_uninstall_audio();
 
     cleanup_resources(
         display, event_queue, timer,
@@ -670,6 +692,14 @@ int main()
         boss_bullet_sprite, boss_bullet_special,
         heart_full, heart_null, icon,
         item_sprite, item_sprite_2, bulletEnemy_boss2);
+
+    al_destroy_audio_stream(music);
+    al_destroy_audio_stream(music_menu);
+    al_uninstall_audio();
+    al_shutdown_font_addon();
+    al_shutdown_ttf_addon();
+    al_shutdown_image_addon();
+    al_uninstall_system();
 
     return 0;
 }
