@@ -670,7 +670,7 @@ void exibir_texto_gradualmente(const char *texto, ALLEGRO_FONT *fonte, float x, 
                 al_clear_to_color(al_map_rgb(0, 0, 0));
                 al_draw_bitmap(background, background_x, 0, 0);
                 al_draw_bitmap(background, background_x + al_get_bitmap_width(background), 0, 0);
-                al_draw_filled_rectangle(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, al_map_rgba(0, 0, 0, 150));
+                al_draw_filled_rectangle(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, al_map_rgba(0, 0, 0, 0));
                 al_draw_text(font, al_map_rgb(0, 255, 255), 400, 20, ALLEGRO_ALIGN_CENTER, "CONTROLES");
                 al_draw_text(font, al_map_rgb(255, 255, 255), 400, 120, ALLEGRO_ALIGN_CENTER, "MOVER: W, A, S, D");
                 al_draw_text(font, al_map_rgb(255, 255, 255), 400, 220, ALLEGRO_ALIGN_CENTER, "ATIRAR: ENTER");

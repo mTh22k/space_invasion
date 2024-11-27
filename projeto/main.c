@@ -32,7 +32,7 @@
 #define FIRE_INTERVAL 0.2        // Intervalo de disparo em segundos
 #define INVULNERABILITY_TIME 1.5 // Tempo de invulnerabilidade em segundos
 #define BOSS_SHOT_INTERVAL 0.4
-#define TIME_TO_BOSS 15
+#define TIME_TO_BOSS 2
 #define SCROLL_SPEED 60
 #define EXPLOSION_FRAME_COUNT 5
 
@@ -42,7 +42,7 @@ int main()
 
     ALLEGRO_DISPLAY *display = al_create_display(SCREEN_WIDTH, SCREEN_HEIGHT);
     ALLEGRO_EVENT_QUEUE *event_queue = al_create_event_queue();
-    ALLEGRO_TIMER *timer = al_create_timer(1.0 / 60);
+    ALLEGRO_TIMER *timer = al_create_timer(1.0 / 50);
     ALLEGRO_FONT *font = al_load_ttf_font("fonts/ATC.ttf", 12, 0);
     ALLEGRO_FONT *font_menu = al_load_ttf_font("fonts/menu_f.ttf", 50, 0);
     ALLEGRO_FONT *font_warn = al_load_ttf_font("fonts/menu_f.ttf", 12, 0);
@@ -292,6 +292,7 @@ int main()
                     {
                         if (game_phase == 1)
                         {
+                            item.active = false;
                             // Aguarda 2 segundos antes de o boss começar a disparar
                             if (current_time - boss_shoot_start_time >= 1.0)
                             {
@@ -302,6 +303,7 @@ int main()
                             }
                         } else 
                         {
+                            item_phase2.active = false;
                             shoot_boss_bullet(&boss, boss_bullets, &boss_bullet_count, game_phase);
                             move_boss_bullets(boss_bullets, MAX_BOSS_BULLETS);
                             check_boss_bullet_collisions(&player,&boss ,boss_bullets, &game_over, game_phase);
@@ -343,6 +345,7 @@ int main()
                             init_second_phase(&player, enemies, bullets, shooting_enemies, &boss, &victory_state, &player_won, &start_time, &enemy_destroyed_count, game_phase);
                             game_phase = 2;
                             item_phase2.active = false; // Assegura que o item da fase 2 está desativado quando a fase 2 começa
+
                             printf("Iniciando fase 2...\n");
                             player_won = 0; // Reinicia a condição de vitória
                         

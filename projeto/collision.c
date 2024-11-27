@@ -31,6 +31,7 @@ void check_boss_collision(Player *player, Bullet bullets[], int bullet_count, Bo
 
             if (boss->health <= 0)
             {
+                al_rest(0.8);
                 boss->active = 0; // Desativa o chefe
                 *player_won = 1;  // Jogador ganhou
             }

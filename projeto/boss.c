@@ -8,7 +8,7 @@ void init_boss(Boss *boss)
     boss->height = 200;          // Altura do chefe
     boss->active = 0;            // Inicialmente inativo
     boss->speed = 2;             // Velocidade do movimento vertical
-    boss->health = 10;
+    boss->health = 20;
     boss->last_shot_time = 0;
     boss->last_special_attack_time = 0;
     boss->special_attack_active = 0;
