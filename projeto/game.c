@@ -572,8 +572,8 @@ void show_victory_message(ALLEGRO_FONT *font, int *exit_game)
 
     
     al_clear_to_color(al_map_rgb(0, 0, 0));
-    exibir_texto_gradualmente("Parabens!", font_normal, 400, 180, al_map_rgb(255, 255, 255), 0.2, background_m, background_x);
-    exibir_texto_gradualmente("Voce zerou o jogo!", font_normal, 400, 250, al_map_rgb(255, 255, 255), 0.2, background_m, background_x);
+    exibir_texto_gradualmente("Parabens!", font_normal, 400, 180, al_map_rgb(255, 255, 255), 0.1, background_m, background_x);
+    exibir_texto_gradualmente("Voce zerou o jogo!", font_normal, 400, 250, al_map_rgb(255, 255, 255), 0.1, background_m, background_x);
 
     int running = 1; // Controle do loop principal
 
