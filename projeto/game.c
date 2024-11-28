@@ -770,7 +770,7 @@ void exibir_texto_gradualmente(const char *texto, ALLEGRO_FONT *fonte, float x, 
                 al_draw_text(font_title, current_color, 400, 130, ALLEGRO_ALIGN_CENTER, "Space Impact");
 
                 // Desenhar opções do menu
-                for (int i = 0; i < 3; i++)
+                for (int i = 0; i < 4; i++)
                 {
                     ALLEGRO_COLOR color = (i == selected_option) ? al_map_rgb(255, 255, 255) : al_map_rgb(0, 0, 0);
                     const char *text;
@@ -779,8 +779,11 @@ void exibir_texto_gradualmente(const char *texto, ALLEGRO_FONT *fonte, float x, 
                         text = "Começar";
                     else if (i == 1)
                         text = "Controles";
-                    else
+                    else if (i == 2)
                         text = "Sair";
+                    else
+                        text = "opções";
+
                     al_draw_textf(font_menu, color, 400, pos_y, ALLEGRO_ALIGN_CENTER, "%s", text);
                 }
 
@@ -791,10 +794,10 @@ void exibir_texto_gradualmente(const char *texto, ALLEGRO_FONT *fonte, float x, 
                 switch (ev.keyboard.keycode)
                 {
                 case ALLEGRO_KEY_DOWN:
-                    selected_option = (selected_option + 1) % 3;
+                    selected_option = (selected_option + 1) % 4;
                     break;
                 case ALLEGRO_KEY_UP:
-                    selected_option = (selected_option + 2) % 3;
+                    selected_option = (selected_option + 2) % 4;
                     break;
                 case ALLEGRO_KEY_ENTER:
                     if (selected_option == 0)
@@ -813,6 +816,10 @@ void exibir_texto_gradualmente(const char *texto, ALLEGRO_FONT *fonte, float x, 
                         al_destroy_event_queue(event_queue);
                         exit(0);
                     }
+                    else if (selected_option == 3)
+                    {
+                        exibir_tela_opcoes(font_menu, background_m, event_queue, display);
+                    }
                     break;
                 }
             }
@@ -820,4 +827,116 @@ void exibir_texto_gradualmente(const char *texto, ALLEGRO_FONT *fonte, float x, 
 
         // Limpar recursos da fonte do título
         al_destroy_font(font_title);
+    }
+
+    void exibir_tela_opcoes(ALLEGRO_FONT *font, ALLEGRO_BITMAP *background, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_DISPLAY *display)
+    {
+        int running = 1;                    // Controle do loop
+        int selected_option = 0;            // Opção atualmente selecionada
+        int checkbox_states[3] = {1, 0, 0}; // Estados das checkboxes: 1 para marcada, 0 para desmarcada
+        float background_x = 0;             // Posição do fundo
+
+        // Carregar imagens para as opções
+        ALLEGRO_BITMAP *option_images[3];
+        option_images[0] = al_load_bitmap("imagens/nave.png");
+        option_images[1] = al_load_bitmap("imagens/nave.png");
+        option_images[2] = al_load_bitmap("imagens/nave.png");
+
+        if (!option_images[0] || !option_images[1] || !option_images[2])
+        {
+            fprintf(stderr, "Erro ao carregar uma ou mais imagens de opções.\n");
+            exit(1);
+        }
+
+        while (running)
+        {
+            ALLEGRO_EVENT ev;
+            al_wait_for_event(event_queue, &ev);
+
+            if (ev.type == ALLEGRO_EVENT_TIMER)
+            {
+                // Movimento do fundo
+                background_x -= 1;
+                if (background_x <= -al_get_bitmap_width(background))
+                {
+                    background_x = 0;
+                }
+
+                // Desenha o fundo
+                al_clear_to_color(al_map_rgb(0, 0, 0));
+                al_draw_bitmap(background, background_x, 0, 0);
+                al_draw_bitmap(background, background_x + al_get_bitmap_width(background), 0, 0);
+
+                // Desenha o título principal
+                al_draw_text(font, al_map_rgb(0, 255, 255), 400, 20, ALLEGRO_ALIGN_CENTER, "CONFIGURAÇÕES");
+
+                // Desenha as opções horizontalmente
+                const char *textos[] = {"Opção 1", "Opção 2", "Opção 3"};
+                int start_x = 200;    // Posição inicial horizontal
+                int y_position = 300; // Posição vertical fixa para todas as opções
+                int spacing = 250;    // Espaçamento entre as opções
+
+                for (int i = 0; i < 3; i++)
+                {
+                    int x_position = start_x + i * spacing; // Calcular posição horizontal com base no índice e espaçamento
+
+                    // Cor da opção: Branco se selecionada, Cinza caso contrário
+                    ALLEGRO_COLOR color = (i == selected_option) ? al_map_rgb(255, 255, 255) : al_map_rgb(128, 128, 128);
+
+                    // Desenha a imagem da opção acima do texto
+                    al_draw_bitmap(option_images[i], x_position - 40, y_position - 80, 0);
+
+                    // Desenha a checkbox abaixo da imagem
+                    if (checkbox_states[i]) // Marcar a checkbox
+                    {
+                        al_draw_filled_rectangle(x_position - 20, y_position + 30, x_position + 10, y_position + 60, al_map_rgb(255, 255, 255));
+                    }
+                    else // Checkbox vazia
+                    {
+                        al_draw_rectangle(x_position - 20, y_position + 30, x_position + 10, y_position + 60, al_map_rgb(255, 255, 255), 2);
+                    }
+
+                    // Desenha o texto abaixo da checkbox
+                    al_draw_text(font, color, x_position, y_position + 80, ALLEGRO_ALIGN_CENTER, textos[i]);
+                }
+
+                al_flip_display();
+            }
+            else if (ev.type == ALLEGRO_EVENT_KEY_DOWN)
+            {
+                switch (ev.keyboard.keycode)
+                {
+                case ALLEGRO_KEY_RIGHT: // Navega para a próxima opção
+                    selected_option = (selected_option + 1) % 3;
+                    break;
+                case ALLEGRO_KEY_LEFT:                           // Navega para a opção anterior
+                    selected_option = (selected_option + 2) % 3; // Soma 2 para evitar valores negativos com o módulo
+                    break;
+                case ALLEGRO_KEY_ENTER:
+                    // Alterna o estado da checkbox na opção selecionada
+                    for (int i = 0; i < 3; i++)
+                    {
+                        checkbox_states[i] = 0; // Desmarcar todas
+                    }
+                    checkbox_states[selected_option] = 1; // Marcar a opção atual
+                    break;
+                case ALLEGRO_KEY_ESCAPE: // Voltar ao menu anterior
+                    running = 0;
+                    break;
+                }
+            }
+            else if (ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE)
+            {
+                // Finaliza o programa
+                al_destroy_display(display);
+                al_destroy_event_queue(event_queue);
+                exit(0);
+            }
+        }
+
+        // Liberar imagens carregadas
+        for (int i = 0; i < 3; i++)
+        {
+            al_destroy_bitmap(option_images[i]);
+        }
     }
