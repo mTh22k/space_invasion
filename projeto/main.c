@@ -44,11 +44,7 @@ int main()
     al_init_ttf_addon();
     al_init_image_addon();
     ALLEGRO_DISPLAY *display = al_create_display(SCREEN_WIDTH, SCREEN_HEIGHT);
-    if (!al_install_keyboard())
-    {
-        fprintf(stderr, "Falha ao instalar o teclado!\n");
-        return -1;
-    }
+    al_install_keyboard();
 
     GameOptions game_options;
 
@@ -893,6 +889,11 @@ int main()
 
     al_destroy_audio_stream(music);
     al_destroy_audio_stream(music_menu);
+    al_uninstall_audio();
+    al_shutdown_font_addon();
+    al_shutdown_ttf_addon();
+    al_shutdown_image_addon();
+    al_uninstall_system();
 
     return 0;
 }

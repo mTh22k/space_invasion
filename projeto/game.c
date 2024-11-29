@@ -120,12 +120,6 @@ void cleanup_resources(
     if (display)
         al_destroy_display(display);
 
-    // Desinstala o sistema Allegro e o áudio
-    al_uninstall_audio();
-    al_shutdown_font_addon();
-    al_shutdown_ttf_addon();
-    al_shutdown_image_addon();
-    al_uninstall_system();
 }
 
 #include <stdbool.h>
