@@ -889,11 +889,6 @@ int main()
 
     al_destroy_audio_stream(music);
     al_destroy_audio_stream(music_menu);
-    al_uninstall_audio();
-    al_shutdown_font_addon();
-    al_shutdown_ttf_addon();
-    al_shutdown_image_addon();
-    al_uninstall_system();
 
     return 0;
 }

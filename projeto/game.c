@@ -113,12 +113,19 @@ void cleanup_resources(
         al_destroy_font(font_info);
 
     // Libera outros recursos
-    if (timer)
-        al_destroy_timer(timer);
     if (event_queue)
         al_destroy_event_queue(event_queue);
+    if (timer)
+        al_destroy_timer(timer);
     if (display)
         al_destroy_display(display);
+
+    // Desinstala o sistema Allegro e o áudio
+    al_uninstall_audio();
+    al_shutdown_font_addon();
+    al_shutdown_ttf_addon();
+    al_shutdown_image_addon();
+    al_uninstall_system();
 }
 
 #include <stdbool.h>
