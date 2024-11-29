@@ -56,7 +56,7 @@ typedef struct
 
 typedef struct
 {
-    float x, y;
+    int x, y;
     int width, height;
     int lives;
     int invulnerable;
@@ -148,6 +148,7 @@ typedef struct
     int x, y;
     bool active;
     ALLEGRO_BITMAP *sprite; // Ponteiro para o sprite
+    int width, height;
 } Item;
 
 #endif // STRUCTS_H

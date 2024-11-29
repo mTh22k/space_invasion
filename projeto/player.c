@@ -12,6 +12,7 @@ void init_player(Player *player)
     player->joystick.right = player->joystick.left = player->joystick.up = player->joystick.down = player->joystick.fire = 0;
     player->paused = 0;
     player->special_attack_active = false;
+    player->speed_multiplier = 0;
 }
 void move_player(Player *player)
 {
@@ -30,4 +31,14 @@ void move_player(Player *player)
         player->x -= PLAYER_SPEED * player->speed_multiplier;
     if (player->joystick.right && player->x < SCREEN_WIDTH - player->width)
         player->x += PLAYER_SPEED * player->speed_multiplier;
+
+    // Corrigir a posição para garantir que o jogador não saia da tela
+    if (player->x < 0)
+        player->x = 0;
+    if (player->x > SCREEN_WIDTH - player->width)
+        player->x = SCREEN_WIDTH - player->width;
+    if (player->y < 0)
+        player->y = 0;
+    if (player->y > SCREEN_HEIGHT - player->height)
+        player->y = SCREEN_HEIGHT - player->height;
 }

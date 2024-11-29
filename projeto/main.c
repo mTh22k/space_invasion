@@ -217,8 +217,8 @@ int main()
 
     ALLEGRO_BITMAP *item_sprite = al_load_bitmap("imagens/item.png");
     ALLEGRO_BITMAP *item_sprite_2 = al_load_bitmap("imagens/item_2.png");
-    Item item = {0, 0, false, item_sprite}; // item_sprite é o sprite do item
-    Item item_phase2 = {0, 0, false, item_sprite_2};
+    Item item = {0, 0, false, item_sprite,40,15}; // item_sprite é o sprite do item
+    Item item_phase2 = {0, 0, false, item_sprite_2,40,15};
 
     ALLEGRO_BITMAP *current_background = background;
     ALLEGRO_BITMAP *current_background_2 = background_2;
@@ -310,6 +310,7 @@ int main()
         {
             break; // Finaliza o jogo
         }
+        
 
         int redraw = 0;
         ALLEGRO_EVENT ev;
@@ -467,8 +468,9 @@ int main()
                             player_won = 0; // Reinicia a condição de vitória
                         }
                     }
-
+                
                     move_player(&player);
+                    printf("Jogador - Posição (%d, %d), Largura: %d, Altura: %d\n", player.x, player.y, player.width, player.height);
                     move_bullets(bullets, MAX_BULLETS, &player, font_menu, game_phase);
 
                     // Lógica de invulnerabilidade
@@ -597,99 +599,105 @@ int main()
             if (player.invulnerable && ((int)(al_get_time() * 10) % 2 == 0))
             {
                 // Verifica qual sprite foi escolhido no menu
-                switch (game_options.sprite_option)
+                if (player.joystick.down)
                 {
-                case 0: // Opção de sprite 1
-                    if (player.joystick.down)
+                    // Verifica qual sprite foi escolhido no menu
+                    switch (game_options.sprite_option)
                     {
+                    case 0:                                                       // Opção de sprite 1
                         al_draw_bitmap(player_sprite_dir, player.x, player.y, 0); // Desenha a sprite para a direita
-                    }
-                    else if (player.joystick.up)
-                    {
-                        al_draw_bitmap(player_sprite_esq, player.x, player.y, 0); // Desenha a sprite para a esquerda
-                    }
-                    else
-                    {
-                        al_draw_bitmap(player_sprite, player.x, player.y, 0); // Desenha a sprite padrão
-                    }
-                    break;
-                case 1: // Opção de sprite 2
-                    if (player.joystick.down)
-                    {
+                        break;
+                    case 1:                                                            // Opção de sprite 2
                         al_draw_bitmap(player_sprite_dir_dif1, player.x, player.y, 0); // Desenha o novo sprite para a direita
-                    }
-                    else if (player.joystick.up)
-                    {
-                        al_draw_bitmap(player_sprite_esq_dif1, player.x, player.y, 0); // Desenha o novo sprite para a esquerda
-                    }
-                    else
-                    {
-                        al_draw_bitmap(player_sprite_dif1, player.x, player.y, 0); // Desenha o novo sprite padrão
-                    }
-                    break;
-                case 2: // Opção de sprite 3
-                    if (player.joystick.down)
-                    {
+                        break;
+                    case 2:                                                            // Opção de sprite 3
                         al_draw_bitmap(player_sprite_dir_dif2, player.x, player.y, 0); // Desenha o terceiro sprite para a direita
+                        break;
                     }
-                    else if (player.joystick.up)
+                }
+                else if (player.joystick.up)
+                {
+                    // Verifica qual sprite foi escolhido no menu
+                    switch (game_options.sprite_option)
                     {
+                    case 0:                                                       // Opção de sprite 1
+                        al_draw_bitmap(player_sprite_esq, player.x, player.y, 0); // Desenha a sprite para a esquerda
+                        break;
+                    case 1:                                                            // Opção de sprite 2
+                        al_draw_bitmap(player_sprite_esq_dif1, player.x, player.y, 0); // Desenha o novo sprite para a esquerda
+                        break;
+                    case 2:                                                            // Opção de sprite 3
                         al_draw_bitmap(player_sprite_esq_dif2, player.x, player.y, 0); // Desenha o terceiro sprite para a esquerda
+                        break;
                     }
-                    else
+                }
+                else
+                {
+                    // Verifica qual sprite foi escolhido no menu
+                    switch (game_options.sprite_option)
                     {
+                    case 0:                                                   // Opção de sprite 1
+                        al_draw_bitmap(player_sprite, player.x, player.y, 0); // Desenha a sprite padrão
+                        break;
+                    case 1:                                                        // Opção de sprite 2
+                        al_draw_bitmap(player_sprite_dif1, player.x, player.y, 0); // Desenha o novo sprite padrão
+                        break;
+                    case 2:                                                        // Opção de sprite 3
                         al_draw_bitmap(player_sprite_dif2, player.x, player.y, 0); // Desenha o terceiro sprite padrão
+                        break;
                     }
-                    break;
                 }
             }
             else if (!player.invulnerable)
             {
                 // Verifica qual sprite foi escolhido no menu
-                switch (game_options.sprite_option)
+                if (player.joystick.down)
                 {
-                case 0: // Opção de sprite 1
-                    if (player.joystick.down)
+                    // Verifica qual sprite foi escolhido no menu
+                    switch (game_options.sprite_option)
                     {
+                    case 0:                                                       // Opção de sprite 1
                         al_draw_bitmap(player_sprite_dir, player.x, player.y, 0); // Desenha a sprite para a direita
-                    }
-                    else if (player.joystick.up)
-                    {
-                        al_draw_bitmap(player_sprite_esq, player.x, player.y, 0); // Desenha a sprite para a esquerda
-                    }
-                    else
-                    {
-                        al_draw_bitmap(player_sprite, player.x, player.y, 0); // Desenha a sprite padrão
-                    }
-                    break;
-                case 1: // Opção de sprite 2
-                    if (player.joystick.down)
-                    {
+                        break;
+                    case 1:                                                            // Opção de sprite 2
                         al_draw_bitmap(player_sprite_dir_dif1, player.x, player.y, 0); // Desenha o novo sprite para a direita
-                    }
-                    else if (player.joystick.up)
-                    {
-                        al_draw_bitmap(player_sprite_esq_dif1, player.x, player.y, 0); // Desenha o novo sprite para a esquerda
-                    }
-                    else
-                    {
-                        al_draw_bitmap(player_sprite_dif1, player.x, player.y, 0); // Desenha o novo sprite padrão
-                    }
-                    break;
-                case 2: // Opção de sprite 3
-                    if (player.joystick.down)
-                    {
+                        break;
+                    case 2:                                                            // Opção de sprite 3
                         al_draw_bitmap(player_sprite_dir_dif2, player.x, player.y, 0); // Desenha o terceiro sprite para a direita
+                        break;
                     }
-                    else if (player.joystick.up)
+                }
+                else if (player.joystick.up)
+                {
+                    // Verifica qual sprite foi escolhido no menu
+                    switch (game_options.sprite_option)
                     {
+                    case 0:                                                       // Opção de sprite 1
+                        al_draw_bitmap(player_sprite_esq, player.x, player.y, 0); // Desenha a sprite para a esquerda
+                        break;
+                    case 1:                                                            // Opção de sprite 2
+                        al_draw_bitmap(player_sprite_esq_dif1, player.x, player.y, 0); // Desenha o novo sprite para a esquerda
+                        break;
+                    case 2:                                                            // Opção de sprite 3
                         al_draw_bitmap(player_sprite_esq_dif2, player.x, player.y, 0); // Desenha o terceiro sprite para a esquerda
+                        break;
                     }
-                    else
+                }
+                else
+                {
+                    // Verifica qual sprite foi escolhido no menu
+                    switch (game_options.sprite_option)
                     {
+                    case 0:                                                   // Opção de sprite 1
+                        al_draw_bitmap(player_sprite, player.x, player.y, 0); // Desenha a sprite padrão
+                        break;
+                    case 1:                                                        // Opção de sprite 2
+                        al_draw_bitmap(player_sprite_dif1, player.x, player.y, 0); // Desenha o novo sprite padrão
+                        break;
+                    case 2:                                                        // Opção de sprite 3
                         al_draw_bitmap(player_sprite_dif2, player.x, player.y, 0); // Desenha o terceiro sprite padrão
+                        break;
                     }
-                    break;
                 }
             }
 
@@ -831,13 +839,23 @@ int main()
 
             if (item.active)
             {
+                // Debug: Exibir a posição e o tamanho do item
+                printf("Item fase 1 - Ativo: Posição (%d, %d), Largura: %d, Altura: %d\n", item.x, item.y, item.width, item.height);
 
-                al_draw_bitmap(item.sprite, item.x, item.y, 0); // Desenha o item no lugar onde ele foi gerado
+                // Desenha o item
+                // Desenha o item normalmente
+                al_draw_bitmap(item.sprite, item.x, item.y, 0);
+
             }
+
             if (item_phase2.active)
             {
+                // Debug: Exibir a posição e o tamanho do item da fase 2
+                printf("Item fase 2 - Ativo: Posição (%d, %d), Largura: %d, Altura: %d\n", item_phase2.x, item_phase2.y, item_phase2.width, item_phase2.height);
 
+                // Desenha o item da fase 2
                 al_draw_bitmap(item_phase2.sprite, item_phase2.x, item_phase2.y, 0);
+
             }
 
             if (boss.active)

@@ -184,31 +184,6 @@ void check_collisions(Player *player, Bullet bullets[], int bullet_count, Enemy 
                
             }
 
-            // Verificar colisão com o item da fase 1
-            if (item_phase1 != NULL && item_phase1->active &&
-                player->x < item_phase1->x + 40 &&
-                player->x + player->width > item_phase1->x &&
-                player->y < item_phase1->y + 40 &&
-                player->y + player->height > item_phase1->y)
-            {
-                item_phase1->active = false; // Consome o item da fase 1
-                player->special_attack_start_time = al_get_time();
-                player->special_attack_active = true;
-                printf("Item fase 1 consumido!\n"); // Log para depuração
-            }
-
-            // Verificar colisão com o item da fase 2
-            if (item_phase2 != NULL && item_phase2->active &&
-                player->x < item_phase2->x + 40 &&
-                player->x + player->width > item_phase2->x &&
-                player->y < item_phase2->y + 40 &&
-                player->y + player->height > item_phase2->y)
-            {
-                item_phase2->active = false; // Consome o item da fase 2
-                player->special_attack_start_time = al_get_time();
-                player->special_attack_active = true;
-                printf("Item fase 2 consumido!\n"); // Log para depuração
-            }
         }
     }
 
@@ -232,6 +207,38 @@ void check_collisions(Player *player, Bullet bullets[], int bullet_count, Enemy 
                     *game_over = 1;
             }
         }
+    }
+
+    // Verificar colisão com o item da fase 1
+    // Verificar colisão com o item da fase 1
+    // Aumenta a área de colisão do item, mantendo a imagem do item inalterada
+
+    // Verificar colisão com o item da fase 1
+    if (item_phase1 != NULL && item_phase1->active &&
+        player->x < item_phase1->x + item_phase1->width &&  // Aumenta a borda direita da colisão
+        player->x + player->width > item_phase1->x &&       // Aumenta a borda esquerda da colisão
+        player->y < item_phase1->y + item_phase1->height && // Aumenta a borda inferior da colisão
+        player->y + player->height > item_phase1->y)        // Aumenta a borda superior da colisão
+    {
+        printf("Colisão detectada com o item fase 1!\n");
+        item_phase1->active = false; // Consome o item da fase 1
+        player->special_attack_start_time = al_get_time();
+        player->special_attack_active = true;
+        printf("Item fase 1 consumido!\n"); // Log para depuração
+    }
+
+    // Verificar colisão com o item da fase 2
+    if (item_phase2 != NULL && item_phase2->active &&
+        player->x < item_phase2->x + item_phase2->width &&  // Aumenta a borda direita da colisão
+        player->x + player->width > item_phase2->x &&       // Aumenta a borda esquerda da colisão
+        player->y < item_phase2->y + item_phase2->height && // Aumenta a borda inferior da colisão
+        player->y + player->height > item_phase2->y)        // Aumenta a borda superior da colisão
+    {
+        printf("Colisão detectada com o item fase 2!\n");
+        item_phase2->active = false; // Consome o item da fase 2
+        player->special_attack_start_time = al_get_time();
+        player->special_attack_active = true;
+        printf("Item fase 2 consumido!\n"); // Log para depuração
     }
 
     // Verificar colisões entre o jogador e inimigos que disparam
