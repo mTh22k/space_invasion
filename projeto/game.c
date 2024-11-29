@@ -326,7 +326,7 @@ void show_game_over_menu(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_qu
 {
     int menu_active = 1;
     float background_x = 0;
-    int color_counter = 0;          // Contador para alternar entre cores
+    int color_counter = 0;      
     int frame_counter = 0;          // Contador de frames para mudar a cor a cada 30 frames
     int color_change_interval = 30; // Intervalo de frames entre mudanças de cor
 
