@@ -7,8 +7,9 @@ void init_allegro()
     al_init_primitives_addon();
     al_init_font_addon();
     al_init_ttf_addon();
-    al_install_keyboard();
     al_init_image_addon();
+    ALLEGRO_DISPLAY *display = al_create_display(SCREEN_WIDTH, SCREEN_HEIGHT);
+    al_install_keyboard();
     srand(time(0));
 }
 
