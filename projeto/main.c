@@ -32,7 +32,7 @@
 #define FIRE_INTERVAL 0.2        // Intervalo de disparo em segundos
 #define INVULNERABILITY_TIME 1.5 // Tempo de invulnerabilidade em segundos
 #define BOSS_SHOT_INTERVAL 0.4
-#define TIME_TO_BOSS 12
+#define TIME_TO_BOSS 30
 #define SCROLL_SPEED 60
 #define EXPLOSION_FRAME_COUNT 5
 
@@ -43,6 +43,12 @@ int main()
     al_init_font_addon();
     al_init_ttf_addon();
     al_init_image_addon();
+    ALLEGRO_DISPLAY *display = al_create_display(800, 600);
+    if (!display)
+    {
+        fprintf(stderr, "Falha ao criar a janela de exibição!\n");
+        return -1;
+    }
     if (!al_install_keyboard())
     {
         fprintf(stderr, "Falha ao instalar o teclado!\n");
@@ -53,12 +59,6 @@ int main()
 
     init_options(&game_options);
 
-    ALLEGRO_DISPLAY *display = al_create_display(800, 600);
-    if (!display)
-    {
-        fprintf(stderr, "Falha ao criar a janela de exibição!\n");
-        return -1;
-    }
     ALLEGRO_EVENT_QUEUE *event_queue = al_create_event_queue();
     ALLEGRO_TIMER *timer = al_create_timer(1.0 / 50);
     ALLEGRO_FONT *font = al_load_ttf_font("fonts/ATC.ttf", 12, 0);
