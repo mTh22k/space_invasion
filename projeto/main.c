@@ -32,13 +32,17 @@
 #define FIRE_INTERVAL 0.2        // Intervalo de disparo em segundos
 #define INVULNERABILITY_TIME 1.5 // Tempo de invulnerabilidade em segundos
 #define BOSS_SHOT_INTERVAL 0.4
-#define TIME_TO_BOSS 2
+#define TIME_TO_BOSS 12
 #define SCROLL_SPEED 60
 #define EXPLOSION_FRAME_COUNT 5
 
 int main()
 {
     init_allegro();
+
+    GameOptions game_options;
+
+    init_options(&game_options);
 
     ALLEGRO_DISPLAY *display = al_create_display(SCREEN_WIDTH, SCREEN_HEIGHT);
     ALLEGRO_EVENT_QUEUE *event_queue = al_create_event_queue();
@@ -49,9 +53,72 @@ int main()
     ALLEGRO_FONT *font_info = al_load_ttf_font("fonts/menu_f.ttf", 20, 0);
     ALLEGRO_BITMAP *background = al_load_bitmap("imagens/background.png");
     ALLEGRO_BITMAP *background_2 = al_load_bitmap("imagens/background_2.png");
+    ALLEGRO_BITMAP *background_3 = al_load_bitmap("imagens/background_3.png");
+
     ALLEGRO_BITMAP *player_sprite = al_load_bitmap("imagens/nave.png");
+    if (!player_sprite)
+    {
+        fprintf(stderr, "Erro ao carregar a imagem 'imagens/nave.png'.\n");
+        return -1;
+    }
+
     ALLEGRO_BITMAP *player_sprite_dir = al_load_bitmap("imagens/nave_dir.png");
+    if (!player_sprite_dir)
+    {
+        fprintf(stderr, "Erro ao carregar a imagem 'imagens/nave_dir.png'.\n");
+        return -1;
+    }
+
     ALLEGRO_BITMAP *player_sprite_esq = al_load_bitmap("imagens/nave_esq.png");
+    if (!player_sprite_esq)
+    {
+        fprintf(stderr, "Erro ao carregar a imagem 'imagens/nave_esq.png'.\n");
+        return -1;
+    }
+
+    ALLEGRO_BITMAP *player_sprite_dif1 = al_load_bitmap("imagens/nave1.png");
+    if (!player_sprite_dif1)
+    {
+        fprintf(stderr, "Erro ao carregar a imagem 'imagens/nave1.png'.\n");
+        return -1;
+    }
+
+    ALLEGRO_BITMAP *player_sprite_dir_dif1 = al_load_bitmap("imagens/nave_1_dir.png");
+    if (!player_sprite_dir_dif1)
+    {
+        fprintf(stderr, "Erro ao carregar a imagem 'imagens/nave_1_dir.png'.\n");
+        return -1;
+    }
+
+    ALLEGRO_BITMAP *player_sprite_esq_dif1 = al_load_bitmap("imagens/nave_1_esq.png");
+    if (!player_sprite_esq_dif1)
+    {
+        fprintf(stderr, "Erro ao carregar a imagem 'imagens/nave_1_esq.png'.\n");
+        return -1;
+    }
+
+    ALLEGRO_BITMAP *player_sprite_dif2 = al_load_bitmap("imagens/nave2.png");
+    if (!player_sprite_dif2)
+    {
+        fprintf(stderr, "Erro ao carregar a imagem 'imagens/nave2.png'.\n");
+        return -1;
+    }
+
+    ALLEGRO_BITMAP *player_sprite_dir_dif2 = al_load_bitmap("imagens/nave_2_dir.png");
+    if (!player_sprite_dir_dif2)
+    {
+        fprintf(stderr, "Erro ao carregar a imagem 'imagens/nave_2_dir.png'.\n");
+        return -1;
+    }
+
+    ALLEGRO_BITMAP *player_sprite_esq_dif2 = al_load_bitmap("imagens/nave_2_esq.png");
+    if (!player_sprite_esq_dif2)
+    {
+        fprintf(stderr, "Erro ao carregar a imagem 'imagens/nave_2_esq.png'.\n");
+        return -1;
+    }
+    ALLEGRO_BITMAP *bullet_sprite_dif1 = al_load_bitmap("imagens/bullet_dif1.png");
+    ALLEGRO_BITMAP *bullet_sprite_dif2 = al_load_bitmap("imagens/bullet_dif2.png");
     ALLEGRO_BITMAP *bullet_sprite = al_load_bitmap("imagens/bullet.png");
     ALLEGRO_BITMAP *bullet_sprite_2 = al_load_bitmap("imagens/bullet_2.png");
     ALLEGRO_BITMAP *bullet_sprite_3 = al_load_bitmap("imagens/bullet_3.png");
@@ -70,6 +137,7 @@ int main()
     ALLEGRO_BITMAP *explosion_sprite = al_load_bitmap("imagens/frame5.png");
     ALLEGRO_BITMAP *explosion_boss = al_load_bitmap("imagens/frame4.png");
     ALLEGRO_BITMAP *bulletEnemy_boss2 = al_load_bitmap("imagens/bulletEnemy_boss2.png");
+    ALLEGRO_BITMAP *sla = al_load_bitmap("imagens/sla.png");
     if (!al_install_audio())
     {
         fprintf(stderr, "Falha ao inicializar o sistema de áudio.\n");
@@ -115,6 +183,9 @@ int main()
     int enemy_bullet_width = al_get_bitmap_width(enemy_bullet_sprite);
     int enemy_bullet_height = al_get_bitmap_height(enemy_bullet_sprite);
 
+    int continue_game = 0;
+    int exit_game = 0;
+
     Player player;
     Bullet bullets[MAX_BULLETS];
     Enemy enemies[MAX_ENEMIES];
@@ -135,6 +206,9 @@ int main()
     Item item = {0, 0, false, item_sprite}; // item_sprite é o sprite do item
     Item item_phase2 = {0, 0, false, item_sprite_2};
 
+    ALLEGRO_BITMAP *current_background = background;
+    ALLEGRO_BITMAP *current_background_2 = background_2;
+
     int firing = 0;
     int paused = 0;
     double last_fire_time = 0;
@@ -145,7 +219,6 @@ int main()
     float background_x = 0;
     int victory_state = 0; // 0 = sem vitória, 1 = animação de explosão, 2 = tela de vitória
     int restart_game = 0;
-    int exit_game = 0;
     float background_speed = 2.0; // Velocidade padrão do plano de fundo
     int enemy_destroyed_count = 0;
     double boss_start_time = 0; // Armazena o tempo em que a espera para o boss começa
@@ -153,6 +226,8 @@ int main()
     double boss_shoot_delay = 0; // Variável para controlar o tempo de ativação do boss
     bool boss_can_shoot = false;
     double boss_shoot_start_time = 0;
+
+    int checkbox_states[3][3] = {{1, 0, 0}, {1, 0, 0}, {1, 0, 0}};
 
     int explosion_frame = 0;
     float explosion_timer = 0.0;
@@ -172,7 +247,7 @@ int main()
 
     al_start_timer(timer);
     // Loop do menu
-    run_menu(font_menu, background, event_queue, display, music_menu);
+    run_menu(font_menu, background, event_queue, display, music_menu, &game_options, &exit_game);
 
     // Para parar a música
     al_detach_audio_stream(music_menu);
@@ -188,8 +263,40 @@ int main()
     al_set_audio_stream_playmode(music, ALLEGRO_PLAYMODE_LOOP);
     al_attach_audio_stream_to_mixer(music, al_get_default_mixer());
 
+    if (game_options.new_option_2 == 0)
+    {
+        current_background = background; // Use o fundo 2
+    }
+    else if (game_options.new_option_2 == 1)
+    {
+        current_background = background_2; // Use um fundo adicional (defina-o antes)
+    }
+    else if (game_options.new_option_2 == 2)
+    {
+        current_background = background_3;
+    }
+
+    if (game_options.new_option_3 == 0)
+    {
+        current_background_2 = background; // Use o fundo 2
+    }
+    else if (game_options.new_option_3 == 1)
+    {
+        current_background_2 = background_2; // Use um fundo adicional (defina-o antes)
+    }
+    else if (game_options.new_option_3 == 2)
+    {
+        current_background_2 = background_3;
+    }
+
     while (1)
     {
+
+        if (exit_game == 1)
+        {
+            break; // Finaliza o jogo
+        }
+
         int redraw = 0;
         ALLEGRO_EVENT ev;
         al_wait_for_event(event_queue, &ev);
@@ -204,7 +311,7 @@ int main()
             {
                 background_x -= background_speed;
                 // Controla a velocidade de rolagem do fundo
-                if (background_x <= -al_get_bitmap_width(background))
+                if (background_x <= -al_get_bitmap_width(current_background))
                 {
                     background_x = 0;
                 }
@@ -299,17 +406,16 @@ int main()
                                 // Verificar colisões entre balas do jogador e o chefe
                                 shoot_boss_bullet(&boss, boss_bullets, &boss_bullet_count, game_phase);
                                 move_boss_bullets(boss_bullets, MAX_BOSS_BULLETS);
-                                check_boss_bullet_collisions(&player,&boss, boss_bullets, &game_over, game_phase);
+                                check_boss_bullet_collisions(&player, &boss, boss_bullets, &game_over, game_phase);
                             }
-                        } else 
+                        }
+                        else
                         {
                             item_phase2.active = false;
                             shoot_boss_bullet(&boss, boss_bullets, &boss_bullet_count, game_phase);
                             move_boss_bullets(boss_bullets, MAX_BOSS_BULLETS);
-                            check_boss_bullet_collisions(&player,&boss ,boss_bullets, &game_over, game_phase);
+                            check_boss_bullet_collisions(&player, &boss, boss_bullets, &game_over, game_phase);
                         }
-                        
-                
 
                         // Checar colisão direta com o boss
                         check_boss_collision(&player, bullets, MAX_BULLETS, &boss, &score, &player_won, &game_over, game_phase);
@@ -318,12 +424,10 @@ int main()
                     if (player_won && victory_state == 0)
                     {
                         // Reproduzir a animação de explosão do boss derrotado
-                        // play_explosion(boss.x, boss.y, explosion_bitmaps, background);
+                        // play_explosion(boss.x, boss.y, explosion_bitmaps, current_background);
                         // al_rest(0.5);
 
                         // Configurar variáveis para o menu de transição
-                        int continue_game = 0;
-                        int exit_game = 0;
 
                         if (game_phase < 2)
                         {
@@ -346,9 +450,7 @@ int main()
                             game_phase = 2;
                             item_phase2.active = false; // Assegura que o item da fase 2 está desativado quando a fase 2 começa
 
-                            printf("Iniciando fase 2...\n");
                             player_won = 0; // Reinicia a condição de vitória
-                        
                         }
                     }
 
@@ -395,7 +497,7 @@ int main()
                 player.paused = !player.paused;
                 if (player.paused)
                 {
-                    draw_pause_message(font_menu, background, event_queue, display, &player, &exit_game);
+                    draw_pause_message(font_menu, current_background, event_queue, display, &player, &exit_game);
                 }
                 break;
             }
@@ -455,7 +557,7 @@ int main()
 
         if (player.paused)
         {
-            draw_pause_message(font_menu, background, event_queue, display, &player, &exit_game); // Mostra a mensagem de pausa
+            draw_pause_message(font_menu, current_background, event_queue, display, &player, &exit_game); // Mostra a mensagem de pausa
         }
         if (exit_game)
         {
@@ -467,45 +569,113 @@ int main()
             if (game_phase == 1)
             {
                 al_clear_to_color(al_map_rgb(0, 0, 0));
-                al_draw_bitmap(background, background_x, 0, 0);
-                al_draw_bitmap(background, background_x + al_get_bitmap_width(background), 0, 0);
+                al_draw_bitmap(current_background, background_x, 0, 0);
+                al_draw_bitmap(current_background, background_x + al_get_bitmap_width(current_background), 0, 0);
             }
             else if (game_phase == 2)
             {
                 al_clear_to_color(al_map_rgb(0, 0, 0));
-                al_draw_bitmap(background_2, background_x, 0, 0);
-                al_draw_bitmap(background_2, background_x + al_get_bitmap_width(background_2), 0, 0);
+                al_draw_bitmap(current_background_2, background_x, 0, 0);
+                al_draw_bitmap(current_background_2, background_x + al_get_bitmap_width(current_background_2), 0, 0);
             }
             // Desenhar o jogador com efeito de piscamento se estiver invulnerável
 
             if (player.invulnerable && ((int)(al_get_time() * 10) % 2 == 0))
             {
-                if (player.joystick.down)
+                // Verifica qual sprite foi escolhido no menu
+                switch (game_options.sprite_option)
                 {
-                    al_draw_bitmap(player_sprite_dir, player.x, player.y, 0); // Desenha a sprite para a direita
-                }
-                else if (player.joystick.up)
-                {
-                    al_draw_bitmap(player_sprite_esq, player.x, player.y, 0); // Desenha a sprite para a esquerda
-                }
-                else
-                {
-                    al_draw_bitmap(player_sprite, player.x, player.y, 0); // Desenha a sprite padrão
+                case 0: // Opção de sprite 1
+                    if (player.joystick.down)
+                    {
+                        al_draw_bitmap(player_sprite_dir, player.x, player.y, 0); // Desenha a sprite para a direita
+                    }
+                    else if (player.joystick.up)
+                    {
+                        al_draw_bitmap(player_sprite_esq, player.x, player.y, 0); // Desenha a sprite para a esquerda
+                    }
+                    else
+                    {
+                        al_draw_bitmap(player_sprite, player.x, player.y, 0); // Desenha a sprite padrão
+                    }
+                    break;
+                case 1: // Opção de sprite 2
+                    if (player.joystick.down)
+                    {
+                        al_draw_bitmap(player_sprite_dir_dif1, player.x, player.y, 0); // Desenha o novo sprite para a direita
+                    }
+                    else if (player.joystick.up)
+                    {
+                        al_draw_bitmap(player_sprite_esq_dif1, player.x, player.y, 0); // Desenha o novo sprite para a esquerda
+                    }
+                    else
+                    {
+                        al_draw_bitmap(player_sprite_dif1, player.x, player.y, 0); // Desenha o novo sprite padrão
+                    }
+                    break;
+                case 2: // Opção de sprite 3
+                    if (player.joystick.down)
+                    {
+                        al_draw_bitmap(player_sprite_dir_dif2, player.x, player.y, 0); // Desenha o terceiro sprite para a direita
+                    }
+                    else if (player.joystick.up)
+                    {
+                        al_draw_bitmap(player_sprite_esq_dif2, player.x, player.y, 0); // Desenha o terceiro sprite para a esquerda
+                    }
+                    else
+                    {
+                        al_draw_bitmap(player_sprite_dif2, player.x, player.y, 0); // Desenha o terceiro sprite padrão
+                    }
+                    break;
                 }
             }
             else if (!player.invulnerable)
             {
-                if (player.joystick.down)
+                // Verifica qual sprite foi escolhido no menu
+                switch (game_options.sprite_option)
                 {
-                    al_draw_bitmap(player_sprite_dir, player.x, player.y, 0); // Desenha a sprite para a direita
-                }
-                else if (player.joystick.up)
-                {
-                    al_draw_bitmap(player_sprite_esq, player.x, player.y, 0); // Desenha a sprite para a esquerda
-                }
-                else
-                {
-                    al_draw_bitmap(player_sprite, player.x, player.y, 0); // Desenha a sprite padrão
+                case 0: // Opção de sprite 1
+                    if (player.joystick.down)
+                    {
+                        al_draw_bitmap(player_sprite_dir, player.x, player.y, 0); // Desenha a sprite para a direita
+                    }
+                    else if (player.joystick.up)
+                    {
+                        al_draw_bitmap(player_sprite_esq, player.x, player.y, 0); // Desenha a sprite para a esquerda
+                    }
+                    else
+                    {
+                        al_draw_bitmap(player_sprite, player.x, player.y, 0); // Desenha a sprite padrão
+                    }
+                    break;
+                case 1: // Opção de sprite 2
+                    if (player.joystick.down)
+                    {
+                        al_draw_bitmap(player_sprite_dir_dif1, player.x, player.y, 0); // Desenha o novo sprite para a direita
+                    }
+                    else if (player.joystick.up)
+                    {
+                        al_draw_bitmap(player_sprite_esq_dif1, player.x, player.y, 0); // Desenha o novo sprite para a esquerda
+                    }
+                    else
+                    {
+                        al_draw_bitmap(player_sprite_dif1, player.x, player.y, 0); // Desenha o novo sprite padrão
+                    }
+                    break;
+                case 2: // Opção de sprite 3
+                    if (player.joystick.down)
+                    {
+                        al_draw_bitmap(player_sprite_dir_dif2, player.x, player.y, 0); // Desenha o terceiro sprite para a direita
+                    }
+                    else if (player.joystick.up)
+                    {
+                        al_draw_bitmap(player_sprite_esq_dif2, player.x, player.y, 0); // Desenha o terceiro sprite para a esquerda
+                    }
+                    else
+                    {
+                        al_draw_bitmap(player_sprite_dif2, player.x, player.y, 0); // Desenha o terceiro sprite padrão
+                    }
+                    break;
                 }
             }
 
@@ -528,7 +698,18 @@ int main()
                         }
                         else
                         {
-                            al_draw_bitmap(bullet_sprite, bullets[i].x + 15, bullets[i].y + 10, 0);
+                            if (game_options.new_option_1 == 0)
+                            {
+                                al_draw_bitmap(bullet_sprite, bullets[i].x + 15, bullets[i].y + 10, 0);
+                            }
+                            else if (game_options.new_option_1 == 1)
+                            {
+                                al_draw_bitmap(bullet_sprite_dif1, bullets[i].x + 15, bullets[i].y + 10, 0);
+                            }
+                            else if (game_options.new_option_1 == 2)
+                            {
+                                al_draw_bitmap(bullet_sprite_dif2, bullets[i].x + 15, bullets[i].y + 10, 0);
+                            }
                         }
                     }
                     else if (game_phase == 2)
@@ -539,7 +720,18 @@ int main()
                         }
                         else
                         {
-                            al_draw_bitmap(bullet_sprite, bullets[i].x + 15, bullets[i].y + 10, 0);
+                            if (game_options.new_option_1 == 0)
+                            {
+                                al_draw_bitmap(bullet_sprite, bullets[i].x + 15, bullets[i].y + 10, 0);
+                            }
+                            else if (game_options.new_option_1 == 1)
+                            {
+                                al_draw_bitmap(bullet_sprite_dif1, bullets[i].x + 15, bullets[i].y + 10, 0);
+                            }
+                            else if (game_options.new_option_1 == 2)
+                            {
+                                al_draw_bitmap(bullet_sprite_dif2, bullets[i].x + 15, bullets[i].y + 10, 0);
+                            }
                         }
                     }
                 }
@@ -564,7 +756,7 @@ int main()
                             al_draw_bitmap(enemy_sprite_2, enemies[i].x, enemies[i].y, 0);
                         }
 
-                        draw_explosion(&enemies[i], explosion_sprite, 0.1);
+                    draw_explosion(&enemies[i], explosion_sprite, 0.1);
                 }
 
                 if (item.active)
@@ -606,7 +798,6 @@ int main()
 
                             al_draw_bitmap(shooting_enemy_sprite_2, shooting_enemy.x, shooting_enemy.y, 0); // Desenhar o inimigo
                         }
-
 
                         // Renderizar os projéteis do inimigo
                         for (int j = 0; j < 10; j++) // Substitua 10 pelo número máximo de projéteis que cada inimigo pode ter
@@ -651,11 +842,11 @@ int main()
                             {
                                 al_draw_bitmap(boss_bullet_sprite, boss_bullets[i].x, boss_bullets[i].y, 0);
                             }
-                        } else 
+                        }
+                        else
                         {
                             al_draw_bitmap(boss_bullet_sprite, boss_bullets[i].x, boss_bullets[i].y, 0);
                         }
-                        
                     }
                 }
                 move_boss(&boss, game_phase);
@@ -682,19 +873,14 @@ int main()
         }
     }
 
-
-    cleanup_resources(
-        display, event_queue, timer,
-        font, font_menu, font_warn, font_info,
-        background, background_2,
-        player_sprite, player_sprite_dir, player_sprite_esq,
-        bullet_sprite, bullet_sprite_2, bullet_sprite_3,
-        enemy_sprite, enemy_sprite_2,
-        shooting_enemy_sprite, shooting_enemy_sprite_2,
-        enemy_bullet_sprite, boss_sprite, boss_sprite_2,
-        boss_bullet_sprite, boss_bullet_special,
-        heart_full, heart_null, icon,
-        item_sprite, item_sprite_2, bulletEnemy_boss2);
+    cleanup_resources(display, event_queue, timer, font, font_menu, font_warn, font_info, background, background_2,
+                      background_3, player_sprite, player_sprite_dir, player_sprite_esq, player_sprite_dif1,
+                      player_sprite_dir_dif1, player_sprite_esq_dif1, player_sprite_dif2, player_sprite_dir_dif2,
+                      player_sprite_esq_dif2, bullet_sprite, bullet_sprite_2, bullet_sprite_3, bullet_sprite_dif1,
+                      bullet_sprite_dif2, enemy_sprite, enemy_sprite_2, shooting_enemy_sprite, shooting_enemy_sprite_2,
+                      enemy_bullet_sprite, boss_sprite, boss_sprite_2, boss_bullet_sprite, boss_bullet_special,
+                      heart_full, heart_null, icon, explosion_sprite, explosion_boss, item_sprite, item_sprite_2,
+                      bulletEnemy_boss2, sla);
 
     al_destroy_audio_stream(music);
     al_destroy_audio_stream(music_menu);

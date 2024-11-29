@@ -30,7 +30,7 @@
 #define FIRE_INTERVAL 0.2
 #define INVULNERABILITY_TIME 1.5
 #define BOSS_SHOT_INTERVAL 0.4
-#define TIME_TO_BOSS 2
+#define TIME_TO_BOSS 12
 #define SCROLL_SPEED 60
 #define EXPLOSION_FRAME_COUNT 5
 
@@ -38,6 +38,21 @@ typedef struct
 {
     unsigned char right, left, up, down, fire;
 } Joystick;
+
+typedef struct
+{
+    int sprite_option;    // 0, 1 ou 2 (tipos de nave ou opção relacionada)
+    int group_1_selected; // 1 para marcar o grupo 1, 0 para desmarcar
+
+        int new_option_1;     // 0, 1 ou 2 (opção 1 do novo grupo)
+    int group_2_selected; // 1 para marcar o grupo 2, 0 para desmarcar
+
+    int new_option_2;
+    int group_3_selected;
+
+    int new_option_3;
+    int group_4_selected;
+} GameOptions;
 
 typedef struct
 {

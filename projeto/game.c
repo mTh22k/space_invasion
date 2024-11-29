@@ -15,33 +15,55 @@ void init_allegro()
 void cleanup_resources(
     ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_TIMER *timer,
     ALLEGRO_FONT *font, ALLEGRO_FONT *font_menu, ALLEGRO_FONT *font_warn, ALLEGRO_FONT *font_info,
-    ALLEGRO_BITMAP *background, ALLEGRO_BITMAP *background_2,
+    ALLEGRO_BITMAP *background, ALLEGRO_BITMAP *background_2, ALLEGRO_BITMAP *background_3,
     ALLEGRO_BITMAP *player_sprite, ALLEGRO_BITMAP *player_sprite_dir, ALLEGRO_BITMAP *player_sprite_esq,
+    ALLEGRO_BITMAP *player_sprite_dif1, ALLEGRO_BITMAP *player_sprite_dir_dif1, ALLEGRO_BITMAP *player_sprite_esq_dif1,
+    ALLEGRO_BITMAP *player_sprite_dif2, ALLEGRO_BITMAP *player_sprite_dir_dif2, ALLEGRO_BITMAP *player_sprite_esq_dif2,
     ALLEGRO_BITMAP *bullet_sprite, ALLEGRO_BITMAP *bullet_sprite_2, ALLEGRO_BITMAP *bullet_sprite_3,
+    ALLEGRO_BITMAP *bullet_sprite_dif1, ALLEGRO_BITMAP *bullet_sprite_dif2,
     ALLEGRO_BITMAP *enemy_sprite, ALLEGRO_BITMAP *enemy_sprite_2,
     ALLEGRO_BITMAP *shooting_enemy_sprite, ALLEGRO_BITMAP *shooting_enemy_sprite_2,
     ALLEGRO_BITMAP *enemy_bullet_sprite, ALLEGRO_BITMAP *boss_sprite, ALLEGRO_BITMAP *boss_sprite_2,
     ALLEGRO_BITMAP *boss_bullet_sprite, ALLEGRO_BITMAP *boss_bullet_special,
     ALLEGRO_BITMAP *heart_full, ALLEGRO_BITMAP *heart_null, ALLEGRO_BITMAP *icon,
-    ALLEGRO_BITMAP *item_sprite, ALLEGRO_BITMAP *item_sprite_2, ALLEGRO_BITMAP *bulletEnemy_boss2)
+    ALLEGRO_BITMAP *explosion_sprite, ALLEGRO_BITMAP *explosion_boss, ALLEGRO_BITMAP *item_sprite,
+    ALLEGRO_BITMAP *item_sprite_2, ALLEGRO_BITMAP *bulletEnemy_boss2, ALLEGRO_BITMAP *sla)
 {
     // Libera bitmaps
     if (background)
         al_destroy_bitmap(background);
     if (background_2)
         al_destroy_bitmap(background_2);
+    if (background_3)
+        al_destroy_bitmap(background_3);
     if (player_sprite)
         al_destroy_bitmap(player_sprite);
     if (player_sprite_dir)
         al_destroy_bitmap(player_sprite_dir);
     if (player_sprite_esq)
         al_destroy_bitmap(player_sprite_esq);
+    if (player_sprite_dif1)
+        al_destroy_bitmap(player_sprite_dif1);
+    if (player_sprite_dir_dif1)
+        al_destroy_bitmap(player_sprite_dir_dif1);
+    if (player_sprite_esq_dif1)
+        al_destroy_bitmap(player_sprite_esq_dif1);
+    if (player_sprite_dif2)
+        al_destroy_bitmap(player_sprite_dif2);
+    if (player_sprite_dir_dif2)
+        al_destroy_bitmap(player_sprite_dir_dif2);
+    if (player_sprite_esq_dif2)
+        al_destroy_bitmap(player_sprite_esq_dif2);
     if (bullet_sprite)
         al_destroy_bitmap(bullet_sprite);
     if (bullet_sprite_2)
         al_destroy_bitmap(bullet_sprite_2);
     if (bullet_sprite_3)
         al_destroy_bitmap(bullet_sprite_3);
+    if (bullet_sprite_dif1)
+        al_destroy_bitmap(bullet_sprite_dif1);
+    if (bullet_sprite_dif2)
+        al_destroy_bitmap(bullet_sprite_dif2);
     if (enemy_sprite)
         al_destroy_bitmap(enemy_sprite);
     if (enemy_sprite_2)
@@ -66,12 +88,18 @@ void cleanup_resources(
         al_destroy_bitmap(heart_null);
     if (icon)
         al_destroy_bitmap(icon);
+    if (explosion_sprite)
+        al_destroy_bitmap(explosion_sprite);
+    if (explosion_boss)
+        al_destroy_bitmap(explosion_boss);
     if (item_sprite)
         al_destroy_bitmap(item_sprite);
     if (item_sprite_2)
         al_destroy_bitmap(item_sprite_2);
     if (bulletEnemy_boss2)
         al_destroy_bitmap(bulletEnemy_boss2);
+    if (sla)
+        al_destroy_bitmap(sla);
 
     // Libera fontes
     if (font)
@@ -647,13 +675,17 @@ void exibir_texto_gradualmente(const char *texto, ALLEGRO_FONT *fonte, float x, 
         }
     }
 
-    void exibir_tela_controles(ALLEGRO_FONT * font, ALLEGRO_BITMAP * background, ALLEGRO_EVENT_QUEUE * event_queue, ALLEGRO_DISPLAY * display)
+    void exibir_tela_controles(ALLEGRO_FONT * font, ALLEGRO_BITMAP * background, ALLEGRO_EVENT_QUEUE * event_queue, ALLEGRO_DISPLAY * display, int *exit_game, int *menu_running)
     {
         float background_x = 0;
         int running = 1; // Controle do loop
 
         while (running)
         {
+            if (*exit_game)
+            {
+                break; // Finaliza o jogo
+            }
             ALLEGRO_EVENT ev;
             al_wait_for_event(event_queue, &ev);
 
@@ -687,20 +719,22 @@ void exibir_texto_gradualmente(const char *texto, ALLEGRO_FONT *fonte, float x, 
             }
             else if (ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE)
             {
-                // Liberar recursos antes de sair
-                al_destroy_display(display);         // Destruir o display
-                al_destroy_event_queue(event_queue); // Destruir a fila de eventos
-                exit(0);                             // Fechar o programa corretamente
+                running = 0;
+                *exit_game = 1;
+                *menu_running = 0;                            // Fechar o programa corretamente
             }
         }
+    
     }
 
-    void run_menu(ALLEGRO_FONT *font_menu, ALLEGRO_BITMAP *background, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_DISPLAY *display, ALLEGRO_AUDIO_STREAM *music_menu)
+    void run_menu(ALLEGRO_FONT *font_menu, ALLEGRO_BITMAP *background, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_DISPLAY *display, ALLEGRO_AUDIO_STREAM *music_menu, GameOptions *game_options, int *exit_game)
     {
         int menu_running = 1;
         int selected_option = 0;
         float background_x = 0;
         float background_speed = 1.0;
+
+        
 
         al_set_audio_stream_playmode(music_menu, ALLEGRO_PLAYMODE_LOOP);
         al_attach_audio_stream_to_mixer(music_menu, al_get_default_mixer());
@@ -717,7 +751,7 @@ void exibir_texto_gradualmente(const char *texto, ALLEGRO_FONT *fonte, float x, 
 
         int color_counter = 0;          // Contador para alternar entre cores
         int color_change_timer = 0;     // Timer para controlar a mudança de cor
-        int color_change_interval = 30; // Intervalo de frames entre mudanças de cor (ajuste esse valor para alterar a velocidade)
+        int color_change_interval = 30; // Intervalo de frames entre mudanças de cor
         ALLEGRO_COLOR colors[] = {
             al_map_rgb(255, 0, 0),    // Vermelho
             al_map_rgb(0, 255, 0),    // Verde
@@ -730,12 +764,18 @@ void exibir_texto_gradualmente(const char *texto, ALLEGRO_FONT *fonte, float x, 
 
         while (menu_running)
         {
+            if (*exit_game == 1)
+            {
+                break; // Finaliza o jogo
+            }
+
             ALLEGRO_EVENT ev;
             al_wait_for_event(event_queue, &ev);
 
             if (ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE)
             {
                 menu_running = 0;
+                *exit_game = 1;
             }
             else if (ev.type == ALLEGRO_EVENT_TIMER)
             {
@@ -759,7 +799,7 @@ void exibir_texto_gradualmente(const char *texto, ALLEGRO_FONT *fonte, float x, 
                     color_counter++;        // Alterar para a próxima cor
                     if (color_counter >= num_colors)
                     {
-                        color_counter = 0; // ALLEGRO_BITMAP *background = al_load_bitmap("imagens/background.png");Voltar para a primeira cor
+                        color_counter = 0; // Voltar para a primeira cor
                     }
                 }
 
@@ -767,22 +807,22 @@ void exibir_texto_gradualmente(const char *texto, ALLEGRO_FONT *fonte, float x, 
                 ALLEGRO_COLOR current_color = colors[color_counter % num_colors]; // Alterna entre as cores
 
                 // Desenhar título
-                al_draw_text(font_title, current_color, 400, 130, ALLEGRO_ALIGN_CENTER, "Space Impact");
+                al_draw_text(font_title, current_color, 400, 80, ALLEGRO_ALIGN_CENTER, "Space Impact");
 
                 // Desenhar opções do menu
                 for (int i = 0; i < 4; i++)
                 {
                     ALLEGRO_COLOR color = (i == selected_option) ? al_map_rgb(255, 255, 255) : al_map_rgb(0, 0, 0);
                     const char *text;
-                    float pos_y = 320 + i * 80; // Maior distância entre os botões
+                    float pos_y = 270 + i * 75; // Maior distância entre os botões
                     if (i == 0)
                         text = "Começar";
+                    else if (i == 2)
+                        text = "Opções";
                     else if (i == 1)
                         text = "Controles";
-                    else if (i == 2)
-                        text = "Sair";
                     else
-                        text = "opções";
+                        text = "Sair";
 
                     al_draw_textf(font_menu, color, 400, pos_y, ALLEGRO_ALIGN_CENTER, "%s", text);
                 }
@@ -794,62 +834,89 @@ void exibir_texto_gradualmente(const char *texto, ALLEGRO_FONT *fonte, float x, 
                 switch (ev.keyboard.keycode)
                 {
                 case ALLEGRO_KEY_DOWN:
+                    // Mover para a próxima opção
                     selected_option = (selected_option + 1) % 4;
                     break;
                 case ALLEGRO_KEY_UP:
-                    selected_option = (selected_option + 2) % 4;
+                    // Mover para a opção anterior
+                    selected_option = (selected_option - 1 + 4) % 4;
                     break;
                 case ALLEGRO_KEY_ENTER:
+                    // Ação para a opção selecionada
                     if (selected_option == 0)
                     {
                         menu_running = 0; // Começar o jogo
                     }
                     else if (selected_option == 1)
                     {
-                        exibir_tela_controles(font_menu, background_m, event_queue, display); // Exibir controles
+                        exibir_tela_controles(font_menu, background_m, event_queue, display, exit_game, &menu_running); // Exibir controles
                     }
                     else if (selected_option == 2)
                     {
-                        menu_running = 0; // Sair do jogo
-                        cleanup_menu_resources();
-                        al_destroy_display(display);
-                        al_destroy_event_queue(event_queue);
-                        exit(0);
+                        exibir_tela_opcoes(font_menu, background_m, event_queue, display, game_options, exit_game, &menu_running); // Exibir opções
                     }
                     else if (selected_option == 3)
                     {
-                        exibir_tela_opcoes(font_menu, background_m, event_queue, display);
+                        menu_running = 0; // Sair do jogo
+                        *exit_game = 1;
                     }
                     break;
                 }
             }
         }
-
+        //*exit_game = 0;
         // Limpar recursos da fonte do título
         al_destroy_font(font_title);
     }
 
-    void exibir_tela_opcoes(ALLEGRO_FONT *font, ALLEGRO_BITMAP *background, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_DISPLAY *display)
+    void init_options(GameOptions *game_options)
     {
-        int running = 1;                    // Controle do loop
-        int selected_option = 0;            // Opção atualmente selecionada
-        int checkbox_states[3] = {1, 0, 0}; // Estados das checkboxes: 1 para marcada, 0 para desmarcada
-        float background_x = 0;             // Posição do fundo
+
+        game_options->new_option_1 = 0;
+        game_options->new_option_2 = 0;
+        game_options->sprite_option = 0;
+        game_options->new_option_3 = 0;
+    }
+
+    void exibir_tela_opcoes(ALLEGRO_FONT *font, ALLEGRO_BITMAP *background, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_DISPLAY *display, GameOptions *game_options, int *exit_game, int *menu_running)
+    {
+        int running = 1;                                                // Controle do loop
+        int selected_group = 0;                                         // Grupo atualmente selecionado (0 = grupo 1, 1 = grupo 2, 2 = grupo 3, 3 = grupo 4)
+        int selected_option = 0;                                        // Opção dentro do grupo selecionado
+        int checkbox_states[12] = {1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0}; // 3 opções do primeiro grupo + 3 do segundo grupo + 3 do terceiro grupo + 3 do quarto grupo
+        float background_x = 0;                                         // Posição do fundo
+
+        ALLEGRO_FONT *font_menu = al_load_ttf_font("fonts/menu_f.ttf", 20, 0);
+        ALLEGRO_FONT *font_option = al_load_ttf_font("fonts/menu_f.ttf", 10, 0);
 
         // Carregar imagens para as opções
-        ALLEGRO_BITMAP *option_images[3];
+        ALLEGRO_BITMAP *option_images[12]; // Agora temos 12 opções
         option_images[0] = al_load_bitmap("imagens/nave.png");
-        option_images[1] = al_load_bitmap("imagens/nave.png");
-        option_images[2] = al_load_bitmap("imagens/nave.png");
+        option_images[1] = al_load_bitmap("imagens/nave1.png");
+        option_images[2] = al_load_bitmap("imagens/nave2.png");
+        option_images[3] = al_load_bitmap("imagens/bullet.png");
+        option_images[4] = al_load_bitmap("imagens/bullet_dif1.png");
+        option_images[5] = al_load_bitmap("imagens/bullet_dif2.png");
+        option_images[6] = al_load_bitmap("imagens/background_1_icon.png");
+        option_images[7] = al_load_bitmap("imagens/background_2_icon.png");
+        option_images[8] = al_load_bitmap("imagens/background_3_icon.png");
+        option_images[9] = al_load_bitmap("imagens/background_1_icon.png");
+        option_images[10] = al_load_bitmap("imagens/background_2_icon.png");
+        option_images[11] = al_load_bitmap("imagens/background_3_icon.png");
 
-        if (!option_images[0] || !option_images[1] || !option_images[2])
-        {
-            fprintf(stderr, "Erro ao carregar uma ou mais imagens de opções.\n");
-            exit(1);
-        }
+        // Flags de opções
+        int sprite_option = game_options->group_1_selected; // Opção selecionada do grupo 1
+        int new_option_1 = game_options->group_2_selected;  // Opção selecionada do grupo 2
+        int new_option_2 = game_options->group_3_selected;  // Opção selecionada do grupo 3
+        int new_option_3 = game_options->group_4_selected;  // Opção selecionada do grupo 4
 
         while (running)
         {
+            if (*exit_game)
+            {
+                break; // Finaliza o jogo
+            }
+
             ALLEGRO_EVENT ev;
             al_wait_for_event(event_queue, &ev);
 
@@ -868,75 +935,181 @@ void exibir_texto_gradualmente(const char *texto, ALLEGRO_FONT *fonte, float x, 
                 al_draw_bitmap(background, background_x + al_get_bitmap_width(background), 0, 0);
 
                 // Desenha o título principal
-                al_draw_text(font, al_map_rgb(0, 255, 255), 400, 20, ALLEGRO_ALIGN_CENTER, "CONFIGURAÇÕES");
+                al_draw_text(font, al_map_rgb(0, 255, 255), 400, 40, ALLEGRO_ALIGN_CENTER, "CONFIGURAÇÕES");
 
-                // Desenha as opções horizontalmente
-                const char *textos[] = {"Opção 1", "Opção 2", "Opção 3"};
-                int start_x = 200;    // Posição inicial horizontal
-                int y_position = 300; // Posição vertical fixa para todas as opções
-                int spacing = 250;    // Espaçamento entre as opções
+                // Calcula posições centralizadas horizontalmente
+                int screen_center_x = 360; // Centro da tela
+                int center_y = 300;        // Linha vertical central
+                int option_spacing = 250;  // Espaçamento horizontal entre as opções
+                int checkbox_size = 20;    // Tamanho da checkbox
 
-                for (int i = 0; i < 3; i++)
+                const char *group_titles[4] = {
+                    "Escolha sua Nave",
+                    "Escolha seu disparo",
+                    "Escolha o Cenário da fase 1",
+                    "Escolha o Cenário da fase 2"};
+
+                // Desenha as opções dos grupos
+                for (int group = 0; group < 4; group++) // Agora temos 4 grupos
                 {
-                    int x_position = start_x + i * spacing; // Calcular posição horizontal com base no índice e espaçamento
+                    int start_y = center_y + (group - 1) * 100; // Ajusta a posição de Y com base no grupo
 
-                    // Cor da opção: Branco se selecionada, Cinza caso contrário
-                    ALLEGRO_COLOR color = (i == selected_option) ? al_map_rgb(255, 255, 255) : al_map_rgb(128, 128, 128);
+                    // Título do grupo
+                    al_draw_text(font_option, al_map_rgb(255, 0, 0), screen_center_x + 22, start_y - 60, ALLEGRO_ALIGN_CENTER, group_titles[group]);
 
-                    // Desenha a imagem da opção acima do texto
-                    al_draw_bitmap(option_images[i], x_position - 40, y_position - 80, 0);
-
-                    // Desenha a checkbox abaixo da imagem
-                    if (checkbox_states[i]) // Marcar a checkbox
+                    // Subgrupos e opções
+                    for (int i = 0; i < 3; i++)
                     {
-                        al_draw_filled_rectangle(x_position - 20, y_position + 30, x_position + 10, y_position + 60, al_map_rgb(255, 255, 255));
-                    }
-                    else // Checkbox vazia
-                    {
-                        al_draw_rectangle(x_position - 20, y_position + 30, x_position + 10, y_position + 60, al_map_rgb(255, 255, 255), 2);
-                    }
 
-                    // Desenha o texto abaixo da checkbox
-                    al_draw_text(font, color, x_position, y_position + 80, ALLEGRO_ALIGN_CENTER, textos[i]);
+                        int current_option = group * 3 + i; // Índice global da opção
+
+                        // Coordenadas da checkbox
+                        int checkbox_x = screen_center_x - (3 - 1) * option_spacing / 2 + i * option_spacing - checkbox_size / 2;
+                        int checkbox_y = start_y - checkbox_size / 2;
+
+                        // Coordenadas da imagem
+                        float image_scale = 0.8; // Escala da imagem
+                        int image_width = al_get_bitmap_width(option_images[current_option]) * image_scale;
+                        int image_height = al_get_bitmap_height(option_images[current_option]) * image_scale;
+                        int image_x = checkbox_x + checkbox_size + 10;
+                        int image_y = start_y - image_height / 2;
+
+                        // Opacidade da imagem
+                        ALLEGRO_COLOR tint = (current_option == selected_group * 3 + selected_option) ? al_map_rgba_f(1.0, 1.0, 1.0, 0.1) : al_map_rgba_f(1.0, 1.0, 1.0, 1.0);
+
+                        // Desenhar checkbox
+                        if (checkbox_states[current_option]) // Marcar checkbox
+                        {
+                            al_draw_filled_rectangle(checkbox_x, checkbox_y, checkbox_x + checkbox_size, checkbox_y + checkbox_size, al_map_rgb(200, 200, 200));
+                        }
+                        else // Checkbox vazia
+                        {
+                            al_draw_rectangle(checkbox_x, checkbox_y, checkbox_x + checkbox_size, checkbox_y + checkbox_size, al_map_rgb(255, 255, 255), 2);
+                        }
+
+                        // Desenhar imagem com opacidade
+                        al_draw_tinted_scaled_bitmap(option_images[current_option], tint, 0, 0, al_get_bitmap_width(option_images[current_option]), al_get_bitmap_height(option_images[current_option]),
+                                                     image_x, image_y, image_width, image_height, 0);
+                    }
                 }
+
+                // Desenha botão "Voltar"
+                ALLEGRO_COLOR back_color = al_map_rgb(255, 255, 255);
+                al_draw_text(font_menu, back_color, 400, 560, ALLEGRO_ALIGN_CENTER, "ESC PARA SAIR");
 
                 al_flip_display();
             }
-            else if (ev.type == ALLEGRO_EVENT_KEY_DOWN)
+            else if (ev.type == ALLEGRO_EVENT_KEY_UP)
             {
-                switch (ev.keyboard.keycode)
+                // Lógica de navegação
+                if (ev.keyboard.keycode == ALLEGRO_KEY_UP)
                 {
-                case ALLEGRO_KEY_RIGHT: // Navega para a próxima opção
-                    selected_option = (selected_option + 1) % 3;
-                    break;
-                case ALLEGRO_KEY_LEFT:                           // Navega para a opção anterior
-                    selected_option = (selected_option + 2) % 3; // Soma 2 para evitar valores negativos com o módulo
-                    break;
-                case ALLEGRO_KEY_ENTER:
-                    // Alterna o estado da checkbox na opção selecionada
+                    // Navegar verticalmente para o grupo de cima
+                    if (selected_group > 0)
+                    {
+                        selected_group--;
+                        selected_option = 0; // Resetar para a primeira opção ao mudar de grupo
+                    }
+                }
+                else if (ev.keyboard.keycode == ALLEGRO_KEY_DOWN)
+                {
+                    // Navegar verticalmente para o grupo de baixo
+                    if (selected_group < 3) // Agora temos 4 grupos
+                    {
+                        selected_group++;
+                        selected_option = 0; // Resetar para a primeira opção ao mudar de grupo
+                    }
+                }
+                else if (ev.keyboard.keycode == ALLEGRO_KEY_LEFT)
+                {
+                    // Navegar horizontalmente para a opção à esquerda
+                    if (selected_option > 0)
+                    {
+                        selected_option--;
+                    }
+                    else
+                    {
+                        selected_option = 2; // Se estiver na primeira opção, vai para a última
+                    }
+                }
+                else if (ev.keyboard.keycode == ALLEGRO_KEY_RIGHT)
+                {
+                    // Navegar horizontalmente para a opção à direita
+                    if (selected_option < 2)
+                    {
+                        selected_option++;
+                    }
+                    else
+                    {
+                        selected_option = 0; // Se estiver na última opção, vai para a primeira
+                    }
+                }
+                else if (ev.keyboard.keycode == ALLEGRO_KEY_ENTER)
+                {
+                    // Ação ao pressionar Enter (marcar a checkbox da opção selecionada)
+                    int current_option = selected_group * 3 + selected_option; // Índice global da opção
+
+                    // Desmarcar todas as opções do grupo antes de marcar a nova
                     for (int i = 0; i < 3; i++)
                     {
-                        checkbox_states[i] = 0; // Desmarcar todas
+                        int option_index = selected_group * 3 + i;
+                        checkbox_states[option_index] = 0;
                     }
-                    checkbox_states[selected_option] = 1; // Marcar a opção atual
-                    break;
-                case ALLEGRO_KEY_ESCAPE: // Voltar ao menu anterior
+
+                    // Marcar a opção selecionada
+                    checkbox_states[current_option] = 1;
+
+                    // Atualiza as flags dos grupos baseadas na opção selecionada
+                    if (selected_group == 0)
+                    {
+                        game_options->sprite_option = selected_option;
+                        game_options->group_1_selected = selected_option;
+                    }
+                    else if (selected_group == 1)
+                    {
+                        game_options->new_option_1 = selected_option;
+                        game_options->group_2_selected = selected_option;
+                    }
+                    else if (selected_group == 2)
+                    {
+                        game_options->new_option_2 = selected_option;
+                        game_options->group_3_selected = selected_option;
+                    }
+                    else if (selected_group == 3)
+                    {
+                        game_options->new_option_3 = selected_option;
+                        game_options->group_4_selected = selected_option;
+                    }
+                }
+                else if (ev.keyboard.keycode == ALLEGRO_KEY_ESCAPE)
+                {
                     running = 0;
-                    break;
                 }
             }
             else if (ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE)
             {
-                // Finaliza o programa
-                al_destroy_display(display);
-                al_destroy_event_queue(event_queue);
-                exit(0);
+                *exit_game = 1; // Fecha o jogo completamente
+                *menu_running = 0;
+                running = 0; // Sai do loop
+            }
+        }
+        for (int i = 0; i < 12; i++)
+        {
+            if (option_images[i])
+            {
+                al_destroy_bitmap(option_images[i]);
+                option_images[i] = NULL;
             }
         }
 
-        // Liberar imagens carregadas
-        for (int i = 0; i < 3; i++)
+        if (font_menu)
         {
-            al_destroy_bitmap(option_images[i]);
+            al_destroy_font(font_menu);
+            font_menu = NULL;
+        }
+        if (font_option)
+        {
+            al_destroy_font(font_option);
+            font_option = NULL;
         }
     }
