@@ -44,7 +44,11 @@ int main()
     al_init_ttf_addon();
     al_init_image_addon();
     ALLEGRO_DISPLAY *display = al_create_display(SCREEN_WIDTH, SCREEN_HEIGHT);
-    al_install_keyboard();
+    if (!al_install_keyboard())
+    {
+        fprintf(stderr, "Falha ao instalar o teclado!\n");
+        return -1;
+    }
 
     GameOptions game_options;
 
