@@ -132,11 +132,13 @@ void move_shooting_enemy(ShootingEnemy *enemy)
 void shoot_enemy_bullet(ShootingEnemy *enemy, float player_x, float player_y, int game_phase)
 {
     double current_time = al_get_time();
-
+    enemy->ready_to_shoot = true;
     if (enemy->ready_to_shoot)
     {
+        printf("kk \n");
         if (game_phase == 1)
         {
+            printf("alo \n");
 
             if (current_time - enemy->last_shot_time >= 1.0)
             { // Dispara a cada 1 segundo
@@ -148,6 +150,7 @@ void shoot_enemy_bullet(ShootingEnemy *enemy, float player_x, float player_y, in
                         enemy->bullets[i].y = enemy->y;
                         enemy->bullets[i].active = 1;
                         enemy->last_shot_time = current_time;
+                         printf("Enemy %p shooting bullet %d at X: %f, Y: %f\n", enemy, i, enemy->bullets[i].x, enemy->bullets[i].y);
                         break;
                     }
                 }
@@ -181,6 +184,7 @@ void move_enemy_bullets(EnemyBullet bullets[], int count)
         if (bullets[i].active)
         {
             bullets[i].x -= bullets[i].speed;
+             printf("Bullet %d moving. Active: %d, X: %f\n", i, bullets[i].active, bullets[i].x);
             if (bullets[i].x < 0)
                 bullets[i].active = 0;
         }

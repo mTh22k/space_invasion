@@ -470,7 +470,6 @@ int main()
                     }
                 
                     move_player(&player);
-                    printf("Jogador - Posição (%d, %d), Largura: %d, Altura: %d\n", player.x, player.y, player.width, player.height);
                     move_bullets(bullets, MAX_BULLETS, &player, font_menu, game_phase);
 
                     // Lógica de invulnerabilidade
@@ -840,7 +839,7 @@ int main()
             if (item.active)
             {
                 // Debug: Exibir a posição e o tamanho do item
-                printf("Item fase 1 - Ativo: Posição (%d, %d), Largura: %d, Altura: %d\n", item.x, item.y, item.width, item.height);
+
 
                 // Desenha o item
                 // Desenha o item normalmente
@@ -851,7 +850,6 @@ int main()
             if (item_phase2.active)
             {
                 // Debug: Exibir a posição e o tamanho do item da fase 2
-                printf("Item fase 2 - Ativo: Posição (%d, %d), Largura: %d, Altura: %d\n", item_phase2.x, item_phase2.y, item_phase2.width, item_phase2.height);
 
                 // Desenha o item da fase 2
                 al_draw_bitmap(item_phase2.sprite, item_phase2.x, item_phase2.y, 0);
