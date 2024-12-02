@@ -112,14 +112,14 @@ int main()
     double last_fire_time = 0;
     int score = 0;
     int game_over = 0;
-    int player_won = 0; // 0 = jogo em andamento, 1 = jogador ganhou
+    int player_won = 0;
     int boss_bullet_count = 0;
     float background_x = 0;
-    int victory_state = 0; // 0 = sem vitória, 1 = animação de explosão, 2 = tela de vitória
+    int victory_state = 0;
     int restart_game = 0;
-    float background_speed = 2.0; // Velocidade padrão do plano de fundo
+    float background_speed = 2.0;
     int enemy_destroyed_count = 0;
-    double boss_start_time = 0; // Armazena o tempo em que a espera para o boss começa
+    double boss_start_time = 0;
     int boss_waiting = 0;
     double boss_shoot_start_time = 0;
     int game_phase = 1;
@@ -150,38 +150,15 @@ int main()
     al_attach_audio_stream_to_mixer(music, al_get_default_mixer());
 
     // qual background vai ser usado
-    if (game_options.new_option_2 == 0)
-    {
-        current_background = background;
-    }
-    else if (game_options.new_option_2 == 1)
-    {
-        current_background = background_2;
-    }
-    else if (game_options.new_option_2 == 2)
-    {
-        current_background = background_3;
-    }
+    update_backgrounds(game_options, backgrounds, &current_background, &current_background_2);
 
-    if (game_options.new_option_3 == 0)
-    {
-        current_background_2 = background;
-    }
-    else if (game_options.new_option_3 == 1)
-    {
-        current_background_2 = background_2;
-    }
-    else if (game_options.new_option_3 == 2)
-    {
-        current_background_2 = background_3;
-    }
 
     while (1)
     {
 
         if (exit_game == 1)
         {
-            break; // Finaliza o jogo
+            break;
         }
 
         int redraw = 0;
