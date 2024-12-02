@@ -1,5 +1,5 @@
 #ifndef GAME_H
-#define GMAE_H
+#define GAME_H
 
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_primitives.h>
@@ -19,26 +19,7 @@
 #include "collision.h"
 #include "boss.h"
 #include "structs.h"
-
-#define SCREEN_WIDTH 800
-#define SCREEN_HEIGHT 600
-#define PLAYER_SPEED 6
-#define BULLET_SPEED 6
-#define ENEMY_SPEED 5
-#define ENEMY_SPEED_SHOOTING 3
-#define MAX_BULLETS 8
-#define MAX_BULLET_COUNT 7
-#define MAX_BOSS_BULLETS 8
-#define MAX_ENEMIES 4
-#define MAX_SHOOTING_ENEMIES 1
-#define FIRE_INTERVAL 0.2
-#define INVULNERABILITY_TIME 1.5
-#define BOSS_SHOT_INTERVAL 0.4
-#define TIME_TO_BOSS 30
-#define SCROLL_SPEED 60
-#define EXPLOSION_FRAME_COUNT 5
-
-void init_allegro();
+#include "defines.h"
 
 void cleanup_resources(
     ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_TIMER *timer,
@@ -59,15 +40,12 @@ void cleanup_resources(
 
 void draw_pause_message(ALLEGRO_FONT *font, ALLEGRO_BITMAP *background, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_DISPLAY *display, Player *player, int *exit_game);
 void draw_player_life(ALLEGRO_BITMAP *heart_full, ALLEGRO_BITMAP *heart_empty, Player *player);
-void draw_timer(ALLEGRO_FONT *font, double elapsed_time);
-void play_explosion(int x, int y, ALLEGRO_BITMAP *explosion_bitmaps[], ALLEGRO_BITMAP *background);
 
 extern ALLEGRO_FONT *menu_font;
 extern ALLEGRO_BITMAP *menu_background;
 
-void draw_menu();
-void init_menu_resources();
-void cleanup_menu_resources();
+void draw_explosion(Enemy *enemy, ALLEGRO_BITMAP *explosion_sprite, double explosion_duration);
+
 void show_game_over_menu(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FONT *font, int *restart_game, int *exit_game);
 void exibir_texto_gradualmente(const char *texto, ALLEGRO_FONT *fonte, float x, float y, ALLEGRO_COLOR cor, float intervalo_entre_letras, ALLEGRO_BITMAP *background_m, float background_x);
 void show_transition_menu(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FONT *font, int *continue_game, int *exit_game);
@@ -77,5 +55,7 @@ void init_options(GameOptions *game_options);
 void run_menu(ALLEGRO_FONT *font_menu, ALLEGRO_BITMAP *background, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_DISPLAY *display, ALLEGRO_AUDIO_STREAM *music_menu, GameOptions *game_options, int *exit_game);
 void exibir_tela_controles(ALLEGRO_FONT *font, ALLEGRO_BITMAP *background, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_DISPLAY *display, int *exit_game, int *menu_running);
 void exibir_tela_opcoes(ALLEGRO_FONT *font, ALLEGRO_BITMAP *background, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_DISPLAY *display, GameOptions *game_options, int *exit_game, int *menu_running);
+void draw_explosion_shoot(ShootingEnemy *shooting_enemy, ALLEGRO_BITMAP *explosion_sprite, double explosion_duration);
+void draw_explosion_boss(Boss *boss, ALLEGRO_BITMAP *explosion_sprite, double explosion_duration);
 
 #endif // ENEMY_H

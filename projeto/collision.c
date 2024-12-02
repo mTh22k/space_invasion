@@ -1,7 +1,5 @@
 #include "collision.h"
 
-#include <stdio.h>
-
 void check_boss_collision(Player *player, Bullet bullets[], int bullet_count, Boss *boss, int *score, int *player_won, int *game_over, int game_phase)
 {
     // Verificar colisão entre balas do jogador e o chefe
@@ -60,6 +58,44 @@ void check_boss_collision(Player *player, Bullet bullets[], int bullet_count, Bo
     }
 }
 
+void check_boss_bullet_collisions(Player *player,Boss *boss ,BossBullet boss_bullets[], int *game_over, int game_phase)
+{
+    for (int i = 0; i < MAX_BOSS_BULLETS; i++)
+    {
+        if (boss_bullets[i].active &&
+            boss_bullets[i].x < player->x + player->width &&
+            boss_bullets[i].x + boss_bullets[i].width > player->x &&
+            boss_bullets[i].y < player->y + player->height &&
+            boss_bullets[i].y + boss_bullets[i].height > player->y)
+        {
+            if (!player->invulnerable)
+            {
+                int damage = (game_phase == 2) ? 1 : 1; // Se for a fase 2, aumenta o dano para 2
+                player->lives -= damage;
+                player->invulnerable = 1;
+                player->invulnerable_time = al_get_time();
+
+                if (player->lives <= 0)
+                    *game_over = 1;
+            }
+            boss_bullets[i].active = 0; // Desativa a bala do chefe
+
+            if (game_phase == 2)
+            {
+                if (boss->special_attack_active)
+                {
+                    player->speed_multiplier = 0.2;                     // Reduz a velocidade em 50%
+                    player->slow_effect_end_time = al_get_time() + 1.0; // Duração de 2 segundos
+                }
+            }
+
+            if (player->lives <= 0)
+                *game_over = 1;
+        }
+    }
+}
+
+
 
 void check_enemy_bullet_collisions(Player *player, ShootingEnemy *enemy, int *game_over)
 {
@@ -88,12 +124,6 @@ void check_enemy_bullet_collisions(Player *player, ShootingEnemy *enemy, int *ga
 
 void check_collisions(Player *player, Bullet bullets[], int bullet_count, Enemy enemies[], int enemy_count, ShootingEnemy shooting_enemies[], int shooting_enemy_count, Item *item_phase1, Item *item_phase2, int *score, int *game_over, int *enemy_destroyed_count, int game_phase)
 {
-    // Reiniciar a contagem de inimigos destruídos ao começar a fase 2
-    // if (game_phase == 2)
-    // {
-    //     printf("atualizou pra 0\n");
-    //     enemy_destroyed_count = 0;
-    // }
 
     // Verificar colisões entre balas do jogador e inimigos normais
     
@@ -264,59 +294,3 @@ void check_collisions(Player *player, Bullet bullets[], int bullet_count, Enemy 
     }
 }
 
-void draw_explosion(Enemy *enemy, ALLEGRO_BITMAP *explosion_sprite, double explosion_duration)
-{
-    if (enemy->exploding)
-    {
-        double elapsed_time = al_get_time() - enemy->explosion_time; // Tempo desde o início da explosão
-
-        // Se o tempo da explosão ainda não passou, desenha a explosão
-        if (elapsed_time < explosion_duration)
-        {
-            al_draw_bitmap(explosion_sprite, enemy->x - 5, enemy->y + 5, 0);
-        }
-        else
-        {
-            enemy->exploding = 0; // Finaliza a explosão após o tempo
-        }
-    }
-}
-
-void draw_explosion_shoot(ShootingEnemy *shooting_enemy, ALLEGRO_BITMAP *explosion_sprite, double explosion_duration) 
-{
-    if (shooting_enemy->exploding)
-    {
-        double elapsed_time = al_get_time() - shooting_enemy->explosion_time; // Tempo desde o início da explosão
-
-        // Se o tempo da explosão ainda não passou, desenha a explosão
-        if (elapsed_time < explosion_duration)
-        {
-            al_draw_bitmap(explosion_sprite, shooting_enemy->x - 5, shooting_enemy->y + 5, 0);
-        }
-        else
-        {
-            shooting_enemy->exploding = 0; // Finaliza a explosão após o tempo
-        }
-    }
-}
-
-void draw_explosion_boss(Boss *boss, ALLEGRO_BITMAP *explosion_sprite, double explosion_duration)
-{
-    if (boss->exploding)
-    {
-        double elapsed_time = al_get_time() - boss->explosion_time; // Tempo desde o início da explosão
-
-        // Se o tempo da explosão ainda não passou, desenha a explosão
-        if (elapsed_time < explosion_duration)
-        {
-            // Definindo a transparência (alfa) para 128 (meia opacidade)
-            ALLEGRO_COLOR color = al_map_rgba_f(1.0, 1.0, 1.0, 0.01); // Branco com 50% de opacidade
-
-            al_draw_tinted_bitmap(explosion_sprite, color, boss->x + 25, boss->y + 25, 0);
-        }
-        else
-        {
-            boss->exploding = 0; // Finaliza a explosão após o tempo
-        }
-    }
-}

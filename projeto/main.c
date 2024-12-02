@@ -17,24 +17,7 @@
 #include "boss.h"
 #include "structs.h"
 #include "game.h"
-
-#define SCREEN_WIDTH 800
-#define SCREEN_HEIGHT 600
-#define PLAYER_SPEED 6
-#define BULLET_SPEED 6
-#define ENEMY_SPEED 5
-#define ENEMY_SPEED_SHOOTING 3
-#define MAX_BULLETS 8
-#define MAX_BULLET_COUNT 7
-#define MAX_BOSS_BULLETS 8
-#define MAX_ENEMIES 4
-#define MAX_SHOOTING_ENEMIES 1
-#define FIRE_INTERVAL 0.2        // Intervalo de disparo em segundos
-#define INVULNERABILITY_TIME 1.5 // Tempo de invulnerabilidade em segundos
-#define BOSS_SHOT_INTERVAL 0.4
-#define TIME_TO_BOSS 30
-#define SCROLL_SPEED 60
-#define EXPLOSION_FRAME_COUNT 5
+#include "defines.h"
 
 int main()
 {
@@ -170,13 +153,13 @@ int main()
         return -1;
     }
 
-    ALLEGRO_AUDIO_STREAM *music = al_load_audio_stream("musica_fundo.ogg", 4, 1024);
+    ALLEGRO_AUDIO_STREAM *music = al_load_audio_stream("musicas/musica_fundo.ogg", 4, 1024);
     if (!music)
     {
         fprintf(stderr, "Falha ao carregar a música de fundo.\n");
         return -1;
     }
-    ALLEGRO_AUDIO_STREAM *music_menu = al_load_audio_stream("musica_menu.ogg", 4, 1024);
+    ALLEGRO_AUDIO_STREAM *music_menu = al_load_audio_stream("musicas/musica_menu.ogg", 4, 1024);
     if (!music)
     {
         fprintf(stderr, "Falha ao carregar a música de menu.\n");
@@ -332,7 +315,6 @@ int main()
                 }
                 if (!game_over && !player.paused) // Verificar se o jogo não está pausado
                 {
-                    draw_timer(font, elapsed_time);
 
                     static double phase2_start_time = -1.0;
                     static bool phase2_started = false;
@@ -438,9 +420,6 @@ int main()
 
                     if (player_won && victory_state == 0)
                     {
-                        // Reproduzir a animação de explosão do boss derrotado
-                        // play_explosion(boss.x, boss.y, explosion_bitmaps, current_background);
-                        // al_rest(0.5);
 
                         // Configurar variáveis para o menu de transição
 

@@ -15,44 +15,19 @@
 #include "collision.h"
 #include "boss.h"
 #include "structs.h"
-
-#define SCREEN_WIDTH 800
-#define SCREEN_HEIGHT 600
-#define PLAYER_SPEED 6
-#define BULLET_SPEED 6
-#define ENEMY_SPEED 5
-#define ENEMY_SPEED_SHOOTING 3
-#define MAX_BULLETS 8
-#define MAX_BULLET_COUNT 7
-#define MAX_BOSS_BULLETS 8
-#define MAX_ENEMIES 4
-#define MAX_SHOOTING_ENEMIES 1
-#define FIRE_INTERVAL 0.2
-#define INVULNERABILITY_TIME 1.5
-#define BOSS_SHOT_INTERVAL 0.4
-#define TIME_TO_BOSS 30
-#define SCROLL_SPEED 60
-#define EXPLOSION_FRAME_COUNT 5
-#define BULLET_WIDTH 50  // Substitua pelo valor correto da largura da bala
-#define BULLET_HEIGHT 12 // Substitua pelo valor correto da altura da bala
+#include "defines.h"
+ // Substitua pelo valor correto da altura da bala
 
 void init_boss(Boss *boss);
 
 void move_boss(Boss *boss, int game_phase);
 
 // Inicializa as balas do chefe
-void init_boss_bullets(BossBullet boss_bullets[], int count);
 
 // Dispara uma bala do chefe
 
 void shoot_boss_bullet(Boss *boss, BossBullet boss_bullets[], int *boss_bullet_count, int game_phase);
 void shoot_boss_special_attack_2(Boss *boss, BossBullet boss_bullets[], int *boss_bullet_count);
 void shoot_boss_special_attack(Boss *boss, BossBullet boss_bullets[], int *boss_bullet_count);
-
-// Move as balas do chefe
-void move_boss_bullets(BossBullet boss_bullets[], int count);
-
-// Verifica colisões entre as balas do chefe e o jogador
-void check_boss_bullet_collisions(Player *player, Boss *boss, BossBullet boss_bullets[], int *game_over, int game_phase);
 
 #endif // BOSS_H

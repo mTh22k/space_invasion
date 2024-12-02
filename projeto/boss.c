@@ -50,16 +50,6 @@ void move_boss(Boss *boss, int game_phase)
     }
 }
 
-void init_boss_bullets(BossBullet boss_bullets[], int count)
-{
-    for (int i = 0; i < count; i++)
-    {
-        boss_bullets[i].active = 0;
-        boss_bullets[i].width = 45;
-        boss_bullets[i].height = 25;
-    }
-}
-
 void shoot_boss_special_attack(Boss *boss, BossBullet boss_bullets[], int *boss_bullet_count)
 {
     double current_time = al_get_time();
@@ -161,54 +151,4 @@ void shoot_boss_bullet(Boss *boss, BossBullet boss_bullets[], int *boss_bullet_c
         shoot_boss_special_attack(boss, boss_bullets, boss_bullet_count);
     }
     
-}
-
-void move_boss_bullets(BossBullet boss_bullets[], int count)
-{
-    for (int i = 0; i < count; i++)
-    {
-        if (boss_bullets[i].active)
-        {
-            boss_bullets[i].x -= boss_bullets[i].speed;
-            if (boss_bullets[i].x < 0)
-                boss_bullets[i].active = 0;
-        }
-    }
-}
-
-void check_boss_bullet_collisions(Player *player,Boss *boss ,BossBullet boss_bullets[], int *game_over, int game_phase)
-{
-    for (int i = 0; i < MAX_BOSS_BULLETS; i++)
-    {
-        if (boss_bullets[i].active &&
-            boss_bullets[i].x < player->x + player->width &&
-            boss_bullets[i].x + boss_bullets[i].width > player->x &&
-            boss_bullets[i].y < player->y + player->height &&
-            boss_bullets[i].y + boss_bullets[i].height > player->y)
-        {
-            if (!player->invulnerable)
-            {
-                int damage = (game_phase == 2) ? 1 : 1; // Se for a fase 2, aumenta o dano para 2
-                player->lives -= damage;
-                player->invulnerable = 1;
-                player->invulnerable_time = al_get_time();
-
-                if (player->lives <= 0)
-                    *game_over = 1;
-            }
-            boss_bullets[i].active = 0; // Desativa a bala do chefe
-
-            if (game_phase == 2)
-            {
-                if (boss->special_attack_active)
-                {
-                    player->speed_multiplier = 0.2;                     // Reduz a velocidade em 50%
-                    player->slow_effect_end_time = al_get_time() + 1.0; // Duração de 2 segundos
-                }
-            }
-
-            if (player->lives <= 0)
-                *game_over = 1;
-        }
-    }
 }

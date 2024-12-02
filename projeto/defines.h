@@ -1,0 +1,24 @@
+#ifndef DEFINES_H
+#define DEFINES_H
+
+#define SCREEN_WIDTH 800
+#define SCREEN_HEIGHT 600
+#define PLAYER_SPEED 6
+#define BULLET_SPEED 6
+#define ENEMY_SPEED 5
+#define ENEMY_SPEED_SHOOTING 3
+#define MAX_BULLETS 8
+#define MAX_BULLET_COUNT 7
+#define MAX_BOSS_BULLETS 8
+#define MAX_ENEMIES 4
+#define MAX_SHOOTING_ENEMIES 1
+#define FIRE_INTERVAL 0.2
+#define INVULNERABILITY_TIME 1.5
+#define BOSS_SHOT_INTERVAL 0.4
+#define TIME_TO_BOSS 30
+#define SCROLL_SPEED 60
+#define EXPLOSION_FRAME_COUNT 5
+#define BULLET_WIDTH 50  // Substitua pelo valor correto da largura da bala
+#define BULLET_HEIGHT 12
+
+#endif
