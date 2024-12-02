@@ -21,192 +21,93 @@
 
 int main()
 {
-    al_init();
-    al_init_primitives_addon();
-    al_init_font_addon();
-    al_init_ttf_addon();
-    al_init_image_addon();
+    init_resources();
     ALLEGRO_DISPLAY *display = al_create_display(800, 600);
-    if (!display)
-    {
-        fprintf(stderr, "Falha ao criar a janela de exibição!\n");
-        return -1;
-    }
-    if (!al_install_keyboard())
-    {
-        fprintf(stderr, "Falha ao instalar o teclado!\n");
-        return -1;
-    }
+    !al_install_keyboard();
 
-    GameOptions game_options;
-
-    init_options(&game_options);
-
+    // fila e timer
     ALLEGRO_EVENT_QUEUE *event_queue = al_create_event_queue();
     ALLEGRO_TIMER *timer = al_create_timer(1.0 / 50);
+
+    // fonts
     ALLEGRO_FONT *font = al_load_ttf_font("fonts/ATC.ttf", 12, 0);
     ALLEGRO_FONT *font_menu = al_load_ttf_font("fonts/menu_f.ttf", 50, 0);
     ALLEGRO_FONT *font_warn = al_load_ttf_font("fonts/menu_f.ttf", 12, 0);
     ALLEGRO_FONT *font_info = al_load_ttf_font("fonts/menu_f.ttf", 20, 0);
+
+    // backgrounds
     ALLEGRO_BITMAP *background = al_load_bitmap("imagens/background.png");
     ALLEGRO_BITMAP *background_2 = al_load_bitmap("imagens/background_2.png");
     ALLEGRO_BITMAP *background_3 = al_load_bitmap("imagens/background_3.png");
+    ALLEGRO_BITMAP *current_background = background;
+    ALLEGRO_BITMAP *current_background_2 = background_2;
 
+    // player
     ALLEGRO_BITMAP *player_sprite = al_load_bitmap("imagens/nave.png");
-    if (!player_sprite)
-    {
-        fprintf(stderr, "Erro ao carregar a imagem 'imagens/nave.png'.\n");
-        return -1;
-    }
-
     ALLEGRO_BITMAP *player_sprite_dir = al_load_bitmap("imagens/nave_dir.png");
-    if (!player_sprite_dir)
-    {
-        fprintf(stderr, "Erro ao carregar a imagem 'imagens/nave_dir.png'.\n");
-        return -1;
-    }
-
     ALLEGRO_BITMAP *player_sprite_esq = al_load_bitmap("imagens/nave_esq.png");
-    if (!player_sprite_esq)
-    {
-        fprintf(stderr, "Erro ao carregar a imagem 'imagens/nave_esq.png'.\n");
-        return -1;
-    }
-
     ALLEGRO_BITMAP *player_sprite_dif1 = al_load_bitmap("imagens/nave1.png");
-    if (!player_sprite_dif1)
-    {
-        fprintf(stderr, "Erro ao carregar a imagem 'imagens/nave1.png'.\n");
-        return -1;
-    }
-
     ALLEGRO_BITMAP *player_sprite_dir_dif1 = al_load_bitmap("imagens/nave_1_dir.png");
-    if (!player_sprite_dir_dif1)
-    {
-        fprintf(stderr, "Erro ao carregar a imagem 'imagens/nave_1_dir.png'.\n");
-        return -1;
-    }
-
     ALLEGRO_BITMAP *player_sprite_esq_dif1 = al_load_bitmap("imagens/nave_1_esq.png");
-    if (!player_sprite_esq_dif1)
-    {
-        fprintf(stderr, "Erro ao carregar a imagem 'imagens/nave_1_esq.png'.\n");
-        return -1;
-    }
-
     ALLEGRO_BITMAP *player_sprite_dif2 = al_load_bitmap("imagens/nave2.png");
-    if (!player_sprite_dif2)
-    {
-        fprintf(stderr, "Erro ao carregar a imagem 'imagens/nave2.png'.\n");
-        return -1;
-    }
-
     ALLEGRO_BITMAP *player_sprite_dir_dif2 = al_load_bitmap("imagens/nave_2_dir.png");
-    if (!player_sprite_dir_dif2)
-    {
-        fprintf(stderr, "Erro ao carregar a imagem 'imagens/nave_2_dir.png'.\n");
-        return -1;
-    }
-
     ALLEGRO_BITMAP *player_sprite_esq_dif2 = al_load_bitmap("imagens/nave_2_esq.png");
-    if (!player_sprite_esq_dif2)
-    {
-        fprintf(stderr, "Erro ao carregar a imagem 'imagens/nave_2_esq.png'.\n");
-        return -1;
-    }
+
+    // disparos player
     ALLEGRO_BITMAP *bullet_sprite_dif1 = al_load_bitmap("imagens/bullet_dif1.png");
     ALLEGRO_BITMAP *bullet_sprite_dif2 = al_load_bitmap("imagens/bullet_dif2.png");
     ALLEGRO_BITMAP *bullet_sprite = al_load_bitmap("imagens/bullet.png");
     ALLEGRO_BITMAP *bullet_sprite_2 = al_load_bitmap("imagens/bullet_2.png");
     ALLEGRO_BITMAP *bullet_sprite_3 = al_load_bitmap("imagens/bullet_3.png");
+
+    // inimigos
     ALLEGRO_BITMAP *enemy_sprite = al_load_bitmap("imagens/enemy.png");
     ALLEGRO_BITMAP *enemy_sprite_2 = al_load_bitmap("imagens/enemy_2.png");
     ALLEGRO_BITMAP *shooting_enemy_sprite = al_load_bitmap("imagens/enemyShoot.png");
     ALLEGRO_BITMAP *shooting_enemy_sprite_2 = al_load_bitmap("imagens/enemyShoot_2.png");
     ALLEGRO_BITMAP *enemy_bullet_sprite = al_load_bitmap("imagens/bulletEnemy.png");
+    ALLEGRO_BITMAP *explosion_sprite = al_load_bitmap("imagens/frame5.png");
+
+    // boss
     ALLEGRO_BITMAP *boss_sprite = al_load_bitmap("imagens/ship_1.png");
     ALLEGRO_BITMAP *boss_sprite_2 = al_load_bitmap("imagens/ship_6.png");
     ALLEGRO_BITMAP *boss_bullet_sprite = al_load_bitmap("imagens/bulletEnemy.png");
     ALLEGRO_BITMAP *boss_bullet_special = al_load_bitmap("imagens/bullet_boss1.png");
+    ALLEGRO_BITMAP *bulletEnemy_boss2 = al_load_bitmap("imagens/bulletEnemy_boss2.png");
+    ALLEGRO_BITMAP *explosion_boss = al_load_bitmap("imagens/frame4.png");
+
+    // icones e vidas
     ALLEGRO_BITMAP *heart_full = al_load_bitmap("imagens/heart_full.png");
     ALLEGRO_BITMAP *heart_null = al_load_bitmap("imagens/heart_null.png");
     ALLEGRO_BITMAP *icon = al_load_bitmap("imagens/icon.png");
-    ALLEGRO_BITMAP *explosion_sprite = al_load_bitmap("imagens/frame5.png");
-    ALLEGRO_BITMAP *explosion_boss = al_load_bitmap("imagens/frame4.png");
-    ALLEGRO_BITMAP *bulletEnemy_boss2 = al_load_bitmap("imagens/bulletEnemy_boss2.png");
-    ALLEGRO_BITMAP *sla = al_load_bitmap("imagens/sla.png");
-    if (!al_install_audio())
-    {
-        fprintf(stderr, "Falha ao inicializar o sistema de áudio.\n");
-        return -1;
-    }
 
-    if (!al_init_acodec_addon())
-    {
-        fprintf(stderr, "Falha ao inicializar os codecs de áudio.\n");
-        return -1;
-    }
+    // itens
+    ALLEGRO_BITMAP *item_sprite = al_load_bitmap("imagens/item.png");
+    ALLEGRO_BITMAP *item_sprite_2 = al_load_bitmap("imagens/item_2.png");
 
-    if (!al_reserve_samples(1))
-    {
-        fprintf(stderr, "Falha ao reservar canais de áudio.\n");
-        return -1;
-    }
-
+    // audio
     ALLEGRO_AUDIO_STREAM *music = al_load_audio_stream("musicas/musica_fundo.ogg", 4, 1024);
-    if (!music)
-    {
-        fprintf(stderr, "Falha ao carregar a música de fundo.\n");
-        return -1;
-    }
     ALLEGRO_AUDIO_STREAM *music_menu = al_load_audio_stream("musicas/musica_menu.ogg", 4, 1024);
-    if (!music)
-    {
-        fprintf(stderr, "Falha ao carregar a música de menu.\n");
-        return -1;
-    }
 
+    // eventos na fila
     al_register_event_source(event_queue, al_get_display_event_source(display));
     al_register_event_source(event_queue, al_get_keyboard_event_source());
     al_register_event_source(event_queue, al_get_timer_event_source(timer));
 
-    int game_phase = 1;
-
-    int bullet_sprite_width = al_get_bitmap_width(bullet_sprite);
-    int bullet_sprite_height = al_get_bitmap_height(bullet_sprite);
-
-    int bullet_sprite_2_width = al_get_bitmap_width(bullet_sprite_2);
-    int bullet_sprite_2_height = al_get_bitmap_height(bullet_sprite_2);
-    int enemy_bullet_width = al_get_bitmap_width(enemy_bullet_sprite);
-    int enemy_bullet_height = al_get_bitmap_height(enemy_bullet_sprite);
-
-    int continue_game = 0;
-    int exit_game = 0;
-
+    // declarações
     Player player;
     Bullet bullets[MAX_BULLETS];
     Enemy enemies[MAX_ENEMIES];
     BossBullet boss_bullets[MAX_BOSS_BULLETS];
-    Bullet enemy_bullets[MAX_BULLET_COUNT]; // Adicione essa linha
+    Bullet enemy_bullets[MAX_BULLET_COUNT];
     ShootingEnemy shooting_enemies[MAX_SHOOTING_ENEMIES];
-    Boss boss; // Declaração do chefe
-    init_boss(&boss);
-    init_shooting_enemies(shooting_enemies, game_phase); // Adicione isso no main
-    init_player(&player);
-    init_bullets(bullets, MAX_BULLETS);
-    init_enemies(enemies, MAX_ENEMIES);
-    init_enemy_bullets(enemy_bullets, MAX_BULLET_COUNT); // Adicione essa linha na função main
-    init_boss_bullets(boss_bullets, MAX_BOSS_BULLETS);
+    Boss boss;
+    GameOptions game_options;
+    Item item = {0, 0, false, item_sprite, 40, 15};
+    Item item_phase2 = {0, 0, false, item_sprite_2, 40, 15};
+    ALLEGRO_BITMAP *backgrounds[] = {background, background_2, background_3};
 
-    ALLEGRO_BITMAP *item_sprite = al_load_bitmap("imagens/item.png");
-    ALLEGRO_BITMAP *item_sprite_2 = al_load_bitmap("imagens/item_2.png");
-    Item item = {0, 0, false, item_sprite,40,15}; // item_sprite é o sprite do item
-    Item item_phase2 = {0, 0, false, item_sprite_2,40,15};
-
-    ALLEGRO_BITMAP *current_background = background;
-    ALLEGRO_BITMAP *current_background_2 = background_2;
-
-    int firing = 0;
+    // variaveis
     int paused = 0;
     double last_fire_time = 0;
     int score = 0;
@@ -220,53 +121,42 @@ int main()
     int enemy_destroyed_count = 0;
     double boss_start_time = 0; // Armazena o tempo em que a espera para o boss começa
     int boss_waiting = 0;
-    double boss_shoot_delay = 0; // Variável para controlar o tempo de ativação do boss
-    bool boss_can_shoot = false;
     double boss_shoot_start_time = 0;
-
+    int game_phase = 1;
+    int continue_game = 0;
+    int exit_game = 0;
     int checkbox_states[3][3] = {{1, 0, 0}, {1, 0, 0}, {1, 0, 0}};
 
-    int explosion_frame = 0;
-    float explosion_timer = 0.0;
-
-    const char *explosion_frames[EXPLOSION_FRAME_COUNT] = {
-        "imagens/frame1.png",
-        "imagens/frame2.png",
-        "imagens/frame3.png",
-        "imagens/frame4.png",
-        "imagens/frame5.png"};
-
-    ALLEGRO_BITMAP *explosion_bitmaps[EXPLOSION_FRAME_COUNT];
-    for (int i = 0; i < EXPLOSION_FRAME_COUNT; i++)
-    {
-        explosion_bitmaps[i] = al_load_bitmap(explosion_frames[i]);
-    }
-
+    // inicializações
+    init_boss(&boss);
+    init_shooting_enemies(shooting_enemies, game_phase);
+    init_player(&player);
+    init_bullets(bullets, MAX_BULLETS);
+    init_enemies(enemies, MAX_ENEMIES);
+    init_enemy_bullets(enemy_bullets, MAX_BULLET_COUNT);
+    init_boss_bullets(boss_bullets, MAX_BOSS_BULLETS);
+    init_options(&game_options);
     al_start_timer(timer);
+
     // Loop do menu
     run_menu(font_menu, background, event_queue, display, music_menu, &game_options, &exit_game);
-
-    // Para parar a música
     al_detach_audio_stream(music_menu);
-
-    // Opcional: destruir a música para liberar memória
     al_destroy_audio_stream(music_menu);
     music_menu = NULL;
 
     al_flush_event_queue(event_queue);
-
     double start_time = al_get_time(); // Tempo inicial
-
     al_set_audio_stream_playmode(music, ALLEGRO_PLAYMODE_LOOP);
     al_attach_audio_stream_to_mixer(music, al_get_default_mixer());
 
+    // qual background vai ser usado
     if (game_options.new_option_2 == 0)
     {
-        current_background = background; // Use o fundo 2
+        current_background = background;
     }
     else if (game_options.new_option_2 == 1)
     {
-        current_background = background_2; // Use um fundo adicional (defina-o antes)
+        current_background = background_2;
     }
     else if (game_options.new_option_2 == 2)
     {
@@ -275,11 +165,11 @@ int main()
 
     if (game_options.new_option_3 == 0)
     {
-        current_background_2 = background; // Use o fundo 2
+        current_background_2 = background;
     }
     else if (game_options.new_option_3 == 1)
     {
-        current_background_2 = background_2; // Use um fundo adicional (defina-o antes)
+        current_background_2 = background_2;
     }
     else if (game_options.new_option_3 == 2)
     {
@@ -293,7 +183,6 @@ int main()
         {
             break; // Finaliza o jogo
         }
-        
 
         int redraw = 0;
         ALLEGRO_EVENT ev;
@@ -447,7 +336,7 @@ int main()
                             player_won = 0; // Reinicia a condição de vitória
                         }
                     }
-                
+
                     move_player(&player);
                     move_bullets(bullets, MAX_BULLETS, &player, font_menu, game_phase);
 
@@ -819,11 +708,9 @@ int main()
             {
                 // Debug: Exibir a posição e o tamanho do item
 
-
                 // Desenha o item
                 // Desenha o item normalmente
                 al_draw_bitmap(item.sprite, item.x, item.y, 0);
-
             }
 
             if (item_phase2.active)
@@ -832,7 +719,6 @@ int main()
 
                 // Desenha o item da fase 2
                 al_draw_bitmap(item_phase2.sprite, item_phase2.x, item_phase2.y, 0);
-
             }
 
             if (boss.active)
@@ -889,7 +775,7 @@ int main()
                       bullet_sprite_dif2, enemy_sprite, enemy_sprite_2, shooting_enemy_sprite, shooting_enemy_sprite_2,
                       enemy_bullet_sprite, boss_sprite, boss_sprite_2, boss_bullet_sprite, boss_bullet_special,
                       heart_full, heart_null, icon, explosion_sprite, explosion_boss, item_sprite, item_sprite_2,
-                      bulletEnemy_boss2, sla);
+                      bulletEnemy_boss2);
 
     al_destroy_audio_stream(music);
     al_destroy_audio_stream(music_menu);

@@ -1,6 +1,17 @@
 
 #include "game.h"
 
+void init_resources() {
+    al_init();
+    al_init_primitives_addon();
+    al_init_font_addon();
+    al_init_ttf_addon();
+    al_init_image_addon();
+    al_install_audio();
+    al_init_acodec_addon();
+    al_reserve_samples(1);
+}
+
 void cleanup_resources(
     ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_TIMER *timer,
     ALLEGRO_FONT *font, ALLEGRO_FONT *font_menu, ALLEGRO_FONT *font_warn, ALLEGRO_FONT *font_info,
@@ -16,7 +27,7 @@ void cleanup_resources(
     ALLEGRO_BITMAP *boss_bullet_sprite, ALLEGRO_BITMAP *boss_bullet_special,
     ALLEGRO_BITMAP *heart_full, ALLEGRO_BITMAP *heart_null, ALLEGRO_BITMAP *icon,
     ALLEGRO_BITMAP *explosion_sprite, ALLEGRO_BITMAP *explosion_boss, ALLEGRO_BITMAP *item_sprite,
-    ALLEGRO_BITMAP *item_sprite_2, ALLEGRO_BITMAP *bulletEnemy_boss2, ALLEGRO_BITMAP *sla)
+    ALLEGRO_BITMAP *item_sprite_2, ALLEGRO_BITMAP *bulletEnemy_boss2)
 {
     // Libera bitmaps
     if (background)
@@ -87,8 +98,6 @@ void cleanup_resources(
         al_destroy_bitmap(item_sprite_2);
     if (bulletEnemy_boss2)
         al_destroy_bitmap(bulletEnemy_boss2);
-    if (sla)
-        al_destroy_bitmap(sla);
 
     // Libera fontes
     if (font)
@@ -1066,4 +1075,18 @@ void draw_explosion_boss(Boss *boss, ALLEGRO_BITMAP *explosion_sprite, double ex
             boss->exploding = 0; // Finaliza a explosão após o tempo
         }
     }
+}
+
+void set_background(int option, ALLEGRO_BITMAP *backgrounds[], ALLEGRO_BITMAP **current_background)
+{
+    if (option >= 0 && option < 3)
+    {
+        *current_background = backgrounds[option];
+    }
+}
+
+void update_backgrounds(GameOptions game_options, ALLEGRO_BITMAP *backgrounds[], ALLEGRO_BITMAP **current_background, ALLEGRO_BITMAP **current_background_2)
+{
+    set_background(game_options.new_option_2, backgrounds, current_background);
+    set_background(game_options.new_option_3, backgrounds, current_background_2);
 }
