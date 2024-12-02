@@ -152,3 +152,21 @@ void shoot_boss_bullet(Boss *boss, BossBullet boss_bullets[], int *boss_bullet_c
     }
     
 }
+
+void check_and_activate_boss(Boss *boss, double *boss_start_time, double current_time, 
+                             double *boss_shoot_start_time, bool *boss_waiting, int remaining_time, 
+                             int screen_width) {
+    // Verifica se o boss deve começar a esperar
+    if (remaining_time <= 0 && !(*boss_waiting) && !(boss->active)) {
+        *boss_waiting = true;           // Marca que estamos aguardando
+        *boss_start_time = current_time; // Registra o tempo inicial da espera
+    }
+
+    // Aguarda os 3 segundos antes de ativar o boss
+    if (*boss_waiting && (current_time - *boss_start_time >= 2.0)) {
+        *boss_waiting = false;            // Reseta o estado de espera
+        boss->active = 1;                 // Ativa o boss
+        boss->x = screen_width - boss->width; // Posiciona o boss
+        *boss_shoot_start_time = current_time; // Define o tempo inicial para começar a disparar
+    }
+}

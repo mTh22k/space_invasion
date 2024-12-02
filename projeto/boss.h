@@ -29,5 +29,8 @@ void move_boss(Boss *boss, int game_phase);
 void shoot_boss_bullet(Boss *boss, BossBullet boss_bullets[], int *boss_bullet_count, int game_phase);
 void shoot_boss_special_attack_2(Boss *boss, BossBullet boss_bullets[], int *boss_bullet_count);
 void shoot_boss_special_attack(Boss *boss, BossBullet boss_bullets[], int *boss_bullet_count);
+void check_and_activate_boss(Boss *boss, double *boss_start_time, double current_time, 
+                             double *boss_shoot_start_time, bool *boss_waiting, int remaining_time, 
+                             int screen_width);
 
 #endif // BOSS_H

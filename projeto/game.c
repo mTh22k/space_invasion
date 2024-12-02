@@ -1090,3 +1090,33 @@ void update_backgrounds(GameOptions game_options, ALLEGRO_BITMAP *backgrounds[],
     set_background(game_options.new_option_2, backgrounds, current_background);
     set_background(game_options.new_option_3, backgrounds, current_background_2);
 }
+
+void handle_phase1_enemy_generation(ShootingEnemy shooting_enemies[], int max_shooting_enemies,
+                                    Enemy enemies[], int max_enemies, int game_phase, Player player) {
+    if (rand() % 200 == 0) {
+        generate_shooting_enemy(shooting_enemies, max_shooting_enemies, game_phase);
+    }
+    if (rand() % 60 == 0) {
+        generate_enemy(enemies, max_enemies, player.width, player.height);
+    }
+}
+
+void handle_phase2_enemy_generation(ShootingEnemy shooting_enemies[], int max_shooting_enemies,
+                                    Enemy enemies[], int max_enemies, int game_phase, Player player,
+                                    double *phase2_start_time, bool *phase2_started) {
+    // Inicializa o tempo quando a fase 2 começa
+    if (!(*phase2_started)) {
+        *phase2_start_time = al_get_time();
+        *phase2_started = true;
+    }
+
+    // Verifica se passou 1 segundo desde o início da fase 2
+    if (al_get_time() - *phase2_start_time >= 1.0) {
+        if (rand() % 100 == 0) {
+            generate_shooting_enemy(shooting_enemies, max_shooting_enemies, game_phase);
+        }
+        if (rand() % 30 == 0) {
+            generate_enemy(enemies, max_enemies, player.width, player.height);
+        }
+    }
+}

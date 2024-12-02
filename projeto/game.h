@@ -60,5 +60,12 @@ void draw_explosion_shoot(ShootingEnemy *shooting_enemy, ALLEGRO_BITMAP *explosi
 void draw_explosion_boss(Boss *boss, ALLEGRO_BITMAP *explosion_sprite, double explosion_duration);
 void set_background(int option, ALLEGRO_BITMAP *backgrounds[], ALLEGRO_BITMAP **current_background);
 void update_backgrounds(GameOptions game_options, ALLEGRO_BITMAP *backgrounds[], ALLEGRO_BITMAP **current_background, ALLEGRO_BITMAP **current_background_2);
+void handle_phase1_enemy_generation(ShootingEnemy shooting_enemies[], int max_shooting_enemies,
+                                    Enemy enemies[], int max_enemies, int game_phase, Player player);
+
+void handle_phase2_enemy_generation(ShootingEnemy shooting_enemies[], int max_shooting_enemies,
+                                    Enemy enemies[], int max_enemies, int game_phase, Player player,
+                                    double *phase2_start_time, bool *phase2_started);
+
 
 #endif // ENEMY_H

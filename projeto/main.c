@@ -156,32 +156,8 @@ int main()
     al_set_audio_stream_playmode(music, ALLEGRO_PLAYMODE_LOOP);
     al_attach_audio_stream_to_mixer(music, al_get_default_mixer());
 
-    // qual background vai ser usado
-    if (game_options.new_option_2 == 0)
-    {
-        current_background = background;
-    }
-    else if (game_options.new_option_2 == 1)
-    {
-        current_background = background_2;
-    }
-    else if (game_options.new_option_2 == 2)
-    {
-        current_background = background_3;
-    }
+    update_backgrounds(game_options, backgrounds, &current_background, &current_background_2);
 
-    if (game_options.new_option_3 == 0)
-    {
-        current_background_2 = background;
-    }
-    else if (game_options.new_option_3 == 1)
-    {
-        current_background_2 = background_2;
-    }
-    else if (game_options.new_option_3 == 2)
-    {
-        current_background_2 = background_3;
-    }
 
     while (1)
     {
@@ -219,39 +195,15 @@ int main()
                     {
                         if (game_phase == 1)
                         {
-                            if (rand() % 200 == 0)
-                            {
-                                generate_shooting_enemy(shooting_enemies, MAX_SHOOTING_ENEMIES, game_phase);
-                            }
-
-                            if (rand() % 60 == 0)
-                            {
-                                generate_enemy(enemies, MAX_ENEMIES, player.width, player.height);
-                            }
+                            handle_phase1_enemy_generation(shooting_enemies, MAX_SHOOTING_ENEMIES, 
+                               enemies, MAX_ENEMIES, game_phase, player);
                         }
                         else if (game_phase == 2)
                         {
-                            // Inicializa o tempo quando a fase 2 começa
-                            if (!phase2_started)
-                            {
-                                phase2_start_time = al_get_time();
-                                phase2_started = true;
-                            }
+                           handle_phase2_enemy_generation(shooting_enemies, MAX_SHOOTING_ENEMIES, 
+                               enemies, MAX_ENEMIES, game_phase, player, 
+                               &phase2_start_time, &phase2_started);
 
-                            // Verifica se passou 1 segundo desde o início da fase 2
-                            if (al_get_time() - phase2_start_time >= 1.0)
-                            {
-                                // Gerar inimigos após 1 segundo
-                                if (rand() % 100 == 0)
-                                {
-                                    generate_shooting_enemy(shooting_enemies, MAX_SHOOTING_ENEMIES, game_phase);
-                                }
-
-                                if (rand() % 30 == 0)
-                                {
-                                    generate_enemy(enemies, MAX_ENEMIES, player.width, player.height);
-                                }
-                            }
                         }
 
                         move_enemies(enemies, MAX_ENEMIES, game_phase);
@@ -263,30 +215,12 @@ int main()
                             shoot_enemy_bullet(&shooting_enemies[i], player.x, player.y, game_phase); // Cada um atira
                             move_enemy_bullets(shooting_enemies[i].bullets, 3);                       // Move os projéteis
                             check_enemy_bullet_collisions(&player, &shooting_enemies[i], &game_over); // Verifica colisões
-                            // check_shooting_enemy_collision(&player, &shooting_enemies[i], &game_over);
                         }
-
-                        // for (int i = 0; i < MAX_SHOOTING_ENEMIES; i++)
-                        // {
-                        //     check_shooting_enemy_collision(&player, &shooting_enemies[i], &game_over);
-                        // }
                     }
 
-                    // Verifique se o boss deve começar a esperar
-                    if (remaining_time <= 0 && !boss_waiting && !boss.active)
-                    {
-                        boss_waiting = 1;               // Marca que estamos aguardando
-                        boss_start_time = current_time; // Registra o tempo inicial da espera
-                    }
-
-                    // Aguarda os 3 segundos antes de ativar o boss
-                    if (boss_waiting && (current_time - boss_start_time >= 2.0))
-                    {
-                        boss_waiting = 0;                     // Reseta o estado de espera
-                        boss.active = 1;                      // Ativa o boss
-                        boss.x = SCREEN_WIDTH - boss.width;   // Posiciona o boss
-                        boss_shoot_start_time = current_time; // Define o tempo inicial para começar a disparar
-                    }
+                    check_and_activate_boss(&boss, &boss_start_time, current_time, 
+                        &boss_shoot_start_time, &boss_waiting, 
+                        remaining_time, SCREEN_WIDTH);
 
                     if (boss.active)
                     {
@@ -339,7 +273,6 @@ int main()
                             init_second_phase(&player, enemies, bullets, shooting_enemies, &boss, &victory_state, &player_won, &start_time, &enemy_destroyed_count, game_phase);
                             game_phase = 2;
                             item_phase2.active = false; // Assegura que o item da fase 2 está desativado quando a fase 2 começa
-
                             player_won = 0; // Reinicia a condição de vitória
                         }
                     }
