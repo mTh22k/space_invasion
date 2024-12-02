@@ -12,7 +12,7 @@ LDFLAGS = $(shell pkg-config --libs allegro-5 allegro_dialog-5 allegro_primitive
 
 
 # Arquivos-fonte
-SRCS = main.c game.c boss.c bullet.c collision.c enemy.c player.c
+SRCS = main.c game.c boss.c bullet.c collision.c enemy.c player.c render.c
 
 # Arquivos objeto (gerados a partir dos arquivos-fonte)
 OBJS = $(SRCS:.c=.o)

@@ -18,6 +18,7 @@
 #include "structs.h"
 #include "game.h"
 #include "defines.h"
+#include "render.h"
 
 int main()
 {
@@ -127,11 +128,12 @@ int main()
     float background_speed = 2.0; // Velocidade padrão do plano de fundo
     int enemy_destroyed_count = 0;
     double boss_start_time = 0; // Armazena o tempo em que a espera para o boss começa
-    int boss_waiting = 0;
+    bool boss_waiting = false;
     double boss_shoot_start_time = 0;
     int game_phase = 1;
     int continue_game = 0;
     int exit_game = 0;
+    int redraw = 0;
     int checkbox_states[3][3] = {{1, 0, 0}, {1, 0, 0}, {1, 0, 0}};
 
     // inicializações
@@ -158,7 +160,6 @@ int main()
 
     update_backgrounds(game_options, backgrounds, &current_background, &current_background_2);
 
-
     while (1)
     {
 
@@ -167,11 +168,9 @@ int main()
             break; // Finaliza o jogo
         }
 
-        int redraw = 0;
         ALLEGRO_EVENT ev;
         al_wait_for_event(event_queue, &ev);
         double current_time = al_get_time(); // Tempo atual
-
         double elapsed_time = al_get_time() - start_time;
         double remaining_time = TIME_TO_BOSS - elapsed_time;
 
@@ -195,15 +194,14 @@ int main()
                     {
                         if (game_phase == 1)
                         {
-                            handle_phase1_enemy_generation(shooting_enemies, MAX_SHOOTING_ENEMIES, 
-                               enemies, MAX_ENEMIES, game_phase, player);
+                            handle_phase1_enemy_generation(shooting_enemies, MAX_SHOOTING_ENEMIES,
+                                                           enemies, MAX_ENEMIES, game_phase, player);
                         }
                         else if (game_phase == 2)
                         {
-                           handle_phase2_enemy_generation(shooting_enemies, MAX_SHOOTING_ENEMIES, 
-                               enemies, MAX_ENEMIES, game_phase, player, 
-                               &phase2_start_time, &phase2_started);
-
+                            handle_phase2_enemy_generation(shooting_enemies, MAX_SHOOTING_ENEMIES,
+                                                           enemies, MAX_ENEMIES, game_phase, player,
+                                                           &phase2_start_time, &phase2_started);
                         }
 
                         move_enemies(enemies, MAX_ENEMIES, game_phase);
@@ -218,9 +216,9 @@ int main()
                         }
                     }
 
-                    check_and_activate_boss(&boss, &boss_start_time, current_time, 
-                        &boss_shoot_start_time, &boss_waiting, 
-                        remaining_time, SCREEN_WIDTH);
+                    check_and_activate_boss(&boss, &boss_start_time, current_time,
+                                            &boss_shoot_start_time, &boss_waiting,
+                                            remaining_time, SCREEN_WIDTH);
 
                     if (boss.active)
                     {
@@ -273,7 +271,7 @@ int main()
                             init_second_phase(&player, enemies, bullets, shooting_enemies, &boss, &victory_state, &player_won, &start_time, &enemy_destroyed_count, game_phase);
                             game_phase = 2;
                             item_phase2.active = false; // Assegura que o item da fase 2 está desativado quando a fase 2 começa
-                            player_won = 0; // Reinicia a condição de vitória
+                            player_won = 0;             // Reinicia a condição de vitória
                         }
                     }
 
@@ -297,84 +295,20 @@ int main()
             break;
         else if (ev.type == ALLEGRO_EVENT_KEY_DOWN)
         {
-            switch (ev.keyboard.keycode)
-            {
-            case ALLEGRO_KEY_W:
-                player.joystick.up = 1;
-                break;
-            case ALLEGRO_KEY_S:
-                player.joystick.down = 1;
-                break;
-            case ALLEGRO_KEY_A:
-                player.joystick.left = 1;
-                background_speed = 0.5;
-                break;
-            case ALLEGRO_KEY_D:
-                player.joystick.right = 1;
-                background_speed = 4.0;
-                break;
-            case ALLEGRO_KEY_ENTER:
-                player.joystick.fire = 1;
-                break;
-            case ALLEGRO_KEY_P: // Aperte P para pausar/despausar
-                player.paused = !player.paused;
-                if (player.paused)
-                {
-                    draw_pause_message(font_menu, current_background, event_queue, display, &player, &exit_game);
-                }
-                break;
-            }
+            handle_keyboard_event(ev, &player, &background_speed, font_menu, current_background, event_queue, display, &exit_game);
+        }
+        else if (ev.type == ALLEGRO_EVENT_KEY_UP)
+        {
+            handle_keyboard_release_event(ev, &player, &background_speed);
         }
         else if (game_over)
         {
             // Exibe o menu de fim de jogo
             show_game_over_menu(display, event_queue, font_menu, &restart_game, &exit_game);
 
-            if (exit_game)
+            if (restart_game)
             {
-                // Se o jogador escolher sair, fecha o jogo
-                break;
-            }
-            else if (restart_game)
-            {
-                // Se o jogador escolher reiniciar, reinicia o jogo
-                // Reinicializa os elementos do jogo
-                init_player(&player);
-                init_boss(&boss);
-                init_enemies(enemies, MAX_ENEMIES);
-                init_bullets(bullets, MAX_BULLETS);
-
-                player.invulnerable = 1;
-                player.invulnerable_time = al_get_time();
-
-                // Zera o estado do jogo e reinicia o loop principal
-                game_over = 0;
-                player_won = 0;
-                score = 0;
-                start_time = al_get_time();
-            }
-        }
-        else if (ev.type == ALLEGRO_EVENT_KEY_UP)
-        {
-            switch (ev.keyboard.keycode)
-            {
-            case ALLEGRO_KEY_W:
-                player.joystick.up = 0;
-                break;
-            case ALLEGRO_KEY_S:
-                player.joystick.down = 0;
-                break;
-            case ALLEGRO_KEY_A:
-                player.joystick.left = 0;
-                background_speed = 2.0;
-                break;
-            case ALLEGRO_KEY_D:
-                player.joystick.right = 0;
-                background_speed = 2.0;
-                break;
-            case ALLEGRO_KEY_ENTER:
-                player.joystick.fire = 0;
-                break;
+                restart_init_game(&player, &boss, enemies, MAX_ENEMIES, bullets, MAX_BULLETS, &game_over, &player_won, &score, &start_time);
             }
         }
 
@@ -401,308 +335,59 @@ int main()
                 al_draw_bitmap(current_background_2, background_x, 0, 0);
                 al_draw_bitmap(current_background_2, background_x + al_get_bitmap_width(current_background_2), 0, 0);
             }
-            // Desenhar o jogador com efeito de piscamento se estiver invulnerável
 
-            if (player.invulnerable && ((int)(al_get_time() * 10) % 2 == 0))
-            {
-                // Verifica qual sprite foi escolhido no menu
-                if (player.joystick.down)
-                {
-                    // Verifica qual sprite foi escolhido no menu
-                    switch (game_options.sprite_option)
-                    {
-                    case 0:                                                       // Opção de sprite 1
-                        al_draw_bitmap(player_sprite_dir, player.x, player.y, 0); // Desenha a sprite para a direita
-                        break;
-                    case 1:                                                            // Opção de sprite 2
-                        al_draw_bitmap(player_sprite_dir_dif1, player.x, player.y, 0); // Desenha o novo sprite para a direita
-                        break;
-                    case 2:                                                            // Opção de sprite 3
-                        al_draw_bitmap(player_sprite_dir_dif2, player.x, player.y, 0); // Desenha o terceiro sprite para a direita
-                        break;
-                    }
-                }
-                else if (player.joystick.up)
-                {
-                    // Verifica qual sprite foi escolhido no menu
-                    switch (game_options.sprite_option)
-                    {
-                    case 0:                                                       // Opção de sprite 1
-                        al_draw_bitmap(player_sprite_esq, player.x, player.y, 0); // Desenha a sprite para a esquerda
-                        break;
-                    case 1:                                                            // Opção de sprite 2
-                        al_draw_bitmap(player_sprite_esq_dif1, player.x, player.y, 0); // Desenha o novo sprite para a esquerda
-                        break;
-                    case 2:                                                            // Opção de sprite 3
-                        al_draw_bitmap(player_sprite_esq_dif2, player.x, player.y, 0); // Desenha o terceiro sprite para a esquerda
-                        break;
-                    }
-                }
-                else
-                {
-                    // Verifica qual sprite foi escolhido no menu
-                    switch (game_options.sprite_option)
-                    {
-                    case 0:                                                   // Opção de sprite 1
-                        al_draw_bitmap(player_sprite, player.x, player.y, 0); // Desenha a sprite padrão
-                        break;
-                    case 1:                                                        // Opção de sprite 2
-                        al_draw_bitmap(player_sprite_dif1, player.x, player.y, 0); // Desenha o novo sprite padrão
-                        break;
-                    case 2:                                                        // Opção de sprite 3
-                        al_draw_bitmap(player_sprite_dif2, player.x, player.y, 0); // Desenha o terceiro sprite padrão
-                        break;
-                    }
-                }
-            }
-            else if (!player.invulnerable)
-            {
-                // Verifica qual sprite foi escolhido no menu
-                if (player.joystick.down)
-                {
-                    // Verifica qual sprite foi escolhido no menu
-                    switch (game_options.sprite_option)
-                    {
-                    case 0:                                                       // Opção de sprite 1
-                        al_draw_bitmap(player_sprite_dir, player.x, player.y, 0); // Desenha a sprite para a direita
-                        break;
-                    case 1:                                                            // Opção de sprite 2
-                        al_draw_bitmap(player_sprite_dir_dif1, player.x, player.y, 0); // Desenha o novo sprite para a direita
-                        break;
-                    case 2:                                                            // Opção de sprite 3
-                        al_draw_bitmap(player_sprite_dir_dif2, player.x, player.y, 0); // Desenha o terceiro sprite para a direita
-                        break;
-                    }
-                }
-                else if (player.joystick.up)
-                {
-                    // Verifica qual sprite foi escolhido no menu
-                    switch (game_options.sprite_option)
-                    {
-                    case 0:                                                       // Opção de sprite 1
-                        al_draw_bitmap(player_sprite_esq, player.x, player.y, 0); // Desenha a sprite para a esquerda
-                        break;
-                    case 1:                                                            // Opção de sprite 2
-                        al_draw_bitmap(player_sprite_esq_dif1, player.x, player.y, 0); // Desenha o novo sprite para a esquerda
-                        break;
-                    case 2:                                                            // Opção de sprite 3
-                        al_draw_bitmap(player_sprite_esq_dif2, player.x, player.y, 0); // Desenha o terceiro sprite para a esquerda
-                        break;
-                    }
-                }
-                else
-                {
-                    // Verifica qual sprite foi escolhido no menu
-                    switch (game_options.sprite_option)
-                    {
-                    case 0:                                                   // Opção de sprite 1
-                        al_draw_bitmap(player_sprite, player.x, player.y, 0); // Desenha a sprite padrão
-                        break;
-                    case 1:                                                        // Opção de sprite 2
-                        al_draw_bitmap(player_sprite_dif1, player.x, player.y, 0); // Desenha o novo sprite padrão
-                        break;
-                    case 2:                                                        // Opção de sprite 3
-                        al_draw_bitmap(player_sprite_dif2, player.x, player.y, 0); // Desenha o terceiro sprite padrão
-                        break;
-                    }
-                }
-            }
+            draw_player_with_effects(&player, &game_options,
+                                     player_sprite, player_sprite_dif1, player_sprite_dif2,
+                                     player_sprite_dir, player_sprite_dir_dif1, player_sprite_dir_dif2,
+                                     player_sprite_esq, player_sprite_esq_dif1, player_sprite_esq_dif2);
 
             // Chamar a função para desenhar a vida do jogador
             draw_player_life(heart_full, heart_null, &player);
 
             // Desenhar as balas
-            for (int i = 0; i < MAX_BULLETS; i++)
-            {
-                if (bullets[i].active)
-                {
-                    // Desenhando o retângulo em volta da hitbox
-
-                    // Desenhando a bala
-                    if (game_phase == 1)
-                    {
-                        if (player.special_attack_active == true)
-                        {
-                            al_draw_bitmap(bullet_sprite_2, bullets[i].x + 15, bullets[i].y + 10, 0);
-                        }
-                        else
-                        {
-                            if (game_options.new_option_1 == 0)
-                            {
-                                al_draw_bitmap(bullet_sprite, bullets[i].x + 15, bullets[i].y + 10, 0);
-                            }
-                            else if (game_options.new_option_1 == 1)
-                            {
-                                al_draw_bitmap(bullet_sprite_dif1, bullets[i].x + 15, bullets[i].y + 10, 0);
-                            }
-                            else if (game_options.new_option_1 == 2)
-                            {
-                                al_draw_bitmap(bullet_sprite_dif2, bullets[i].x + 15, bullets[i].y + 10, 0);
-                            }
-                        }
-                    }
-                    else if (game_phase == 2)
-                    {
-                        if (player.special_attack_active == true)
-                        {
-                            al_draw_bitmap(bullet_sprite_3, bullets[i].x + 15, bullets[i].y + 10, 0);
-                        }
-                        else
-                        {
-                            if (game_options.new_option_1 == 0)
-                            {
-                                al_draw_bitmap(bullet_sprite, bullets[i].x + 15, bullets[i].y + 10, 0);
-                            }
-                            else if (game_options.new_option_1 == 1)
-                            {
-                                al_draw_bitmap(bullet_sprite_dif1, bullets[i].x + 15, bullets[i].y + 10, 0);
-                            }
-                            else if (game_options.new_option_1 == 2)
-                            {
-                                al_draw_bitmap(bullet_sprite_dif2, bullets[i].x + 15, bullets[i].y + 10, 0);
-                            }
-                        }
-                    }
-                }
-            }
+            draw_bullets(bullets, MAX_BULLETS, game_phase, &player, &game_options,
+                         bullet_sprite, bullet_sprite_2, bullet_sprite_3,
+                         bullet_sprite_dif1, bullet_sprite_dif2);
 
             if (remaining_time > 0)
             {
                 float last_time = al_get_time();
                 float delta_time = al_get_time() - last_time;
+
                 // Desenhar inimigos
-                for (int i = 0; i < MAX_ENEMIES; i++)
-                {
-                    if (enemies[i].active)
-                        if (game_phase == 1)
-                        {
+                draw_enemies(enemies, MAX_ENEMIES, game_phase, enemy_sprite, enemy_sprite_2, explosion_sprite);
 
-                            al_draw_bitmap(enemy_sprite, enemies[i].x, enemies[i].y + 0, 0);
-                        }
-                        else if (game_phase == 2)
-                        {
-
-                            al_draw_bitmap(enemy_sprite_2, enemies[i].x, enemies[i].y, 0);
-                        }
-
-                    draw_explosion(&enemies[i], explosion_sprite, 0.1);
-                }
-
-                if (item.active)
-                {
-                    al_draw_bitmap(item.sprite, item.x, item.y, 0); // Desenha o item no lugar onde ele foi gerado
-                }
-
-                if (game_phase == 1 && player.special_attack_active == true)
-                {
-                    al_draw_text(font_warn, al_map_rgb(255, 255, 255), 400, 550, ALLEGRO_ALIGN_CENTRE, "Voce pegou disparos rapidos por 6 segundos!");
-                }
-                else if (game_phase == 2 && player.special_attack_active == true)
-                {
-                    al_draw_text(font_warn, al_map_rgb(255, 255, 255), 400, 550, ALLEGRO_ALIGN_CENTRE, "Voce pegou disparos com 2x de dano por 6 segundos!");
-                }
+                draw_item_and_warning(&item, &player, game_phase, font_warn);
 
                 // Renderização dos inimigos que atiram
-                for (int i = 0; i < MAX_SHOOTING_ENEMIES; i++)
-                {
-                    ShootingEnemy shooting_enemy = shooting_enemies[i]; // Obter o inimigo atual
-
-                    if (shooting_enemy.active)
-                    {
-                        if (game_phase == 1)
-                        {
-                            if (!shooting_enemy.ready_to_shoot)
-                            {
-                                shooting_enemy.ready_to_shoot = true;
-                            }
-
-                            al_draw_bitmap(shooting_enemy_sprite, shooting_enemy.x, shooting_enemy.y, 0); // Desenhar o inimigo
-                        }
-                        else if (game_phase == 2)
-                        {
-                            if (!shooting_enemy.ready_to_shoot)
-                            {
-                                shooting_enemy.ready_to_shoot = true;
-                            }
-
-                            al_draw_bitmap(shooting_enemy_sprite_2, shooting_enemy.x, shooting_enemy.y, 0); // Desenhar o inimigo
-                        }
-
-                        // Renderizar os projéteis do inimigo
-                        for (int j = 0; j < 10; j++) // Substitua 10 pelo número máximo de projéteis que cada inimigo pode ter
-                        {
-                            if (shooting_enemy.bullets[j].active)
-                            {
-                                // Desenhando o retângulo em volta da hitbox do projétil do inimigo
-
-                                // Desenhando o projétil do inimigo
-                                al_draw_bitmap(enemy_bullet_sprite, shooting_enemy.bullets[j].x - 30, shooting_enemy.bullets[j].y + 20, 0);
-                            }
-                        }
-                        draw_explosion_shoot(&shooting_enemies[i], explosion_sprite, 0.1);
-                    }
-                }
+                draw_shooting_enemies(shooting_enemies, MAX_SHOOTING_ENEMIES,
+                                      shooting_enemy_sprite, shooting_enemy_sprite_2,
+                                      enemy_bullet_sprite, explosion_sprite,
+                                      game_phase);
             }
 
             if (item.active)
             {
-                // Debug: Exibir a posição e o tamanho do item
-
-                // Desenha o item
                 // Desenha o item normalmente
                 al_draw_bitmap(item.sprite, item.x, item.y, 0);
             }
 
             if (item_phase2.active)
             {
-                // Debug: Exibir a posição e o tamanho do item da fase 2
-
                 // Desenha o item da fase 2
                 al_draw_bitmap(item_phase2.sprite, item_phase2.x, item_phase2.y, 0);
             }
 
             if (boss.active)
             {
-                for (int i = 0; i < MAX_BOSS_BULLETS; i++)
-                {
-                    if (boss_bullets[i].active)
-                    {
-                        if (game_phase == 2)
-                        {
-                            if (boss.special_attack_active == 1)
-                            {
-                                al_draw_bitmap(bulletEnemy_boss2, boss_bullets[i].x, boss_bullets[i].y, 0);
-                            }
-                            else
-                            {
-                                al_draw_bitmap(boss_bullet_sprite, boss_bullets[i].x, boss_bullets[i].y, 0);
-                            }
-                        }
-                        else
-                        {
-                            al_draw_bitmap(boss_bullet_sprite, boss_bullets[i].x, boss_bullets[i].y, 0);
-                        }
-                    }
-                }
-                move_boss(&boss, game_phase);
-                if (game_phase == 1)
-                {
-
-                    al_draw_bitmap(boss_sprite, boss.x, boss.y, 0); // Desenhar o inimigo
-                }
-                else if (game_phase == 2)
-                {
-
-                    al_draw_bitmap(boss_sprite_2, boss.x, boss.y, 0); // Desenhar o inimigo
-                }
-                draw_explosion_boss(&boss, explosion_boss, 0.1);
+                draw_boss(&boss, boss_bullets, MAX_BOSS_BULLETS,
+                          boss_sprite, boss_sprite_2,
+                          boss_bullet_sprite, bulletEnemy_boss2,
+                          explosion_boss, game_phase);
             }
 
             // Desenhar o placar
-            al_draw_textf(font_info, al_map_rgb(255, 255, 255), 680, 10, 0, "Score: %d", score);
-            al_draw_bitmap(icon, 0, 0, 0);
-            al_draw_textf(font_info, al_map_rgb(255, 255, 255), 90, 50, 0, "Player 1");
-            // al_draw_textf(font, al_map_rgb(255, 0, 0), SCREEN_WIDTH - 100, 10, 0, "Time: %.2f", remaining_time);
+           draw_hud(font_info, icon, score, "Player 1");
 
             al_flip_display();
         }

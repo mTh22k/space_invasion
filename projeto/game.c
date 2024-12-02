@@ -1120,3 +1120,77 @@ void handle_phase2_enemy_generation(ShootingEnemy shooting_enemies[], int max_sh
         }
     }
 }
+
+void handle_keyboard_event(ALLEGRO_EVENT ev, Player *player, float *background_speed, 
+                           ALLEGRO_FONT *font_menu, ALLEGRO_BITMAP *current_background, 
+                           ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_DISPLAY *display, 
+                           int *exit_game) {
+    switch (ev.keyboard.keycode) {
+        case ALLEGRO_KEY_W:
+            player->joystick.up = 1;
+            break;
+        case ALLEGRO_KEY_S:
+            player->joystick.down = 1;
+            break;
+        case ALLEGRO_KEY_A:
+            player->joystick.left = 1;
+            *background_speed = 0.5;
+            break;
+        case ALLEGRO_KEY_D:
+            player->joystick.right = 1;
+            *background_speed = 4.0;
+            break;
+        case ALLEGRO_KEY_ENTER:
+            player->joystick.fire = 1;
+            break;
+        case ALLEGRO_KEY_P: // Aperte P para pausar/despausar
+            player->paused = !player->paused;
+            if (player->paused) {
+                draw_pause_message(font_menu, current_background, event_queue, display, player, exit_game);
+            }
+            break;
+    }
+}
+
+void handle_keyboard_release_event(ALLEGRO_EVENT ev, Player *player, float *background_speed) {
+    switch (ev.keyboard.keycode) {
+        case ALLEGRO_KEY_W:
+            player->joystick.up = 0;
+            break;
+        case ALLEGRO_KEY_S:
+            player->joystick.down = 0;
+            break;
+        case ALLEGRO_KEY_A:
+            player->joystick.left = 0;
+            *background_speed = 2.0;
+            break;
+        case ALLEGRO_KEY_D:
+            player->joystick.right = 0;
+            *background_speed = 2.0;
+            break;
+        case ALLEGRO_KEY_ENTER:
+            player->joystick.fire = 0;
+            break;
+    }
+}
+void restart_init_game(Player *player, Boss *boss, Enemy enemies[], int max_enemies, 
+                  Bullet bullets[], int max_bullets, int *game_over, 
+                  int *player_won, int *score, double *start_time) {
+    // Reinicializa os elementos do jogo
+    init_player(player);
+    init_boss(boss);
+    init_enemies(enemies, max_enemies);
+    init_bullets(bullets, max_bullets);
+
+    // Define o jogador como invulnerável temporariamente
+    player->invulnerable = 1;
+    player->invulnerable_time = al_get_time();
+
+    // Zera o estado do jogo
+    *game_over = 0;
+    *player_won = 0;
+    *score = 0;
+
+    // Reinicia o cronômetro do jogo
+    *start_time = al_get_time();
+}

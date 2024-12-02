@@ -66,6 +66,13 @@ void handle_phase1_enemy_generation(ShootingEnemy shooting_enemies[], int max_sh
 void handle_phase2_enemy_generation(ShootingEnemy shooting_enemies[], int max_shooting_enemies,
                                     Enemy enemies[], int max_enemies, int game_phase, Player player,
                                     double *phase2_start_time, bool *phase2_started);
-
+void handle_keyboard_event(ALLEGRO_EVENT ev, Player *player, float *background_speed, 
+                           ALLEGRO_FONT *font_menu, ALLEGRO_BITMAP *current_background, 
+                           ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_DISPLAY *display, 
+                           int *exit_game);
+void handle_keyboard_release_event(ALLEGRO_EVENT ev, Player *player, float *background_speed);
+void restart_init_game(Player *player, Boss *boss, Enemy enemies[], int max_enemies, 
+                  Bullet bullets[], int max_bullets, int *game_over, 
+                  int *player_won, int *score, double *start_time);
 
 #endif // ENEMY_H
