@@ -257,10 +257,21 @@ int main()
                         {
                             // Mover todos os inimigos que atiram
                             move_shooting_enemy(&shooting_enemies[i]);
-                            // Cada um atira
-                            shoot_enemy_bullet(&shooting_enemies[i], player.x, player.y, game_phase);
+
+                            // Verifica se o inimigo está visível antes de atirar
+                            if (shooting_enemies[i].x + shooting_enemies[i].width >= 0 &&
+                                shooting_enemies[i].x <= SCREEN_WIDTH &&
+                                shooting_enemies[i].y + shooting_enemies[i].height >= 0 &&
+                                shooting_enemies[i].y <= SCREEN_HEIGHT)
+                            {
+
+                                // Permite disparo apenas se o inimigo está na tela
+                                shoot_enemy_bullet(&shooting_enemies[i], player.x, player.y, game_phase);
+                            }
+
                             // Move os projéteis
                             move_enemy_bullets(shooting_enemies[i].bullets, 3);
+
                             // Verifica colisões dos projéteis com o jogador
                             check_enemy_bullet_collisions(&player, &shooting_enemies[i], &game_over);
                         }

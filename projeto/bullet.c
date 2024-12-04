@@ -17,9 +17,9 @@ void move_bullets(Bullet bullets[], int count, Player *player, ALLEGRO_FONT *fon
     if (player->special_attack_active)
     {
         float tempo_passado = al_get_time() - player->special_attack_start_time;
-        if (tempo_passado > 6.0f) // Desativa o ataque especial após 6 segundos
+        if (tempo_passado > 5.0f) // Desativa o ataque especial após 6 segundos
         {
-            al_draw_text(font, al_map_rgb(255, 255, 255), 300, 400, ALLEGRO_ALIGN_CENTRE, "Voce pegou disparos rapidos por 6 segundos!");
+            al_draw_text(font, al_map_rgb(255, 255, 255), 300, 400, ALLEGRO_ALIGN_CENTRE, "Voce pegou disparos rapidos por 5 segundos!");
             player->special_attack_active = false;
         }
     }
@@ -99,6 +99,14 @@ void shoot_enemy_bullet(ShootingEnemy *enemy, float player_x, float player_y, in
 {
     double current_time = al_get_time();
     enemy->ready_to_shoot = true; // O inimigo está pronto para disparar
+
+    for (int i = 0; i < 3; i++) // Limite de 3 balas disparadas
+    {   
+        if (enemy->health <= 0)
+        {
+            enemy->bullets[i].active = 0;
+        }
+    }
 
     if (enemy->ready_to_shoot)
     {

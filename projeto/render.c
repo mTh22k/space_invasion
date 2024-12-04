@@ -150,11 +150,11 @@ void draw_item_and_warning(Item *item, Player *player, int game_phase,
         // Exibe a mensagem de acordo com a fase do jogo
         if (game_phase == 1)
         {
-            message = "Voce pegou disparos rapidos por 6 segundos!";
+            message = "Voce pegou disparos rapidos por 5 segundos!";
         }
         else if (game_phase == 2)
         {
-            message = "Voce pegou disparos com 2x de dano por 6 segundos!";
+            message = "Voce pegou disparos com 2x de dano por 5 segundos!";
         }
 
         // Exibe a mensagem na tela

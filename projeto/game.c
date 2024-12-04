@@ -182,14 +182,9 @@ void draw_pause_message(ALLEGRO_FONT *font, ALLEGRO_BITMAP *background, ALLEGRO_
 
             // Exibe os botões para retomar ou sair
             ALLEGRO_FONT *button_font = al_load_ttf_font("fonts/menu_f.ttf", 40, 0);
-            if (!button_font)
-            {
-                fprintf(stderr, "Erro ao carregar a fonte dos botões.\n");
-                return;
-            }
 
-            al_draw_text(button_font, al_map_rgb(255, 255, 255), 400, 250, ALLEGRO_ALIGN_CENTER, "Pressione R para Retomar");
-            al_draw_text(button_font, al_map_rgb(255, 255, 255), 400, 400, ALLEGRO_ALIGN_CENTER, "Pressione Q para Sair");
+            al_draw_text(button_font, al_map_rgb(255, 255, 255), 400, 250, ALLEGRO_ALIGN_CENTER, "Pressione ENTER para Retomar");
+            al_draw_text(button_font, al_map_rgb(255, 255, 255), 400, 400, ALLEGRO_ALIGN_CENTER, "Pressione ESC para Sair");
 
             al_flip_display(); // Atualiza a tela
 
@@ -199,12 +194,12 @@ void draw_pause_message(ALLEGRO_FONT *font, ALLEGRO_BITMAP *background, ALLEGRO_
         // Detecta a entrada do teclado
         else if (ev.type == ALLEGRO_EVENT_KEY_DOWN)
         {
-            if (ev.keyboard.keycode == ALLEGRO_KEY_R)
+            if (ev.keyboard.keycode == ALLEGRO_KEY_ENTER)
             {
                 player->paused = 0; // Retorna ao jogo
                 running = 0;        // Sai do loop de pausa
             }
-            else if (ev.keyboard.keycode == ALLEGRO_KEY_Q)
+            else if (ev.keyboard.keycode == ALLEGRO_KEY_ESCAPE)
             {
                 *exit_game = 1; // Define a flag para sair do jogo
                 running = 0;    // Sai do loop de pausa
@@ -270,19 +265,7 @@ void show_game_over_menu(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_qu
 
     // Carregar os recursos necessários
     ALLEGRO_FONT *menu_font = al_load_ttf_font("fonts/menu_f.ttf", 35, 0);
-    if (!menu_font) // Verifica se a fonte foi carregada com sucesso
-    {
-        fprintf(stderr, "Erro ao carregar fonte do menu.\n");
-        return;
-    }
-
     ALLEGRO_BITMAP *menu_background = al_load_bitmap("imagens/menu_restart.png");
-    if (!menu_background) // Verifica se a imagem de fundo foi carregada
-    {
-        fprintf(stderr, "Erro ao carregar o fundo do menu.\n");
-        al_destroy_font(menu_font); // Libera a fonte
-        return;
-    }
 
     while (menu_active)
     {
@@ -312,8 +295,8 @@ void show_game_over_menu(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_qu
 
         // Desenha as mensagens no display
         al_draw_text(font, colors[color_counter], 400, 100, ALLEGRO_ALIGN_CENTER, "Você foi Derrotado!");                 // Título com a cor alternando
-        al_draw_text(menu_font, al_map_rgb(255, 255, 255), 400, 350, ALLEGRO_ALIGN_CENTER, "Pressione R para Reiniciar"); // Mensagem de reiniciar
-        al_draw_text(menu_font, al_map_rgb(255, 255, 255), 400, 450, ALLEGRO_ALIGN_CENTER, "Pressione Q para Sair");      // Mensagem de sair
+        al_draw_text(menu_font, al_map_rgb(255, 255, 255), 400, 350, ALLEGRO_ALIGN_CENTER, "Pressione ENTER para Reiniciar"); // Mensagem de reiniciar
+        al_draw_text(menu_font, al_map_rgb(255, 255, 255), 400, 450, ALLEGRO_ALIGN_CENTER, "Pressione ESQ para Sair");      // Mensagem de sair
 
         al_flip_display(); // Atualiza a tela com o novo conteúdo
 
@@ -323,12 +306,12 @@ void show_game_over_menu(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_qu
 
         if (ev.type == ALLEGRO_EVENT_KEY_DOWN)
         {
-            if (ev.keyboard.keycode == ALLEGRO_KEY_R) // Se pressionar R, reinicia o jogo
+            if (ev.keyboard.keycode == ALLEGRO_KEY_ENTER) // Se pressionar R, reinicia o jogo
             {
                 *restart_game = 1;
                 menu_active = 0;
             }
-            else if (ev.keyboard.keycode == ALLEGRO_KEY_Q) // Se pressionar Q, sai do jogo
+            else if (ev.keyboard.keycode == ALLEGRO_KEY_ESCAPE) // Se pressionar Q, sai do jogo
             {
                 *exit_game = 1;
                 menu_active = 0;
@@ -365,11 +348,6 @@ void show_transition_menu(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_q
 
     // Carrega o fundo de transição
     ALLEGRO_BITMAP *background = al_load_bitmap("imagens/menu.jpg");
-    if (!background) // Verifica se o fundo foi carregado corretamente
-    {
-        fprintf(stderr, "Erro ao carregar o fundo!\n");
-        return;
-    }
 
     // Variáveis para o movimento do fundo
     float background_x = 0.0f;
@@ -409,27 +387,22 @@ void show_transition_menu(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_q
 
         // Desenha os botões de controle com fonte menor
         ALLEGRO_FONT *button_font = al_load_ttf_font("fonts/game_f.ttf", 35, 0);
-        if (!button_font)
-        {
-            fprintf(stderr, "Erro ao carregar a fonte dos botões.\n");
-            return;
-        }
 
-        al_draw_text(button_font, al_map_rgb(200, 200, 200), 400, 230, ALLEGRO_ALIGN_CENTER, "Pressione 1 para");
+        al_draw_text(button_font, al_map_rgb(200, 200, 200), 400, 230, ALLEGRO_ALIGN_CENTER, "Pressione ENTER para");
         al_draw_text(button_font, al_map_rgb(200, 200, 200), 400, 280, ALLEGRO_ALIGN_CENTER, "Avancar a Proxima Fase");
-        al_draw_text(button_font, al_map_rgb(200, 200, 200), 400, 390, ALLEGRO_ALIGN_CENTER, "Pressione 2 para Sair");
+        al_draw_text(button_font, al_map_rgb(200, 200, 200), 400, 390, ALLEGRO_ALIGN_CENTER, "Pressione ESC para Sair");
 
         al_flip_display(); // Atualiza a tela
 
         // Detecta as ações do teclado
         if (ev.type == ALLEGRO_EVENT_KEY_DOWN)
         {
-            if (ev.keyboard.keycode == ALLEGRO_KEY_1) // Se pressionar 1, continua para a próxima fase
+            if (ev.keyboard.keycode == ALLEGRO_KEY_ENTER) // Se pressionar 1, continua para a próxima fase
             {
                 *continue_game = 1;
                 menu_active = 0;
             }
-            else if (ev.keyboard.keycode == ALLEGRO_KEY_2) // Se pressionar 2, sai do jogo
+            else if (ev.keyboard.keycode == ALLEGRO_KEY_ESCAPE) // Se pressionar 2, sai do jogo
             {
                 *exit_game = 1;
                 menu_active = 0;
@@ -452,7 +425,7 @@ void show_transition_menu(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_q
 void init_second_phase(Player *player, Enemy enemies[], Bullet bullets[], ShootingEnemy shooting_enemies[], Boss *boss, int *victory_state, int *player_won, double *start_time, int *enemy_destroyed_count, int game_phase)
 {
     // Configurações iniciais do chefe (boss) da fase
-    boss->health = 23;           // Define a saúde inicial do chefe
+    boss->health = 35;           // Define a saúde inicial do chefe
     boss->speed = 6;             // Define a velocidade vertical do chefe
     boss->horizontal_speed = 2;  // Define a velocidade horizontal do chefe (mais lenta)
     boss->y = SCREEN_HEIGHT / 4; // Define a posição inicial do chefe (no topo da tela)
@@ -491,29 +464,9 @@ void show_victory_message(ALLEGRO_FONT *font, int *exit_game)
 {
     // Carrega as fontes usadas nas mensagens
     ALLEGRO_FONT *font_title = al_load_ttf_font("fonts/menu_f.ttf", 35, 0);
-    if (!font_title)
-    {
-        fprintf(stderr, "Erro ao carregar a fonte do título.\n");
-        return;
-    }
-
     ALLEGRO_FONT *font_normal = al_load_ttf_font("fonts/menu_f.ttf", 50, 0);
-    if (!font_normal)
-    {
-        fprintf(stderr, "Erro ao carregar a fonte normal.\n");
-        al_destroy_font(font_title);
-        return;
-    }
-
     // Carrega a imagem de fundo
     ALLEGRO_BITMAP *background_m = al_load_bitmap("imagens/menu.jpg");
-    if (!background_m)
-    {
-        fprintf(stderr, "Erro ao carregar o fundo do menu.\n");
-        al_destroy_font(font_title);
-        al_destroy_font(font_normal);
-        return;
-    }
 
     // Configuração inicial do movimento do fundo
     float background_x = 0.0f;
@@ -521,14 +474,6 @@ void show_victory_message(ALLEGRO_FONT *font, int *exit_game)
 
     // Criação da fila de eventos para detectar entradas do usuário
     ALLEGRO_EVENT_QUEUE *event_queue = al_create_event_queue();
-    if (!event_queue)
-    {
-        fprintf(stderr, "Erro ao criar a fila de eventos.\n");
-        al_destroy_font(font_title);
-        al_destroy_font(font_normal);
-        al_destroy_bitmap(background_m);
-        return;
-    }
 
     // Registra os eventos da fila
     al_register_event_source(event_queue, al_get_keyboard_event_source());
@@ -609,7 +554,6 @@ void exibir_texto_gradualmente(const char *texto, ALLEGRO_FONT *fonte, float x, 
     }
 }
 
-// Função para exibir a tela de controles
 void exibir_tela_controles(ALLEGRO_FONT *font, ALLEGRO_BITMAP *background, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_DISPLAY *display, int *exit_game, int *menu_running)
 {
     float background_x = 0;
@@ -633,17 +577,30 @@ void exibir_tela_controles(ALLEGRO_FONT *font, ALLEGRO_BITMAP *background, ALLEG
                 background_x = 0;
             }
 
-            // Desenha o fundo e as frases já exibidas
+            // Desenha o fundo e a tela de controles
             al_clear_to_color(al_map_rgb(0, 0, 0));
-            al_draw_bitmap(background, background_x, 0, 0);                                   // Fundo
-            al_draw_bitmap(background, background_x + al_get_bitmap_width(background), 0, 0); // Fundo para looping
+            al_draw_bitmap(background, background_x, 0, 0);
+            al_draw_bitmap(background, background_x + al_get_bitmap_width(background), 0, 0);
+            al_draw_filled_rectangle(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, al_map_rgba(0, 0, 0, 0));
+            al_draw_text(font, al_map_rgb(0, 255, 255), 400, 20, ALLEGRO_ALIGN_CENTER, "CONTROLES");
+            al_draw_text(font, al_map_rgb(255, 255, 255), 400, 120, ALLEGRO_ALIGN_CENTER, "MOVER: W, A, S, D");
+            al_draw_text(font, al_map_rgb(255, 255, 255), 400, 220, ALLEGRO_ALIGN_CENTER, "ATIRAR: ENTER");
+            al_draw_text(font, al_map_rgb(255, 255, 255), 400, 320, ALLEGRO_ALIGN_CENTER, "PAUSAR: P");
+            al_draw_text(font, al_map_rgb(0, 255, 255), 400, 520, ALLEGRO_ALIGN_CENTER, "VOLTAR: ESC");
 
-            // Desenha os controles na tela
-            al_draw_text(font, al_map_rgb(255, 255, 255), 400, 180, ALLEGRO_ALIGN_CENTER, "Controle do Jogo:");
-            al_draw_text(font, al_map_rgb(255, 255, 255), 400, 230, ALLEGRO_ALIGN_CENTER, "Movimentar: Setas ou WASD");
-            al_draw_text(font, al_map_rgb(255, 255, 255), 400, 280, ALLEGRO_ALIGN_CENTER, "Atirar: Espaco");
+            al_flip_display(); // Atualiza a tela
+        }
 
-            al_flip_display();
+        // Detecta ações do teclado
+        else if (ev.type == ALLEGRO_EVENT_KEY_DOWN && ev.keyboard.keycode == ALLEGRO_KEY_ESCAPE)
+        {
+            running = 0; // Sai da tela de controles
+        }
+        else if (ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE)
+        {
+            running = 0;
+            *exit_game = 1;
+            *menu_running = 0; // Fechar o programa corretamente
         }
     }
 }
@@ -662,12 +619,6 @@ void run_menu(ALLEGRO_FONT *font_menu, ALLEGRO_BITMAP *background, ALLEGRO_EVENT
 
     // Carregar fonte maior para o título
     ALLEGRO_FONT *font_title = al_load_ttf_font("fonts/game_f.ttf", 72, 0);
-    if (!font_title)
-    {
-        fprintf(stderr, "Erro ao carregar a fonte do título.\n");
-        return;
-    }
-
     // Carregar imagem de fundo do menu
     ALLEGRO_BITMAP *background_m = al_load_bitmap("imagens/menu.jpg");
 

@@ -115,6 +115,7 @@ typedef struct
     double explosion_time;    // Tempo de explosão
     int exploding;            // Flag de explosão
     bool ready_to_shoot;      // Flag indicando se o inimigo está pronto para disparar
+    int bullet_count;
 } ShootingEnemy;
 
 // Estrutura que representa um boss, com suas balas, ataques especiais e propriedades
