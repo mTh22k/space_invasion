@@ -1,5 +1,6 @@
 #include "player.h"
 
+// inicializa cada campo do jogador
 void init_player(Player *player)
 {
     player->x = 50;

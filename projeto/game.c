@@ -1,17 +1,20 @@
 
 #include "game.h"
 
-void init_resources() {
-    al_init();
-    al_init_primitives_addon();
-    al_init_font_addon();
-    al_init_ttf_addon();
-    al_init_image_addon();
-    al_install_audio();
-    al_init_acodec_addon();
-    al_reserve_samples(1);
+// Inicializa os recursos do jogo, incluindo bibliotecas e addons do Allegro
+void init_resources()
+{
+    al_init();                  // Inicializa a Allegro
+    al_init_primitives_addon(); // Inicializa o addon de primitivas gráficas
+    al_init_font_addon();       // Inicializa o addon de fontes
+    al_init_ttf_addon();        // Inicializa o addon de fontes TTF
+    al_init_image_addon();      // Inicializa o addon de imagens
+    al_install_audio();         // Instala o sistema de áudio
+    al_init_acodec_addon();     // Inicializa o addon de codecs de áudio
+    al_reserve_samples(1);      // Reserva 1 sample de áudio
 }
 
+// Libera os recursos alocados para o jogo, incluindo bitmaps, fontes, eventos, etc.
 void cleanup_resources(
     ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_TIMER *timer,
     ALLEGRO_FONT *font, ALLEGRO_FONT *font_menu, ALLEGRO_FONT *font_warn, ALLEGRO_FONT *font_info,
@@ -27,9 +30,9 @@ void cleanup_resources(
     ALLEGRO_BITMAP *boss_bullet_sprite, ALLEGRO_BITMAP *boss_bullet_special,
     ALLEGRO_BITMAP *heart_full, ALLEGRO_BITMAP *heart_null, ALLEGRO_BITMAP *icon,
     ALLEGRO_BITMAP *explosion_sprite, ALLEGRO_BITMAP *explosion_boss, ALLEGRO_BITMAP *item_sprite,
-    ALLEGRO_BITMAP *item_sprite_2, ALLEGRO_BITMAP *bulletEnemy_boss2)
+    ALLEGRO_BITMAP *item_sprite_2, ALLEGRO_BITMAP *bulletEnemy_boss2, ALLEGRO_BITMAP *slide_1, ALLEGRO_BITMAP *slide_2, ALLEGRO_BITMAP *slide_3)
 {
-    // Libera bitmaps
+    // Libera todos os bitmaps usados no jogo
     if (background)
         al_destroy_bitmap(background);
     if (background_2)
@@ -98,8 +101,14 @@ void cleanup_resources(
         al_destroy_bitmap(item_sprite_2);
     if (bulletEnemy_boss2)
         al_destroy_bitmap(bulletEnemy_boss2);
+    if (slide_1)
+        al_destroy_bitmap(slide_1);
+    if (slide_2)
+        al_destroy_bitmap(slide_2);
+    if (slide_3)
+        al_destroy_bitmap(slide_3);
 
-    // Libera fontes
+    // Libera todas as fontes usadas no jogo
     if (font)
         al_destroy_font(font);
     if (font_menu)
@@ -109,7 +118,7 @@ void cleanup_resources(
     if (font_info)
         al_destroy_font(font_info);
 
-    // Libera outros recursos
+    // Libera outros recursos como a fila de eventos, timer e display
     if (event_queue)
         al_destroy_event_queue(event_queue);
     if (timer)
@@ -118,14 +127,16 @@ void cleanup_resources(
         al_destroy_display(display);
 }
 
+// Exibe a tela de pausa com uma mensagem e opções para retomar ou sair
 void draw_pause_message(ALLEGRO_FONT *font, ALLEGRO_BITMAP *background, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_DISPLAY *display, Player *player, int *exit_game)
 {
-    float background_x = 0;
-    int running = 1;                // Controle do loop
-    int color_counter = 0;          // Contador para alternar entre cores
-    int frame_counter = 0;          // Contador de frames para mudar a cor a cada 30 frames
-    int color_change_interval = 30; // Intervalo de frames entre mudanças de cor (ajuste esse valor para alterar a velocidade)
+    float background_x = 0;         // Posição do fundo em movimento
+    int running = 1;                // Controle do loop de pausa
+    int color_counter = 0;          // Contador para alternar as cores do título
+    int frame_counter = 0;          // Contador para frames
+    int color_change_interval = 30; // Intervalo de frames entre mudança de cor
     ALLEGRO_COLOR colors[] = {
+        // Cores que alternam para o título
         al_map_rgb(255, 0, 0),    // Vermelho
         al_map_rgb(0, 255, 0),    // Verde
         al_map_rgb(0, 0, 255),    // Azul
@@ -135,6 +146,7 @@ void draw_pause_message(ALLEGRO_FONT *font, ALLEGRO_BITMAP *background, ALLEGRO_
     };
     int num_colors = sizeof(colors) / sizeof(colors[0]);
 
+    // Loop de exibição da tela de pausa
     while (running)
     {
         ALLEGRO_EVENT ev;
@@ -149,30 +161,26 @@ void draw_pause_message(ALLEGRO_FONT *font, ALLEGRO_BITMAP *background, ALLEGRO_
                 background_x = 0;
             }
 
-            // Atualiza o contador de frames e altera a cor do título a cada 30 frames
+            // Muda a cor do título a cada 30 frames
             frame_counter++;
             if (frame_counter >= color_change_interval)
             {
-                frame_counter = 0; // Reseta o contador de frames
-                color_counter++;   // Muda a cor
+                frame_counter = 0;
+                color_counter++;
                 if (color_counter >= num_colors)
-                {
-                    color_counter = 0; // Volta para a primeira cor
-                }
+                    color_counter = 0;
             }
 
             // Desenha o fundo em movimento
-            al_clear_to_color(al_map_rgb(0, 0, 0));                                           // Limpa a tela
-            al_draw_bitmap(background, background_x, 0, 0);                                   // Fundo principal
-            al_draw_bitmap(background, background_x + al_get_bitmap_width(background), 0, 0); // Fundo repetido para efeito de movimento
+            al_clear_to_color(al_map_rgb(0, 0, 0)); // Limpa a tela
+            al_draw_bitmap(background, background_x, 0, 0);
+            al_draw_bitmap(background, background_x + al_get_bitmap_width(background), 0, 0);
 
-            // Desenha a mensagem de pausa e as opções
-            al_draw_filled_rectangle(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, al_map_rgba(0, 0, 0, 150)); // Cor semitransparente
-
-            // Título com a cor que alterna a cada 30 frames
+            // Desenha a mensagem de pausa
+            al_draw_filled_rectangle(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, al_map_rgba(0, 0, 0, 150)); // Tela semitransparente
             al_draw_text(font, colors[color_counter], 400, 100, ALLEGRO_ALIGN_CENTER, "Jogo Pausado");
 
-            // Fonte menor para os botões
+            // Exibe os botões para retomar ou sair
             ALLEGRO_FONT *button_font = al_load_ttf_font("fonts/menu_f.ttf", 40, 0);
             if (!button_font)
             {
@@ -188,64 +196,68 @@ void draw_pause_message(ALLEGRO_FONT *font, ALLEGRO_BITMAP *background, ALLEGRO_
             al_destroy_font(button_font); // Libera a fonte dos botões após desenhar
         }
 
-        // Detecta ações do teclado
+        // Detecta a entrada do teclado
         else if (ev.type == ALLEGRO_EVENT_KEY_DOWN)
         {
             if (ev.keyboard.keycode == ALLEGRO_KEY_R)
             {
                 player->paused = 0; // Retorna ao jogo
-                running = 0;        // Sai da tela de pausa
+                running = 0;        // Sai do loop de pausa
             }
             else if (ev.keyboard.keycode == ALLEGRO_KEY_Q)
             {
-                *exit_game = 1; // Atualiza o controle para sair do jogo
-                running = 0;    // Sai da tela de pausa
+                *exit_game = 1; // Define a flag para sair do jogo
+                running = 0;    // Sai do loop de pausa
             }
         }
         else if (ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE)
         {
-            *exit_game = 1; // Atualiza o controle de saída se a janela for fechada
-            running = 0;    // Sai da tela de pausa
+            *exit_game = 1; // Define a flag para sair do jogo
+            running = 0;    // Sai do loop de pausa
         }
     }
 
+    // Libera recursos e fecha o jogo se a flag de saída for acionada
     if (*exit_game == 1)
     {
-        al_destroy_display(display);         // Libere recursos, como o display
-        al_destroy_event_queue(event_queue); // Libere a fila de eventos
-        exit(0);                             // Feche o jogo corretamente
+        al_destroy_display(display);         // Libera o display
+        al_destroy_event_queue(event_queue); // Libera a fila de eventos
+        exit(0);                             // Encerra o jogo
     }
 }
 
+// Desenha as vidas do jogador na tela, representadas por corações cheios ou vazios
 void draw_player_life(ALLEGRO_BITMAP *heart_full, ALLEGRO_BITMAP *heart_empty, Player *player)
 {
-    // Coordenadas para posicionar os corações
+    // Coordenadas para posicionar os corações na tela
     float x_start = 90; // Posição inicial no eixo X
     float y_start = 10; // Posição no eixo Y
     float spacing = 40; // Espaçamento entre os corações
 
     // Desenha um coração cheio ou vazio para cada vida
-    for (int i = 0; i < 4; i++)
-    { // Assumindo que o jogador tem no máximo 4 vidas
-        if (i < player->lives)
+    for (int i = 0; i < 4; i++) // Assumindo que o jogador tem no máximo 4 vidas
+    {
+        if (i < player->lives) // Se o índice for menor que o número de vidas, desenha um coração cheio
         {
             al_draw_bitmap(heart_full, x_start + i * spacing, y_start, 0); // Desenhar coração cheio
         }
-        else
+        else // Se o índice for maior ou igual ao número de vidas, desenha um coração vazio
         {
             al_draw_bitmap(heart_empty, x_start + i * spacing, y_start, 0); // Desenhar coração vazio
         }
     }
 }
 
+// Exibe o menu de Game Over com opções para reiniciar ou sair do jogo
 void show_game_over_menu(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FONT *font, int *restart_game, int *exit_game)
 {
-    int menu_active = 1;
-    float background_x = 0;
-    int color_counter = 0;
+    int menu_active = 1;            // Controle do loop do menu
+    float background_x = 0;         // Posição inicial do fundo
+    int color_counter = 0;          // Contador para alternar entre as cores
     int frame_counter = 0;          // Contador de frames para mudar a cor a cada 30 frames
     int color_change_interval = 30; // Intervalo de frames entre mudanças de cor
 
+    // Cores que o título alternará
     ALLEGRO_COLOR colors[] = {
         al_map_rgb(255, 0, 0),    // Vermelho
         al_map_rgb(0, 255, 0),    // Verde
@@ -256,25 +268,25 @@ void show_game_over_menu(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_qu
     };
     int num_colors = sizeof(colors) / sizeof(colors[0]);
 
-    // Carregar recursos antes do loop
+    // Carregar os recursos necessários
     ALLEGRO_FONT *menu_font = al_load_ttf_font("fonts/menu_f.ttf", 35, 0);
-    if (!menu_font)
+    if (!menu_font) // Verifica se a fonte foi carregada com sucesso
     {
         fprintf(stderr, "Erro ao carregar fonte do menu.\n");
         return;
     }
 
     ALLEGRO_BITMAP *menu_background = al_load_bitmap("imagens/menu_restart.png");
-    if (!menu_background)
+    if (!menu_background) // Verifica se a imagem de fundo foi carregada
     {
         fprintf(stderr, "Erro ao carregar o fundo do menu.\n");
-        al_destroy_font(menu_font);
+        al_destroy_font(menu_font); // Libera a fonte
         return;
     }
 
     while (menu_active)
     {
-        // Atualiza o contador de frames e altera a cor do título
+        // Atualiza a cor do título a cada 30 frames
         frame_counter++;
         if (frame_counter >= color_change_interval)
         {
@@ -287,56 +299,57 @@ void show_game_over_menu(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_qu
         }
 
         // Movimento do fundo
-        background_x -= 0.5f;
+        background_x -= 0.5f; // Movimenta o fundo para a esquerda
         if (background_x <= -al_get_bitmap_width(menu_background))
         {
             background_x = 0; // Reseta a posição do fundo
         }
 
         // Limpa a tela e desenha o fundo
-        al_clear_to_color(al_map_rgb(0, 0, 0));
-        al_draw_bitmap(menu_background, background_x, 0, 0);
-        al_draw_bitmap(menu_background, background_x + al_get_bitmap_width(menu_background), 0, 0);
+        al_clear_to_color(al_map_rgb(0, 0, 0));                                                     // Limpa a tela com a cor preta
+        al_draw_bitmap(menu_background, background_x, 0, 0);                                        // Desenha o fundo
+        al_draw_bitmap(menu_background, background_x + al_get_bitmap_width(menu_background), 0, 0); // Desenha o fundo repetido
 
-        // Desenha mensagens no display
-        al_draw_text(font, colors[color_counter], 400, 100, ALLEGRO_ALIGN_CENTER, "Você foi Derrotado!");
-        al_draw_text(menu_font, al_map_rgb(255, 255, 255), 400, 350, ALLEGRO_ALIGN_CENTER, "Pressione R para Reiniciar");
-        al_draw_text(menu_font, al_map_rgb(255, 255, 255), 400, 450, ALLEGRO_ALIGN_CENTER, "Pressione Q para Sair");
+        // Desenha as mensagens no display
+        al_draw_text(font, colors[color_counter], 400, 100, ALLEGRO_ALIGN_CENTER, "Você foi Derrotado!");                 // Título com a cor alternando
+        al_draw_text(menu_font, al_map_rgb(255, 255, 255), 400, 350, ALLEGRO_ALIGN_CENTER, "Pressione R para Reiniciar"); // Mensagem de reiniciar
+        al_draw_text(menu_font, al_map_rgb(255, 255, 255), 400, 450, ALLEGRO_ALIGN_CENTER, "Pressione Q para Sair");      // Mensagem de sair
 
-        al_flip_display();
+        al_flip_display(); // Atualiza a tela com o novo conteúdo
 
-        // Processa eventos
+        // Processa os eventos de teclado
         ALLEGRO_EVENT ev;
         al_wait_for_event(event_queue, &ev);
 
         if (ev.type == ALLEGRO_EVENT_KEY_DOWN)
         {
-            if (ev.keyboard.keycode == ALLEGRO_KEY_R)
+            if (ev.keyboard.keycode == ALLEGRO_KEY_R) // Se pressionar R, reinicia o jogo
             {
                 *restart_game = 1;
                 menu_active = 0;
             }
-            else if (ev.keyboard.keycode == ALLEGRO_KEY_Q)
+            else if (ev.keyboard.keycode == ALLEGRO_KEY_Q) // Se pressionar Q, sai do jogo
             {
                 *exit_game = 1;
                 menu_active = 0;
             }
         }
-        else if (ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE)
+        else if (ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE) // Se o usuário fechar a janela, sai do jogo
         {
             *exit_game = 1;
             menu_active = 0;
         }
     }
 
-    // Liberação de recursos
-    al_destroy_font(menu_font);
-    al_destroy_bitmap(menu_background);
+    // Liberação dos recursos carregados
+    al_destroy_font(menu_font);         // Libera a fonte
+    al_destroy_bitmap(menu_background); // Libera o fundo
 }
 
+// Exibe o menu de transição entre fases com opções para continuar ou sair do jogo
 void show_transition_menu(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FONT *font, int *continue_game, int *exit_game)
 {
-    int menu_active = 1;
+    int menu_active = 1;            // Controle do loop do menu
     int color_counter = 0;          // Contador para alternar entre cores
     int frame_counter = 0;          // Contador de frames para mudar a cor a cada 30 frames
     int color_change_interval = 30; // Intervalo de frames entre mudanças de cor
@@ -350,24 +363,24 @@ void show_transition_menu(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_q
     };
     int num_colors = sizeof(colors) / sizeof(colors[0]);
 
-    // Carregar o background
+    // Carrega o fundo de transição
     ALLEGRO_BITMAP *background = al_load_bitmap("imagens/menu.jpg");
-    if (!background)
+    if (!background) // Verifica se o fundo foi carregado corretamente
     {
         fprintf(stderr, "Erro ao carregar o fundo!\n");
         return;
     }
 
-    // Variáveis para controle do movimento do fundo
+    // Variáveis para o movimento do fundo
     float background_x = 0.0f;
-    float background_speed = 0.2f; // Ajuste a velocidade do fundo conforme necessário
+    float background_speed = 0.2f; // Velocidade do movimento do fundo
 
     while (menu_active)
     {
         ALLEGRO_EVENT ev;
         al_wait_for_event(event_queue, &ev);
 
-        // Atualiza o contador de frames e altera a cor do título a cada 30 frames
+        // Atualiza a cor do título a cada 30 frames
         frame_counter++;
         if (frame_counter >= color_change_interval)
         {
@@ -380,23 +393,21 @@ void show_transition_menu(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_q
         }
 
         // Movimento do fundo
-        background_x -= background_speed;
+        background_x -= background_speed; // Move o fundo para a esquerda
         if (background_x <= -al_get_bitmap_width(background))
         {
-            background_x = 0; // Reseta a posição do fundo para criar um looping contínuo
+            background_x = 0; // Reseta a posição do fundo
         }
 
         // Limpa a tela e desenha o fundo
-        al_clear_to_color(al_map_rgb(0, 0, 0)); // Fundo preto
-
-        // Desenha o fundo em movimento
+        al_clear_to_color(al_map_rgb(0, 0, 0));                                           // Limpa a tela com a cor preta
         al_draw_bitmap(background, background_x, 0, 0);                                   // Desenha o fundo
-        al_draw_bitmap(background, background_x + al_get_bitmap_width(background), 0, 0); // Desenha o fundo repetido para efeito de loop
+        al_draw_bitmap(background, background_x + al_get_bitmap_width(background), 0, 0); // Desenha o fundo repetido
 
-        // Título com a cor que alterna a cada 30 frames
+        // Exibe o título com a cor alternada
         al_draw_text(font, colors[color_counter], SCREEN_WIDTH / 2, 100, ALLEGRO_ALIGN_CENTER, "Boss Derrotado!");
 
-        // Fonte menor para os botões de controle
+        // Desenha os botões de controle com fonte menor
         ALLEGRO_FONT *button_font = al_load_ttf_font("fonts/game_f.ttf", 35, 0);
         if (!button_font)
         {
@@ -408,23 +419,23 @@ void show_transition_menu(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_q
         al_draw_text(button_font, al_map_rgb(200, 200, 200), 400, 280, ALLEGRO_ALIGN_CENTER, "Avancar a Proxima Fase");
         al_draw_text(button_font, al_map_rgb(200, 200, 200), 400, 390, ALLEGRO_ALIGN_CENTER, "Pressione 2 para Sair");
 
-        al_flip_display();
+        al_flip_display(); // Atualiza a tela
 
         // Detecta as ações do teclado
         if (ev.type == ALLEGRO_EVENT_KEY_DOWN)
         {
-            if (ev.keyboard.keycode == ALLEGRO_KEY_1)
+            if (ev.keyboard.keycode == ALLEGRO_KEY_1) // Se pressionar 1, continua para a próxima fase
             {
                 *continue_game = 1;
                 menu_active = 0;
             }
-            else if (ev.keyboard.keycode == ALLEGRO_KEY_2)
+            else if (ev.keyboard.keycode == ALLEGRO_KEY_2) // Se pressionar 2, sai do jogo
             {
                 *exit_game = 1;
                 menu_active = 0;
             }
         }
-        else if (ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE)
+        else if (ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE) // Se o usuário fechar a janela, sai do jogo
         {
             *exit_game = 1;
             menu_active = 0;
@@ -433,46 +444,52 @@ void show_transition_menu(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_q
         al_destroy_font(button_font); // Libera a fonte dos botões após desenhar
     }
 
-    // Libera o bitmap de fundo
+    // Libera o bitmap do fundo
     al_destroy_bitmap(background);
 }
 
+// Função para inicializar a segunda fase do jogo
 void init_second_phase(Player *player, Enemy enemies[], Bullet bullets[], ShootingEnemy shooting_enemies[], Boss *boss, int *victory_state, int *player_won, double *start_time, int *enemy_destroyed_count, int game_phase)
 {
-    boss->health = 23;
-    boss->speed = 6;             // Velocidade vertical
-    boss->horizontal_speed = 2;  // Velocidade horizontal mais lenta
-    boss->y = SCREEN_HEIGHT / 4; // Posição inicial no topo
-    boss->x = SCREEN_WIDTH;      // Coloca o boss fora da tela
-    *victory_state = 0;
-    *player_won = 0;
-    *start_time = al_get_time(); // Reinicia o tempo
-    game_phase = 2;
-    *enemy_destroyed_count = 0;
+    // Configurações iniciais do chefe (boss) da fase
+    boss->health = 23;           // Define a saúde inicial do chefe
+    boss->speed = 6;             // Define a velocidade vertical do chefe
+    boss->horizontal_speed = 2;  // Define a velocidade horizontal do chefe (mais lenta)
+    boss->y = SCREEN_HEIGHT / 4; // Define a posição inicial do chefe (no topo da tela)
+    boss->x = SCREEN_WIDTH;      // Coloca o chefe fora da tela no início
+    *victory_state = 0;          // Inicializa o estado de vitória como falso
+    *player_won = 0;             // Inicializa a variável de vitória do jogador como falso
+    *start_time = al_get_time(); // Armazena o tempo de início para controle de tempo
+    game_phase = 2;              // Define a fase do jogo para a segunda fase
+    *enemy_destroyed_count = 0;  // Zera o contador de inimigos destruídos
 
+    // Inicializa as configurações dos inimigos que disparam
     for (int i = 0; i < MAX_SHOOTING_ENEMIES; i++)
     {
-        shooting_enemies[i].vertical_speed = 4;
+        shooting_enemies[i].vertical_speed = 4; // Define a velocidade vertical dos inimigos que atiram
     }
 
+    // Inicializa as configurações dos inimigos normais
     for (int i = 0; i < MAX_ENEMIES; i++)
     {
-        enemies[i].active = 0;
-        enemies[i].health = 2;
-        enemies[i].vertical_speed = 1.0;                       // Velocidade vertical constante
-        enemies[i].original_y = rand() % (SCREEN_HEIGHT - 30); // Posição inicial aleatória
-        enemies[i].y = enemies[i].original_y;
-        enemies[i].moving_up = 1; // Começar movendo para cima
+        enemies[i].active = 0;                                 // Inicia os inimigos como inativos
+        enemies[i].health = 2;                                 // Define a saúde dos inimigos
+        enemies[i].vertical_speed = 1.0;                       // Define a velocidade vertical dos inimigos
+        enemies[i].original_y = rand() % (SCREEN_HEIGHT - 30); // Define a posição inicial aleatória dos inimigos
+        enemies[i].y = enemies[i].original_y;                  // Atualiza a posição inicial
+        enemies[i].moving_up = 1;                              // Define que os inimigos começam a se mover para cima
     }
 
-    // Inicialize as outras entidades da fase se necessário
-    init_player(player);
-    init_enemies(enemies, MAX_ENEMIES);
-    init_bullets(bullets, MAX_BULLETS);
+    // Inicializa o jogador, inimigos e projéteis
+    init_player(player);                // Inicializa o jogador
+    init_enemies(enemies, MAX_ENEMIES); // Inicializa os inimigos
+    init_bullets(bullets, MAX_BULLETS); // Inicializa os projéteis
 }
 
+// Função para exibir a mensagem de vitória ao jogador
 void show_victory_message(ALLEGRO_FONT *font, int *exit_game)
 {
+    // Carrega as fontes usadas nas mensagens
     ALLEGRO_FONT *font_title = al_load_ttf_font("fonts/menu_f.ttf", 35, 0);
     if (!font_title)
     {
@@ -488,6 +505,7 @@ void show_victory_message(ALLEGRO_FONT *font, int *exit_game)
         return;
     }
 
+    // Carrega a imagem de fundo
     ALLEGRO_BITMAP *background_m = al_load_bitmap("imagens/menu.jpg");
     if (!background_m)
     {
@@ -497,9 +515,11 @@ void show_victory_message(ALLEGRO_FONT *font, int *exit_game)
         return;
     }
 
-    float background_x = 0.0f;     // Posição inicial do fundo
-    float background_speed = 0.2f; // Velocidade de movimento do fundo
+    // Configuração inicial do movimento do fundo
+    float background_x = 0.0f;
+    float background_speed = 0.2f;
 
+    // Criação da fila de eventos para detectar entradas do usuário
     ALLEGRO_EVENT_QUEUE *event_queue = al_create_event_queue();
     if (!event_queue)
     {
@@ -510,9 +530,11 @@ void show_victory_message(ALLEGRO_FONT *font, int *exit_game)
         return;
     }
 
+    // Registra os eventos da fila
     al_register_event_source(event_queue, al_get_keyboard_event_source());
     al_register_event_source(event_queue, al_get_display_event_source(al_get_current_display()));
 
+    // Exibe as mensagens gradualmente
     al_clear_to_color(al_map_rgb(0, 0, 0));
     exibir_texto_gradualmente("Parabens!", font_normal, 400, 180, al_map_rgb(255, 255, 255), 0.1, background_m, background_x);
     exibir_texto_gradualmente("Voce zerou o jogo!", font_normal, 400, 250, al_map_rgb(255, 255, 255), 0.1, background_m, background_x);
@@ -540,7 +562,7 @@ void show_victory_message(ALLEGRO_FONT *font, int *exit_game)
 
         al_flip_display();
 
-        // Verifica eventos
+        // Verifica eventos de teclado e de fechamento da janela
         ALLEGRO_EVENT ev;
         al_wait_for_event(event_queue, &ev);
 
@@ -555,12 +577,13 @@ void show_victory_message(ALLEGRO_FONT *font, int *exit_game)
             *exit_game = 1;
         }
     }
-    al_destroy_event_queue(event_queue);
-    al_destroy_bitmap(background_m);
-    al_destroy_font(font_title);
-    al_destroy_font(font_normal);
+    al_destroy_event_queue(event_queue); // Libera a fila de eventos
+    al_destroy_bitmap(background_m);     // Libera o bitmap de fundo
+    al_destroy_font(font_title);         // Libera a fonte do título
+    al_destroy_font(font_normal);        // Libera a fonte normal
 }
 
+// Função para exibir o texto gradualmente na tela
 void exibir_texto_gradualmente(const char *texto, ALLEGRO_FONT *fonte, float x, float y, ALLEGRO_COLOR cor, float intervalo_entre_letras, ALLEGRO_BITMAP *background_m, float background_x)
 {
     char buffer[128] = ""; // Buffer para armazenar o texto que vai sendo construído
@@ -586,6 +609,7 @@ void exibir_texto_gradualmente(const char *texto, ALLEGRO_FONT *fonte, float x, 
     }
 }
 
+// Função para exibir a tela de controles
 void exibir_tela_controles(ALLEGRO_FONT *font, ALLEGRO_BITMAP *background, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_DISPLAY *display, int *exit_game, int *menu_running)
 {
     float background_x = 0;
@@ -609,45 +633,34 @@ void exibir_tela_controles(ALLEGRO_FONT *font, ALLEGRO_BITMAP *background, ALLEG
                 background_x = 0;
             }
 
-            // Desenha o fundo e a tela de controles
+            // Desenha o fundo e as frases já exibidas
             al_clear_to_color(al_map_rgb(0, 0, 0));
-            al_draw_bitmap(background, background_x, 0, 0);
-            al_draw_bitmap(background, background_x + al_get_bitmap_width(background), 0, 0);
-            al_draw_filled_rectangle(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, al_map_rgba(0, 0, 0, 0));
-            al_draw_text(font, al_map_rgb(0, 255, 255), 400, 20, ALLEGRO_ALIGN_CENTER, "CONTROLES");
-            al_draw_text(font, al_map_rgb(255, 255, 255), 400, 120, ALLEGRO_ALIGN_CENTER, "MOVER: W, A, S, D");
-            al_draw_text(font, al_map_rgb(255, 255, 255), 400, 220, ALLEGRO_ALIGN_CENTER, "ATIRAR: ENTER");
-            al_draw_text(font, al_map_rgb(255, 255, 255), 400, 320, ALLEGRO_ALIGN_CENTER, "PAUSAR: P");
-            al_draw_text(font, al_map_rgb(0, 255, 255), 400, 520, ALLEGRO_ALIGN_CENTER, "VOLTAR: ENTER");
+            al_draw_bitmap(background, background_x, 0, 0);                                   // Fundo
+            al_draw_bitmap(background, background_x + al_get_bitmap_width(background), 0, 0); // Fundo para looping
 
-            al_flip_display(); // Atualiza a tela
-        }
+            // Desenha os controles na tela
+            al_draw_text(font, al_map_rgb(255, 255, 255), 400, 180, ALLEGRO_ALIGN_CENTER, "Controle do Jogo:");
+            al_draw_text(font, al_map_rgb(255, 255, 255), 400, 230, ALLEGRO_ALIGN_CENTER, "Movimentar: Setas ou WASD");
+            al_draw_text(font, al_map_rgb(255, 255, 255), 400, 280, ALLEGRO_ALIGN_CENTER, "Atirar: Espaco");
 
-        // Detecta ações do teclado
-        else if (ev.type == ALLEGRO_EVENT_KEY_DOWN && ev.keyboard.keycode == ALLEGRO_KEY_ENTER)
-        {
-            running = 0; // Sai da tela de controles
-        }
-        else if (ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE)
-        {
-            running = 0;
-            *exit_game = 1;
-            *menu_running = 0; // Fechar o programa corretamente
+            al_flip_display();
         }
     }
 }
 
+// Função principal para executar o menu do jogo
 void run_menu(ALLEGRO_FONT *font_menu, ALLEGRO_BITMAP *background, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_DISPLAY *display, ALLEGRO_AUDIO_STREAM *music_menu, GameOptions *game_options, int *exit_game)
 {
-    int menu_running = 1;
-    int selected_option = 0;
-    float background_x = 0;
-    float background_speed = 1.0;
+    int menu_running = 1;         // Controle do loop do menu
+    int selected_option = 0;      // Índice da opção atualmente selecionada
+    float background_x = 0;       // Posição horizontal do fundo
+    float background_speed = 1.0; // Velocidade do movimento do fundo
 
+    // Configurar música do menu para tocar em loop
     al_set_audio_stream_playmode(music_menu, ALLEGRO_PLAYMODE_LOOP);
     al_attach_audio_stream_to_mixer(music_menu, al_get_default_mixer());
 
-    // Carregar uma fonte maior para o título
+    // Carregar fonte maior para o título
     ALLEGRO_FONT *font_title = al_load_ttf_font("fonts/game_f.ttf", 72, 0);
     if (!font_title)
     {
@@ -655,12 +668,15 @@ void run_menu(ALLEGRO_FONT *font_menu, ALLEGRO_BITMAP *background, ALLEGRO_EVENT
         return;
     }
 
+    // Carregar imagem de fundo do menu
     ALLEGRO_BITMAP *background_m = al_load_bitmap("imagens/menu.jpg");
 
+    // Configurações de alternância de cores do título
     int color_counter = 0;          // Contador para alternar entre cores
     int color_change_timer = 0;     // Timer para controlar a mudança de cor
     int color_change_interval = 30; // Intervalo de frames entre mudanças de cor
     ALLEGRO_COLOR colors[] = {
+        // Paleta de cores para o título
         al_map_rgb(255, 0, 0),    // Vermelho
         al_map_rgb(0, 255, 0),    // Verde
         al_map_rgb(0, 0, 255),    // Azul
@@ -670,11 +686,13 @@ void run_menu(ALLEGRO_FONT *font_menu, ALLEGRO_BITMAP *background, ALLEGRO_EVENT
     };
     int num_colors = sizeof(colors) / sizeof(colors[0]);
 
+    // Loop principal do menu
     while (menu_running)
     {
+        // Verifica se o jogador decidiu sair do jogo
         if (*exit_game == 1)
         {
-            break; // Finaliza o jogo
+            break; // Encerra o loop
         }
 
         ALLEGRO_EVENT ev;
@@ -682,107 +700,112 @@ void run_menu(ALLEGRO_FONT *font_menu, ALLEGRO_BITMAP *background, ALLEGRO_EVENT
 
         if (ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE)
         {
-            menu_running = 0;
-            *exit_game = 1;
+            menu_running = 0; // Fecha o menu
+            *exit_game = 1;   // Indica que o jogo deve ser encerrado
         }
         else if (ev.type == ALLEGRO_EVENT_TIMER)
         {
-            // Mover o fundo
+            // Movimento do fundo
             background_x -= background_speed;
             if (background_x <= -al_get_bitmap_width(background_m))
             {
-                background_x = 0;
+                background_x = 0; // Reseta a posição do fundo
             }
 
-            // Desenhar fundo
-            al_clear_to_color(al_map_rgb(0, 0, 0));
-            al_draw_bitmap(background_m, background_x, 0, 0);
-            al_draw_bitmap(background_m, background_x + al_get_bitmap_width(background_m), 0, 0);
+            // Desenho do fundo
+            al_clear_to_color(al_map_rgb(0, 0, 0));                                               // Fundo preto
+            al_draw_bitmap(background_m, background_x, 0, 0);                                     // Fundo principal
+            al_draw_bitmap(background_m, background_x + al_get_bitmap_width(background_m), 0, 0); // Fundo contínuo
 
-            // Atualizar o timer de mudança de cor
+            // Alternância de cores do título
             color_change_timer++;
             if (color_change_timer >= color_change_interval)
             {
-                color_change_timer = 0; // Resetar o timer
-                color_counter++;        // Alterar para a próxima cor
+                color_change_timer = 0; // Reseta o timer
+                color_counter++;        // Passa para a próxima cor
                 if (color_counter >= num_colors)
                 {
-                    color_counter = 0; // Voltar para a primeira cor
+                    color_counter = 0; // Volta para a primeira cor
                 }
             }
 
-            // Mudar a cor do título
-            ALLEGRO_COLOR current_color = colors[color_counter % num_colors]; // Alterna entre as cores
+            ALLEGRO_COLOR current_color = colors[color_counter % num_colors]; // Cor atual do título
 
-            // Desenhar título
+            // Desenho do título do menu
             al_draw_text(font_title, current_color, 400, 80, ALLEGRO_ALIGN_CENTER, "Space Impact");
 
-            // Desenhar opções do menu
+            // Desenho das opções do menu
             for (int i = 0; i < 4; i++)
             {
+                // Determina a cor da opção atual (branca se selecionada, preta caso contrário)
                 ALLEGRO_COLOR color = (i == selected_option) ? al_map_rgb(255, 255, 255) : al_map_rgb(0, 0, 0);
                 const char *text;
-                float pos_y = 270 + i * 75; // Maior distância entre os botões
+                float pos_y = 270 + i * 75; // Espaçamento entre as opções
+
+                // Define o texto de cada opção
                 if (i == 0)
                     text = "Começar";
-                else if (i == 2)
-                    text = "Opções";
                 else if (i == 1)
                     text = "Controles";
+                else if (i == 2)
+                    text = "Opções";
                 else
                     text = "Sair";
 
+                // Desenha a opção no menu
                 al_draw_textf(font_menu, color, 400, pos_y, ALLEGRO_ALIGN_CENTER, "%s", text);
             }
 
-            al_flip_display();
+            al_flip_display(); // Atualiza a tela
         }
         else if (ev.type == ALLEGRO_EVENT_KEY_DOWN)
         {
+            // Controle de navegação e seleção
             switch (ev.keyboard.keycode)
             {
             case ALLEGRO_KEY_DOWN:
-                // Mover para a próxima opção
-                selected_option = (selected_option + 1) % 4;
+                selected_option = (selected_option + 1) % 4; // Move para a próxima opção
                 break;
             case ALLEGRO_KEY_UP:
-                // Mover para a opção anterior
-                selected_option = (selected_option - 1 + 4) % 4;
+                selected_option = (selected_option - 1 + 4) % 4; // Move para a opção anterior
                 break;
             case ALLEGRO_KEY_ENTER:
-                // Ação para a opção selecionada
+                // Executa a ação correspondente à opção selecionada
                 if (selected_option == 0)
                 {
-                    menu_running = 0; // Começar o jogo
+                    menu_running = 0; // Inicia o jogo
                 }
                 else if (selected_option == 1)
                 {
-                    exibir_tela_controles(font_menu, background_m, event_queue, display, exit_game, &menu_running); // Exibir controles
+                    // Exibe os controles
+                    exibir_tela_controles(font_menu, background_m, event_queue, display, exit_game, &menu_running);
                 }
                 else if (selected_option == 2)
                 {
-                    exibir_tela_opcoes(font_menu, background_m, event_queue, display, game_options, exit_game, &menu_running); // Exibir opções
+                    // Exibe as opções de configuração
+                    exibir_tela_opcoes(font_menu, background_m, event_queue, display, game_options, exit_game, &menu_running);
                 }
                 else if (selected_option == 3)
                 {
-                    menu_running = 0; // Sair do jogo
-                    *exit_game = 1;
+                    menu_running = 0; // Sai do menu
+                    *exit_game = 1;   // Encerra o jogo
                 }
                 break;
             }
         }
     }
-    // Limpar recursos da fonte do título
+
+    // Libera a fonte do título após o fim do menu
     al_destroy_font(font_title);
 }
 
+// Inicializa as opções do jogo com valores padrão
 void init_options(GameOptions *game_options)
 {
-
-    game_options->new_option_1 = 0;
-    game_options->new_option_2 = 0;
-    game_options->sprite_option = 0;
-    game_options->new_option_3 = 0;
+    game_options->new_option_1 = 0;  // Opção personalizada 1
+    game_options->new_option_2 = 0;  // Opção personalizada 2
+    game_options->sprite_option = 0; // Seleção de sprites
+    game_options->new_option_3 = 0;  // Opção personalizada 3
 }
 
 void exibir_tela_opcoes(ALLEGRO_FONT *font, ALLEGRO_BITMAP *background, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_DISPLAY *display, GameOptions *game_options, int *exit_game, int *menu_running)
@@ -1039,7 +1062,7 @@ void draw_explosion(Enemy *enemy, ALLEGRO_BITMAP *explosion_sprite, double explo
     }
 }
 
-void draw_explosion_shoot(ShootingEnemy *shooting_enemy, ALLEGRO_BITMAP *explosion_sprite, double explosion_duration) 
+void draw_explosion_shoot(ShootingEnemy *shooting_enemy, ALLEGRO_BITMAP *explosion_sprite, double explosion_duration)
 {
     if (shooting_enemy->exploding)
     {
@@ -1092,90 +1115,104 @@ void update_backgrounds(GameOptions game_options, ALLEGRO_BITMAP *backgrounds[],
 }
 
 void handle_phase1_enemy_generation(ShootingEnemy shooting_enemies[], int max_shooting_enemies,
-                                    Enemy enemies[], int max_enemies, int game_phase, Player player) {
-    if (rand() % 200 == 0) {
+                                    Enemy enemies[], int max_enemies, int game_phase, Player player)
+{
+    if (rand() % 200 == 0)
+    {
         generate_shooting_enemy(shooting_enemies, max_shooting_enemies, game_phase);
     }
-    if (rand() % 60 == 0) {
+    if (rand() % 60 == 0)
+    {
         generate_enemy(enemies, max_enemies, player.width, player.height);
     }
 }
 
 void handle_phase2_enemy_generation(ShootingEnemy shooting_enemies[], int max_shooting_enemies,
                                     Enemy enemies[], int max_enemies, int game_phase, Player player,
-                                    double *phase2_start_time, bool *phase2_started) {
+                                    double *phase2_start_time, bool *phase2_started)
+{
     // Inicializa o tempo quando a fase 2 começa
-    if (!(*phase2_started)) {
+    if (!(*phase2_started))
+    {
         *phase2_start_time = al_get_time();
         *phase2_started = true;
     }
 
     // Verifica se passou 1 segundo desde o início da fase 2
-    if (al_get_time() - *phase2_start_time >= 1.0) {
-        if (rand() % 100 == 0) {
+    if (al_get_time() - *phase2_start_time >= 1.0)
+    {
+        if (rand() % 100 == 0)
+        {
             generate_shooting_enemy(shooting_enemies, max_shooting_enemies, game_phase);
         }
-        if (rand() % 30 == 0) {
+        if (rand() % 30 == 0)
+        {
             generate_enemy(enemies, max_enemies, player.width, player.height);
         }
     }
 }
 
-void handle_keyboard_event(ALLEGRO_EVENT ev, Player *player, float *background_speed, 
-                           ALLEGRO_FONT *font_menu, ALLEGRO_BITMAP *current_background, 
-                           ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_DISPLAY *display, 
-                           int *exit_game) {
-    switch (ev.keyboard.keycode) {
-        case ALLEGRO_KEY_W:
-            player->joystick.up = 1;
-            break;
-        case ALLEGRO_KEY_S:
-            player->joystick.down = 1;
-            break;
-        case ALLEGRO_KEY_A:
-            player->joystick.left = 1;
-            *background_speed = 0.5;
-            break;
-        case ALLEGRO_KEY_D:
-            player->joystick.right = 1;
-            *background_speed = 4.0;
-            break;
-        case ALLEGRO_KEY_ENTER:
-            player->joystick.fire = 1;
-            break;
-        case ALLEGRO_KEY_P: // Aperte P para pausar/despausar
-            player->paused = !player->paused;
-            if (player->paused) {
-                draw_pause_message(font_menu, current_background, event_queue, display, player, exit_game);
-            }
-            break;
+void handle_keyboard_event(ALLEGRO_EVENT ev, Player *player, float *background_speed,
+                           ALLEGRO_FONT *font_menu, ALLEGRO_BITMAP *current_background,
+                           ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_DISPLAY *display,
+                           int *exit_game)
+{
+    switch (ev.keyboard.keycode)
+    {
+    case ALLEGRO_KEY_W:
+        player->joystick.up = 1;
+        break;
+    case ALLEGRO_KEY_S:
+        player->joystick.down = 1;
+        break;
+    case ALLEGRO_KEY_A:
+        player->joystick.left = 1;
+        *background_speed = 0.5;
+        break;
+    case ALLEGRO_KEY_D:
+        player->joystick.right = 1;
+        *background_speed = 4.0;
+        break;
+    case ALLEGRO_KEY_ENTER:
+        player->joystick.fire = 1;
+        break;
+    case ALLEGRO_KEY_P: // Aperte P para pausar/despausar
+        player->paused = !player->paused;
+        if (player->paused)
+        {
+            draw_pause_message(font_menu, current_background, event_queue, display, player, exit_game);
+        }
+        break;
     }
 }
 
-void handle_keyboard_release_event(ALLEGRO_EVENT ev, Player *player, float *background_speed) {
-    switch (ev.keyboard.keycode) {
-        case ALLEGRO_KEY_W:
-            player->joystick.up = 0;
-            break;
-        case ALLEGRO_KEY_S:
-            player->joystick.down = 0;
-            break;
-        case ALLEGRO_KEY_A:
-            player->joystick.left = 0;
-            *background_speed = 2.0;
-            break;
-        case ALLEGRO_KEY_D:
-            player->joystick.right = 0;
-            *background_speed = 2.0;
-            break;
-        case ALLEGRO_KEY_ENTER:
-            player->joystick.fire = 0;
-            break;
+void handle_keyboard_release_event(ALLEGRO_EVENT ev, Player *player, float *background_speed)
+{
+    switch (ev.keyboard.keycode)
+    {
+    case ALLEGRO_KEY_W:
+        player->joystick.up = 0;
+        break;
+    case ALLEGRO_KEY_S:
+        player->joystick.down = 0;
+        break;
+    case ALLEGRO_KEY_A:
+        player->joystick.left = 0;
+        *background_speed = 2.0;
+        break;
+    case ALLEGRO_KEY_D:
+        player->joystick.right = 0;
+        *background_speed = 2.0;
+        break;
+    case ALLEGRO_KEY_ENTER:
+        player->joystick.fire = 0;
+        break;
     }
 }
-void restart_init_game(Player *player, Boss *boss, Enemy enemies[], int max_enemies, 
-                  Bullet bullets[], int max_bullets, int *game_over, 
-                  int *player_won, int *score, double *start_time) {
+void restart_init_game(Player *player, Boss *boss, Enemy enemies[], int max_enemies,
+                       Bullet bullets[], int max_bullets, int *game_over,
+                       int *player_won, int *score, double *start_time)
+{
     // Reinicializa os elementos do jogo
     init_player(player);
     init_boss(boss);
@@ -1193,4 +1230,77 @@ void restart_init_game(Player *player, Boss *boss, Enemy enemies[], int max_enem
 
     // Reinicia o cronômetro do jogo
     *start_time = al_get_time();
+}
+
+void start_slideshow_and_game(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_TIMER *timer,
+                              ALLEGRO_BITMAP *image1, ALLEGRO_BITMAP *image2, ALLEGRO_BITMAP *image3, int *exit_game, int *history_game)
+{
+    // Variáveis de controle
+    int current_image = 0;
+    double image_timer = 0.0;
+    bool running = true;
+    *history_game = 0;
+
+    al_start_timer(timer);
+
+    // Loop principal do slideshow
+    while (running)
+    {
+        ALLEGRO_EVENT ev;
+        al_wait_for_event(event_queue, &ev);
+
+        if (ev.type == ALLEGRO_EVENT_TIMER)
+        {
+            // Atualizar timer da imagem
+            image_timer += 1.0 / 60.0;
+
+            // Trocar de imagem automaticamente a cada 8 segundos
+            if (image_timer >= IMAGE_SWITCH_TIME)
+            {
+                image_timer = 0.0;
+                current_image++;
+                if (current_image >= 3)
+                {                    // Há 3 imagens
+                    running = false; // Termina o slideshow
+                }
+            }
+
+            // Renderizar tela
+            al_clear_to_color(al_map_rgb(0, 0, 0));
+            if (current_image == 0)
+            {
+                al_draw_bitmap(image1, 0, 0, 0);
+            }
+            else if (current_image == 1)
+            {
+                al_draw_bitmap(image2, 0, 0, 0);
+            }
+            else if (current_image == 2)
+            {
+                al_draw_bitmap(image3, 0, 0, 0);
+            }
+            al_flip_display();
+        }
+
+        // Tecla Enter para trocar de imagem
+        else if (ev.type == ALLEGRO_EVENT_KEY_DOWN)
+        {
+            if (ev.keyboard.keycode == ALLEGRO_KEY_ENTER)
+            {
+                current_image++;
+                image_timer = 0.0; // Reiniciar o timer
+                if (current_image >= 3)
+                {                    // Há 3 imagens
+                    running = false; // Termina o slideshow
+                }
+            }
+        }
+
+        // Fechar janela
+        else if (ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE)
+        {
+            running = false;
+            *exit_game = 1;
+        }
+    }
 }

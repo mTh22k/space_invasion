@@ -17,7 +17,10 @@
 #include "structs.h"
 #include "defines.h"
 
+// Função para inicializar as propriedades do jogador
 void init_player(Player *player);
+
+// Função para mover o jogador com base nas entradas de controle
 void move_player(Player *player);
 
 #endif // PLAYER_H

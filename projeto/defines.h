@@ -18,7 +18,9 @@
 #define TIME_TO_BOSS 30
 #define SCROLL_SPEED 60
 #define EXPLOSION_FRAME_COUNT 5
-#define BULLET_WIDTH 50  // Substitua pelo valor correto da largura da bala
+#define BULLET_WIDTH 50  
 #define BULLET_HEIGHT 12
+#define NUM_IMAGES 3
+#define IMAGE_SWITCH_TIME 6.0
 
 #endif
