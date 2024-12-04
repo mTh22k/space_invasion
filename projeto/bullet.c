@@ -62,7 +62,7 @@ void fire_bullet(Bullet bullets[], int count, float x, float y)
             bullets[i].x = x + 20;
             bullets[i].y = y - 5;
             bullets[i].active = 1;
-            bullets[i].width = 50; // Define o tamanho da bala
+            bullets[i].width = 50; 
             bullets[i].height = 30;
             break;
         }
@@ -75,7 +75,7 @@ void init_boss_bullets(BossBullet boss_bullets[], int count)
     for (int i = 0; i < count; i++)
     {
         boss_bullets[i].active = 0;
-        boss_bullets[i].width = 45; // Define o tamanho das balas do boss
+        boss_bullets[i].width = 45;
         boss_bullets[i].height = 25;
     }
 }

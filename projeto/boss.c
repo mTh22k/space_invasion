@@ -1,7 +1,6 @@
 #include "boss.h"
 
-// Inicializa o chefe (boss)
-// Define a posição inicial, tamanho, velocidade e estado do chefe
+// Inicializa o chefe
 void init_boss(Boss *boss)
 {
     boss->x = SCREEN_WIDTH;      // Inicia fora da tela, à direita
@@ -10,13 +9,12 @@ void init_boss(Boss *boss)
     boss->height = 200;          // Altura do chefe
     boss->active = 0;            // Inicialmente o chefe está inativo
     boss->speed = 2;             // Velocidade de movimento vertical
-    boss->health = 30;           // Saúde inicial do chefe
+    boss->health = 25;           // Saúde inicial do chefe
     boss->last_shot_time = 0;    // Tempo do último disparo
     boss->last_special_attack_time = 0; // Tempo do último ataque especial
     boss->special_attack_active = 0; // Ataque especial está inativo no início
 }
 
-// Move o chefe dependendo da fase do jogo
 // O movimento vertical é invertido se o chefe atingir o topo ou o fundo da tela
 void move_boss(Boss *boss, int game_phase)
 {
@@ -89,7 +87,7 @@ void shoot_boss_special_attack_2(Boss *boss, BossBullet boss_bullets[], int *bos
                     boss_bullets[j].x = boss->x;
                     boss_bullets[j].y = boss->y - 10 + i * 100; // Posições espaçadas verticalmente
                     boss_bullets[j].active = 1;
-                    boss_bullets[j].speed = BULLET_SPEED * 1.5; // Velocidade aumentada
+                    boss_bullets[j].speed = BULLET_SPEED * 1.5;
                     (*boss_bullet_count)++;
                     break;
                 }

@@ -46,7 +46,6 @@ void check_boss_collision(Player *player, Bullet bullets[], int bullet_count, Bo
         if (!player->invulnerable)
         {
             player->lives--;          // Diminui a vida do jogador
-            printf("Colisão com o chefe! Perdeu uma vida. Vidas restantes: %d\n", player->lives);
             player->invulnerable = 1; // Ativa o estado de invulnerabilidade temporária
             player->invulnerable_time = al_get_time();
 
@@ -58,79 +57,96 @@ void check_boss_collision(Player *player, Bullet bullets[], int bullet_count, Bo
     }
 }
 
-void check_boss_bullet_collisions(Player *player,Boss *boss ,BossBullet boss_bullets[], int *game_over, int game_phase)
+// Função que verifica colisões entre as balas do chefe e o jogador
+void check_boss_bullet_collisions(Player *player, Boss *boss, BossBullet boss_bullets[], int *game_over, int game_phase)
 {
+    // Itera sobre todas as balas do chefe
     for (int i = 0; i < MAX_BOSS_BULLETS; i++)
     {
+        // Verifica se a bala está ativa e se houve colisão com o jogador
         if (boss_bullets[i].active &&
-            boss_bullets[i].x < player->x + player->width &&
+            boss_bullets[i].x < player->x + player->width && 
             boss_bullets[i].x + boss_bullets[i].width > player->x &&
-            boss_bullets[i].y < player->y + player->height &&
+            boss_bullets[i].y < player->y + player->height && 
             boss_bullets[i].y + boss_bullets[i].height > player->y)
         {
+            // Se o jogador não estiver invulnerável, ele recebe dano
             if (!player->invulnerable)
             {
-                int damage = (game_phase == 2) ? 1 : 1; // Se for a fase 2, aumenta o dano para 2
-                player->lives -= damage;
-                player->invulnerable = 1;
-                player->invulnerable_time = al_get_time();
+               
+                int damage = (game_phase == 2) ? 1 : 1;    // Dano, que pode ser ajustado dependendo da fase
+                player->lives -= damage;                   
+                player->invulnerable = 1;                  
+                player->invulnerable_time = al_get_time(); 
 
+                // Se as vidas do jogador chegarem a 0, termina o jogo
                 if (player->lives <= 0)
-                    *game_over = 1;
+                    *game_over = 1; 
             }
-            boss_bullets[i].active = 0; // Desativa a bala do chefe
 
+            // Desativa a bala do chefe após a colisão
+            boss_bullets[i].active = 0;
+
+            // Verifica se está na fase 2 e se o ataque especial do chefe está ativo
             if (game_phase == 2)
             {
                 if (boss->special_attack_active)
                 {
-                    player->speed_multiplier = 0.2;                     // Reduz a velocidade em 50%
-                    player->slow_effect_end_time = al_get_time() + 1.0; // Duração de 2 segundos
+                    // Se o ataque especial do chefe estiver ativo, o jogador tem sua velocidade reduzida
+                    player->speed_multiplier = 0.2;                     
+                    player->slow_effect_end_time = al_get_time() + 1.0; // Define o tempo de duração do efeito de desaceleração (1 segundo)
                 }
             }
 
+            // Se as vidas do jogador chegarem a 0, o jogo termina
             if (player->lives <= 0)
                 *game_over = 1;
         }
     }
 }
-
-
-
+// Função que verifica colisões entre as balas dos inimigos e o jogador
 void check_enemy_bullet_collisions(Player *player, ShootingEnemy *enemy, int *game_over)
 {
+    // Itera sobre as balas disparadas pelo inimigo (máximo de 3 balas)
     for (int i = 0; i < 3; i++)
     {
+        // Verifica se a bala está ativa e se houve colisão com o jogador
         if (enemy->bullets[i].active &&
-            enemy->bullets[i].x < player->x + player->width &&
+            enemy->bullets[i].x < player->x + player->width && 
             enemy->bullets[i].x + enemy->bullets[i].width > player->x &&
-            enemy->bullets[i].y < player->y + player->height &&
+            enemy->bullets[i].y < player->y + player->height && 
             enemy->bullets[i].y + enemy->bullets[i].height > player->y)
         {
+            // Se o jogador não estiver invulnerável, ele recebe dano
             if (!player->invulnerable)
             {
+                // Diminui uma vida do jogador e imprime mensagem no console
                 player->lives--;
-                printf("Colisão com a bala do inimigo! Perdeu uma vida. Vidas restantes: %d\n", player->lives);
-                player->invulnerable = 1;
-                player->invulnerable_time = al_get_time();
+                player->invulnerable = 1;                
+                player->invulnerable_time = al_get_time(); 
 
+                // Se as vidas do jogador chegarem a 0, termina o jogo
                 if (player->lives <= 0)
-                    *game_over = 1;
+                    *game_over = 1; 
             }
+
+            // Desativa a bala após a colisão
             enemy->bullets[i].active = 0;
         }
     }
 }
 
+// Função para verificar as colisões entre o jogador, balas, inimigos e itens
 void check_collisions(Player *player, Bullet bullets[], int bullet_count, Enemy enemies[], int enemy_count, ShootingEnemy shooting_enemies[], int shooting_enemy_count, Item *item_phase1, Item *item_phase2, int *score, int *game_over, int *enemy_destroyed_count, int game_phase)
 {
     // Verificar colisões entre balas do jogador e inimigos normais
     for (int i = 0; i < bullet_count; i++)
     {
-        if (bullets[i].active)
+        if (bullets[i].active) 
         {
-            for (int j = 0; j < enemy_count; j++)
+            for (int j = 0; j < enemy_count; j++) // Itera pelos inimigos normais
             {
+                // Verifica se a bala colide com o inimigo
                 if (enemies[j].active &&
                     bullets[i].x < enemies[j].x + enemies[j].width &&
                     bullets[i].x + bullets[i].width > enemies[j].x &&
@@ -138,7 +154,8 @@ void check_collisions(Player *player, Bullet bullets[], int bullet_count, Enemy 
                     bullets[i].y + bullets[i].height > enemies[j].y)
                 {
                     bullets[i].active = 0; // Desativa a bala
-                    // Aplica dano dobrado na fase 2 se o item foi consumido
+
+                    // Aplica dano ao inimigo (dobrado na fase 2 se o ataque especial estiver ativo)
                     if (game_phase == 2 && player->special_attack_active)
                     {
                         enemies[j].health -= 2;
@@ -146,30 +163,33 @@ void check_collisions(Player *player, Bullet bullets[], int bullet_count, Enemy 
                     else
                     {
                         enemies[j].health--;
-                    } // Diminui a vida do inimigo
-                    enemies[j].damaged = 1;                  // Marca como danificado
-                    enemies[j].damaged_time = al_get_time(); // Registra o tempo
-                    (*score)++;
+                    }
+
+                    enemies[j].damaged = 1;                  
+                    enemies[j].damaged_time = al_get_time(); 
+                    (*score)++;                            
                     enemies[j].exploding = 1;
                     enemies[j].explosion_time = al_get_time();
 
-                    // Se o inimigo é destruído, conta e gera itens
+                    // Se o inimigo for destruído, desativa ele e gera um item
                     if (enemies[j].health <= 0)
                     {
                         enemies[j].active = 0;
-                        (*enemy_destroyed_count)++;
+                        (*enemy_destroyed_count)++; 
 
+                        // Gera item da fase 1
                         if (game_phase == 1 && item_phase1 != NULL && !item_phase1->active && *enemy_destroyed_count == 5)
                         {
                             item_phase1->x = enemies[j].x;
                             item_phase1->y = enemies[j].y;
-                            item_phase1->active = true; // Gera o item da fase 1
+                            item_phase1->active = true; 
                         }
-                        else if (game_phase == 2 && item_phase2 != NULL && !item_phase2->active && *enemy_destroyed_count == 4) // Alterado para 5 para garantir que a fase 2 esteja bem avançada
+                        // Gera item da fase 2
+                        else if (game_phase == 2 && item_phase2 != NULL && !item_phase2->active && *enemy_destroyed_count == 4)
                         {
                             item_phase2->x = enemies[j].x;
                             item_phase2->y = enemies[j].y;
-                            item_phase2->active = true; // Gera o item da fase 2
+                            item_phase2->active = true; 
                         }
                     }
                 }
@@ -185,6 +205,8 @@ void check_collisions(Player *player, Bullet bullets[], int bullet_count, Enemy 
                     bullets[i].y + bullets[i].height > shooting_enemies[k].y)
                 {
                     bullets[i].active = 0; // Desativa a bala
+
+                    // Aplica dano ao inimigo atirador (dobrado na fase 2 se o ataque especial estiver ativo)
                     if (game_phase == 2 && player->special_attack_active)
                     {
                         shooting_enemies[k].health -= 2;
@@ -193,14 +215,15 @@ void check_collisions(Player *player, Bullet bullets[], int bullet_count, Enemy 
                     {
                         shooting_enemies[k].health--;
                     }
+
                     shooting_enemies[k].exploding = 1;
                     shooting_enemies[k].explosion_time = al_get_time();
                     (*score)++;
 
+                    // Se o inimigo atirador for destruído, desativa ele
                     if (shooting_enemies[k].health <= 0)
                     {
-                        shooting_enemies[k].active = 0; // Desativa o inimigo
-
+                        shooting_enemies[k].active = 0; 
                     }
                 }
             }
@@ -210,19 +233,21 @@ void check_collisions(Player *player, Bullet bullets[], int bullet_count, Enemy 
     // Verificar colisões entre o jogador e inimigos normais
     for (int j = 0; j < enemy_count; j++)
     {
+        // Verifica se o jogador colide com um inimigo
         if (enemies[j].active &&
             enemies[j].x < player->x + player->width &&
             enemies[j].x + enemies[j].width > player->x &&
             enemies[j].y < player->y + player->height &&
             enemies[j].y + enemies[j].height > player->y)
         {
+            // Se o jogador não estiver invulnerável, ele perde uma vida
             if (!player->invulnerable)
             {
                 player->lives--;
-                printf("Colisão com inimigo normal! Perdeu uma vida. Vidas restantes: %d\n", player->lives);
-                player->invulnerable = 1;
+                player->invulnerable = 1;                 // Torna o jogador invulnerável
                 player->invulnerable_time = al_get_time();
 
+                // Se as vidas do jogador forem 0, o jogo termina
                 if (player->lives <= 0)
                     *game_over = 1;
             }
@@ -230,32 +255,27 @@ void check_collisions(Player *player, Bullet bullets[], int bullet_count, Enemy 
     }
 
     // Verificar colisão com o item da fase 1
-    // Verificar colisão com o item da fase 1
-    // Aumenta a área de colisão do item, mantendo a imagem do item inalterada
-
-    // Verificar colisão com o item da fase 1
     if (item_phase1 != NULL && item_phase1->active &&
-        player->x < item_phase1->x + item_phase1->width &&  // Aumenta a borda direita da colisão
-        player->x + player->width > item_phase1->x &&       // Aumenta a borda esquerda da colisão
-        player->y < item_phase1->y + item_phase1->height && // Aumenta a borda inferior da colisão
-        player->y + player->height > item_phase1->y)        // Aumenta a borda superior da colisão
+        player->x < item_phase1->x + item_phase1->width &&
+        player->x + player->width > item_phase1->x &&
+        player->y < item_phase1->y + item_phase1->height &&
+        player->y + player->height > item_phase1->y)
     {
-        item_phase1->active = false; // Consome o item da fase 1
-        player->special_attack_start_time = al_get_time();
-        player->special_attack_active = true;
+        item_phase1->active = false;                       // Consome o item da fase 1
+        player->special_attack_start_time = al_get_time(); // Marca o tempo do início do ataque especial
+        player->special_attack_active = true;              // Ativa o ataque especial
     }
 
     // Verificar colisão com o item da fase 2
     if (item_phase2 != NULL && item_phase2->active &&
-        player->x < item_phase2->x + item_phase2->width &&  // Aumenta a borda direita da colisão
-        player->x + player->width > item_phase2->x &&       // Aumenta a borda esquerda da colisão
-        player->y < item_phase2->y + item_phase2->height && // Aumenta a borda inferior da colisão
-        player->y + player->height > item_phase2->y)        // Aumenta a borda superior da colisão
+        player->x < item_phase2->x + item_phase2->width &&
+        player->x + player->width > item_phase2->x &&
+        player->y < item_phase2->y + item_phase2->height &&
+        player->y + player->height > item_phase2->y)
     {
-
-        item_phase2->active = false; // Consome o item da fase 2
-        player->special_attack_start_time = al_get_time();
-        player->special_attack_active = true;
+        item_phase2->active = false;                       // Consome o item da fase 2
+        player->special_attack_start_time = al_get_time(); // Marca o tempo do início do ataque especial
+        player->special_attack_active = true;              // Ativa o ataque especial
     }
 
     // Verificar colisões entre o jogador e inimigos que disparam
@@ -267,13 +287,14 @@ void check_collisions(Player *player, Bullet bullets[], int bullet_count, Enemy 
             shooting_enemies[k].y < player->y + player->height &&
             shooting_enemies[k].y + shooting_enemies[k].height > player->y)
         {
+            // Se o jogador não estiver invulnerável, ele perde uma vida
             if (!player->invulnerable)
             {
                 player->lives--;
-                printf("Colisão com o inimigo atirador! Perdeu uma vida. Vidas restantes: %d\n", player->lives);
-                player->invulnerable = 1;
+                player->invulnerable = 1;                 
                 player->invulnerable_time = al_get_time();
 
+                // Se as vidas do jogador forem 0, o jogo termina
                 if (player->lives <= 0)
                     *game_over = 1;
             }
