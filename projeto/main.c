@@ -191,7 +191,7 @@ int main()
         // Verifica se o jogo está no modo historia
         if (history_mode == 1)
         {
-            start_slideshow_and_game(display, event_queue, timer, slide_1, slide_2, slide_3, &exit_game, &history_mode);
+            start_history_slide(display, event_queue, timer, slide_1, slide_2, slide_3, &exit_game, &history_mode);
             // Inicia o modo de exibição de slides e depois o jogo
         }
 
@@ -208,6 +208,20 @@ int main()
 
         if (ev.type == ALLEGRO_EVENT_TIMER)
         {
+
+            if (game_over)
+            {
+                // Exibe o menu de fim de jogo
+                show_game_over_menu(display, event_queue, font_menu, &restart_game, &exit_game);
+
+                // Se o jogador escolher reiniciar o jogo
+                if (restart_game)
+                {
+                    item_phase2.active = false;
+                    item.active = false;
+                    restart_init_game(&player, &boss, enemies, MAX_ENEMIES, bullets, MAX_BULLETS, &game_over, &player_won, &score, &start_time, &enemy_destroyed_count);
+                }
+            }
             // Se o jogo não acabou
             if (!game_over)
             {
@@ -282,79 +296,87 @@ int main()
                                             &boss_shoot_start_time, &boss_waiting,
                                             remaining_time, SCREEN_WIDTH);
 
-                    // Se o boss está ativo
-                    if (boss.active)
+                    for (int i = 0; i < MAX_BOSS_BULLETS; i++)
                     {
-                        // Se estamos na fase 1
-                        if (game_phase == 1)
+                        if (player.lives <= 0)
                         {
-                            item.active = false;
-                            // Aguarda 2 segundos antes de o boss começar a disparar
-                            if (current_time - boss_shoot_start_time >= 1.0)
+                            boss_bullets[i].active = 0;
+                        }
+                    }
+
+                        // Se o boss está ativo
+                        if (boss.active)
+                        {
+                            // Se estamos na fase 1
+                            if (game_phase == 1)
                             {
-                                // Verificar colisões entre balas do jogador e o chefe
+                                item.active = false;
+                                // Aguarda 2 segundos antes de o boss começar a disparar
+                                if (current_time - boss_shoot_start_time >= 1.0)
+                                {
+                                    // Verificar colisões entre balas do jogador e o chefe
+                                    shoot_boss_bullet(&boss, boss_bullets, &boss_bullet_count, game_phase);
+                                    move_boss_bullets(boss_bullets, MAX_BOSS_BULLETS, &player);
+                                    check_boss_bullet_collisions(&player, &boss, boss_bullets, &game_over, game_phase);
+                                }
+                            }
+                            else
+                            {
+                                // colisões e movimentação fase 2
+                                item_phase2.active = false;
                                 shoot_boss_bullet(&boss, boss_bullets, &boss_bullet_count, game_phase);
-                                move_boss_bullets(boss_bullets, MAX_BOSS_BULLETS);
+                                move_boss_bullets(boss_bullets, MAX_BOSS_BULLETS, &player);
                                 check_boss_bullet_collisions(&player, &boss, boss_bullets, &game_over, game_phase);
                             }
-                        }
-                        else
-                        {
-                            // colisões e movimentação fase 2
-                            item_phase2.active = false;
-                            shoot_boss_bullet(&boss, boss_bullets, &boss_bullet_count, game_phase);
-                            move_boss_bullets(boss_bullets, MAX_BOSS_BULLETS);
-                            check_boss_bullet_collisions(&player, &boss, boss_bullets, &game_over, game_phase);
+
+                            // Checar colisão direta com o boss
+                            check_boss_collision(&player, bullets, MAX_BULLETS, &boss, &score, &player_won, &game_over, game_phase);
                         }
 
-                        // Checar colisão direta com o boss
-                        check_boss_collision(&player, bullets, MAX_BULLETS, &boss, &score, &player_won, &game_over, game_phase);
+                        // Se o jogador venceu e a fase de vitória não foi ativada ainda
+                        if (player_won && victory_state == 0)
+                        {
+                            // Configurar variáveis para o menu de transição
+                            if (game_phase < 2)
+                            {
+                                show_transition_menu(display, event_queue, font_menu, &continue_game, &exit_game);
+                            }
+                            else
+                            {
+                                show_victory_message(font_menu, &exit_game);
+                            }
+
+                            // Checar a escolha do jogador
+                            if (exit_game)
+                            {
+                                break;
+                            }
+                            else if (continue_game)
+                            {
+                                // Reiniciar o jogo para a segunda fase ou configurar para próxima fase
+                                init_second_phase(&player, enemies, bullets, shooting_enemies, &boss, &victory_state, &player_won, &start_time, &enemy_destroyed_count, game_phase);
+                                game_phase = 2;
+                                item_phase2.active = false;
+                                player_won = 0;
+                            }
+                        }
+
+                        // Move o jogador
+                        move_player(&player);
+                        // Move as balas
+                        move_bullets(bullets, MAX_BULLETS, &player, font_menu, game_phase);
+
+                        // Lógica de invulnerabilidade
+                        if (player.invulnerable && (al_get_time() - player.invulnerable_time) > INVULNERABILITY_TIME)
+                            player.invulnerable = 0;
+
+                        // Verifica se o jogador pressionou o botão de disparo
+                        if (player.joystick.fire && (al_get_time() - last_fire_time) > FIRE_INTERVAL)
+                        {
+                            fire_bullet(bullets, MAX_BULLETS, player.x + player.width, player.y + player.height / 2);
+                            last_fire_time = al_get_time();
+                        }
                     }
-
-                    // Se o jogador venceu e a fase de vitória não foi ativada ainda
-                    if (player_won && victory_state == 0)
-                    {
-                        // Configurar variáveis para o menu de transição
-                        if (game_phase < 2)
-                        {
-                            show_transition_menu(display, event_queue, font_menu, &continue_game, &exit_game);
-                        }
-                        else
-                        {
-                            show_victory_message(font_menu, &exit_game);
-                        }
-
-                        // Checar a escolha do jogador
-                        if (exit_game)
-                        {
-                            break;
-                        }
-                        else if (continue_game)
-                        {
-                            // Reiniciar o jogo para a segunda fase ou configurar para próxima fase
-                            init_second_phase(&player, enemies, bullets, shooting_enemies, &boss, &victory_state, &player_won, &start_time, &enemy_destroyed_count, game_phase);
-                            game_phase = 2;
-                            item_phase2.active = false;
-                            player_won = 0;
-                        }
-                    }
-
-                    // Move o jogador
-                    move_player(&player);
-                    // Move as balas
-                    move_bullets(bullets, MAX_BULLETS, &player, font_menu, game_phase);
-
-                    // Lógica de invulnerabilidade
-                    if (player.invulnerable && (al_get_time() - player.invulnerable_time) > INVULNERABILITY_TIME)
-                        player.invulnerable = 0;
-
-                    // Verifica se o jogador pressionou o botão de disparo
-                    if (player.joystick.fire && (al_get_time() - last_fire_time) > FIRE_INTERVAL)
-                    {
-                        fire_bullet(bullets, MAX_BULLETS, player.x + player.width, player.y + player.height / 2);
-                        last_fire_time = al_get_time();
-                    }
-                }
 
                 // Indica que a tela precisa ser redesenhada
                 redraw = 1;
@@ -374,24 +396,6 @@ int main()
             handle_keyboard_release_event(ev, &player, &background_speed);
         }
         // Se o jogo acabou
-        else if (game_over)
-        {
-            // Exibe o menu de fim de jogo
-            show_game_over_menu(display, event_queue, font_menu, &restart_game, &exit_game);
-
-            // Se o jogador escolher reiniciar o jogo
-            if (restart_game)
-            {
-                restart_init_game(&player, &boss, enemies, MAX_ENEMIES, bullets, MAX_BULLETS, &game_over, &player_won, &score, &start_time);
-            }
-        }
-
-        // Se o jogo está pausado
-        if (player.paused)
-        {
-            // Mostra a mensagem de pausa
-            draw_pause_message(font_menu, current_background, event_queue, display, &player, &exit_game);
-        }
 
         // Se o jogador deseja sair do jogo
         if (exit_game)

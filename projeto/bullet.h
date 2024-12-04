@@ -36,7 +36,7 @@ void init_boss_bullets(BossBullet boss_bullets[], int count);
 
 // Move as balas disparadas pelo boss
 // Atualiza a posição das balas do boss e desativa as balas quando saem da tela
-void move_boss_bullets(BossBullet boss_bullets[], int count);
+void move_boss_bullets(BossBullet boss_bullets[], int count, Player *player);
 
 // Dispara as balas do inimigo
 // Permite que o inimigo dispare balas dependendo do tempo passado e da fase do jogo

@@ -115,10 +115,10 @@ void handle_keyboard_release_event(ALLEGRO_EVENT ev, Player *player, float *back
 // Função para reiniciar o jogo
 void restart_init_game(Player *player, Boss *boss, Enemy enemies[], int max_enemies,
                        Bullet bullets[], int max_bullets, int *game_over,
-                       int *player_won, int *score, double *start_time);
+                       int *player_won, int *score, double *start_time, int *enemy_destroyed_count);
 
 // Função para iniciar o slideshow e o jogo
-void start_slideshow_and_game(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_TIMER *timer,
-                              ALLEGRO_BITMAP *image1, ALLEGRO_BITMAP *image2, ALLEGRO_BITMAP *image3, int *exit_game, int *history_game);
+void start_history_slide(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_TIMER *timer,
+                         ALLEGRO_BITMAP *image1, ALLEGRO_BITMAP *image2, ALLEGRO_BITMAP *image3, int *exit_game, int *history_game);
 
 #endif // ENEMY_H

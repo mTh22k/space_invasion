@@ -26,10 +26,13 @@ void move_player(Player *player)
     // Move o jogador considerando o multiplicador de velocidade
     if (player->joystick.up && player->y > 0)
         player->y -= PLAYER_SPEED * player->speed_multiplier;
-    if (player->joystick.down && player->y < SCREEN_HEIGHT - player->height)
+
+    if (player->joystick.down && player->y < SCREEN_HEIGHT - player->height - 20) // 50px de margem
         player->y += PLAYER_SPEED * player->speed_multiplier;
+
     if (player->joystick.left && player->x > 0)
         player->x -= PLAYER_SPEED * player->speed_multiplier;
+
     if (player->joystick.right && player->x < SCREEN_WIDTH - player->width)
         player->x += PLAYER_SPEED * player->speed_multiplier;
 
@@ -40,6 +43,8 @@ void move_player(Player *player)
         player->x = SCREEN_WIDTH - player->width;
     if (player->y < 0)
         player->y = 0;
-    if (player->y > SCREEN_HEIGHT - player->height)
-        player->y = SCREEN_HEIGHT - player->height;
+
+    // Garantir que a parte inferior do jogador não ultrapasse a borda inferior com 50px de margem
+    if (player->y > SCREEN_HEIGHT - player->height - 20)
+        player->y = SCREEN_HEIGHT - player->height - 20;
 }

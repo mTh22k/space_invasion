@@ -201,8 +201,8 @@ void draw_pause_message(ALLEGRO_FONT *font, ALLEGRO_BITMAP *background, ALLEGRO_
             }
             else if (ev.keyboard.keycode == ALLEGRO_KEY_ESCAPE)
             {
-                *exit_game = 1; // Define a flag para sair do jogo
-                running = 0;    // Sai do loop de pausa
+                running = 0;
+                *exit_game = 1; // Define a flag para sair do jogo    
             }
         }
         else if (ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE)
@@ -294,9 +294,9 @@ void show_game_over_menu(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_qu
         al_draw_bitmap(menu_background, background_x + al_get_bitmap_width(menu_background), 0, 0); // Desenha o fundo repetido
 
         // Desenha as mensagens no display
-        al_draw_text(font, colors[color_counter], 400, 100, ALLEGRO_ALIGN_CENTER, "Você foi Derrotado!");                 // Título com a cor alternando
+        al_draw_text(font, colors[color_counter], 400, 100, ALLEGRO_ALIGN_CENTER, "Você foi Derrotado!");                     // Título com a cor alternando
         al_draw_text(menu_font, al_map_rgb(255, 255, 255), 400, 350, ALLEGRO_ALIGN_CENTER, "Pressione ENTER para Reiniciar"); // Mensagem de reiniciar
-        al_draw_text(menu_font, al_map_rgb(255, 255, 255), 400, 450, ALLEGRO_ALIGN_CENTER, "Pressione ESQ para Sair");      // Mensagem de sair
+        al_draw_text(menu_font, al_map_rgb(255, 255, 255), 400, 450, ALLEGRO_ALIGN_CENTER, "Pressione ESQ para Sair");        // Mensagem de sair
 
         al_flip_display(); // Atualiza a tela com o novo conteúdo
 
@@ -1162,13 +1162,14 @@ void handle_keyboard_release_event(ALLEGRO_EVENT ev, Player *player, float *back
 }
 void restart_init_game(Player *player, Boss *boss, Enemy enemies[], int max_enemies,
                        Bullet bullets[], int max_bullets, int *game_over,
-                       int *player_won, int *score, double *start_time)
+                       int *player_won, int *score, double *start_time, int *enemy_destroyed_count)
 {
     // Reinicializa os elementos do jogo
     init_player(player);
     init_boss(boss);
     init_enemies(enemies, max_enemies);
     init_bullets(bullets, max_bullets);
+    *enemy_destroyed_count = 0;
 
     // Define o jogador como invulnerável temporariamente
     player->invulnerable = 1;
@@ -1183,8 +1184,8 @@ void restart_init_game(Player *player, Boss *boss, Enemy enemies[], int max_enem
     *start_time = al_get_time();
 }
 
-void start_slideshow_and_game(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_TIMER *timer,
-                              ALLEGRO_BITMAP *image1, ALLEGRO_BITMAP *image2, ALLEGRO_BITMAP *image3, int *exit_game, int *history_game)
+void start_history_slide(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_TIMER *timer,
+                         ALLEGRO_BITMAP *image1, ALLEGRO_BITMAP *image2, ALLEGRO_BITMAP *image3, int *exit_game, int *history_game)
 {
     // Variáveis de controle
     int current_image = 0;

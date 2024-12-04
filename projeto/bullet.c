@@ -81,10 +81,11 @@ void init_boss_bullets(BossBullet boss_bullets[], int count)
 }
 
 // Função para mover as balas disparadas pelo boss
-void move_boss_bullets(BossBullet boss_bullets[], int count)
+void move_boss_bullets(BossBullet boss_bullets[], int count, Player *player)
 {
     for (int i = 0; i < count; i++)
     {
+        
         if (boss_bullets[i].active)
         {
             boss_bullets[i].x -= boss_bullets[i].speed; // Move a bala para a esquerda
