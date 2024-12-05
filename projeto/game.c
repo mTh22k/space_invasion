@@ -420,7 +420,7 @@ void show_transition_menu(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_q
 void init_second_phase(Player *player, Enemy enemies[], Bullet bullets[], ShootingEnemy shooting_enemies[], Boss *boss, int *victory_state, int *player_won, double *start_time, int *enemy_destroyed_count, int game_phase)
 {
     // Configurações iniciais do chefe (
-    boss->health = 25;
+    boss->health = 18;
     boss->speed = 6;
     boss->horizontal_speed = 2;
     boss->y = SCREEN_HEIGHT / 4;

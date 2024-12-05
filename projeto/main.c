@@ -245,20 +245,23 @@ int main()
                     // Se ainda há tempo restante para o boss aparecer
                     if (remaining_time > 0)
                     {
-                        // Se estamos na fase 1 do jogo
-                        if (game_phase == 1)
+                        if (boss.active == 0)
                         {
-                            handle_phase1_enemy_generation(shooting_enemies, MAX_SHOOTING_ENEMIES,
-                                                           enemies, MAX_ENEMIES, game_phase, player);
-                            // Gera inimigos na fase 1
-                        }
-                        // Se estamos na fase 2 do jogo
-                        else if (game_phase == 2)
-                        {
-                            handle_phase2_enemy_generation(shooting_enemies, MAX_SHOOTING_ENEMIES,
-                                                           enemies, MAX_ENEMIES, game_phase, player,
-                                                           &phase2_start_time, &phase2_started);
-                            // Gera inimigos na fase 2
+                            // Se estamos na fase 1 do jogo
+                            if (game_phase == 1)
+                            {
+                                    handle_phase1_enemy_generation(shooting_enemies, MAX_SHOOTING_ENEMIES,
+                                                            enemies, MAX_ENEMIES, game_phase, player);
+                                // Gera inimigos na fase 1
+                            }
+                            // Se estamos na fase 2 do jogo
+                            else if (game_phase == 2)
+                            {
+                                    handle_phase2_enemy_generation(shooting_enemies, MAX_SHOOTING_ENEMIES,
+                                                            enemies, MAX_ENEMIES, game_phase, player,
+                                                            &phase2_start_time, &phase2_started);
+                                // Gera inimigos na fase 2
+                            }
                         }
 
                         // Move os inimigos
