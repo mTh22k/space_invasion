@@ -3,34 +3,41 @@
 // Inicializa o chefe
 void init_boss(Boss *boss)
 {
-    boss->x = SCREEN_WIDTH;      // Inicia fora da tela, à direita
-    boss->y = SCREEN_HEIGHT / 2; // Posição vertical inicial no meio da tela
-    boss->width = 200;           // Largura do chefe
-    boss->height = 200;          // Altura do chefe
-    boss->active = 0;            // Inicialmente o chefe está inativo
-    boss->speed = 2;             // Velocidade de movimento vertical
-    boss->health = 18;           // Saúde inicial do chefe
-    boss->last_shot_time = 0;    // Tempo do último disparo
+    boss->x = SCREEN_WIDTH;             // Inicia fora da tela, à direita
+    boss->y = SCREEN_HEIGHT / 2;        // Posição vertical inicial no meio da tela
+    boss->width = 200;                  // Largura do chefe
+    boss->height = 200;                 // Altura do chefe
+    boss->active = 0;                   // Inicialmente o chefe está inativo
+    boss->speed = 2;                    // Velocidade de movimento vertical
+    boss->health = 18;                  // Saúde inicial do chefe
+    boss->last_shot_time = 0;           // Tempo do último disparo
     boss->last_special_attack_time = 0; // Tempo do último ataque especial
-    boss->special_attack_active = 0; // Ataque especial está inativo no início
+    boss->special_attack_active = 0;    // Ataque especial está inativo no início
 }
 
 // O movimento vertical é invertido se o chefe atingir o topo ou o fundo da tela
 void move_boss(Boss *boss, int game_phase)
 {
-    if (game_phase == 1) {
-        if (boss->active) {
+    if (game_phase == 1)
+    {
+        if (boss->active)
+        {
             // Movimento vertical padrão
             boss->y += boss->speed;
-            if (boss->y <= 0 || boss->y >= SCREEN_HEIGHT - boss->height) {
+            if (boss->y <= 0 || boss->y >= SCREEN_HEIGHT - boss->height)
+            {
                 boss->speed = -boss->speed; // Inverte a direção
             }
         }
-    } else if (game_phase == 2) {
-        if (boss->active) {
+    }
+    else if (game_phase == 2)
+    {
+        if (boss->active)
+        {
             // Movimento vertical mais rápido
             boss->y += boss->speed * 2; // Velocidade aumentada
-            if (boss->y <= 0 || boss->y >= SCREEN_HEIGHT - boss->height) {
+            if (boss->y <= 0 || boss->y >= SCREEN_HEIGHT - boss->height)
+            {
                 boss->speed = -boss->speed; // Inverte a direção
             }
         }
@@ -44,14 +51,18 @@ void shoot_boss_special_attack(Boss *boss, BossBullet boss_bullets[], int *boss_
     double current_time = al_get_time();
 
     // Verifica se é hora de começar o ataque especial
-    if (!boss->special_attack_active && current_time - boss->last_special_attack_time >= 2.0) {
+    if (!boss->special_attack_active && current_time - boss->last_special_attack_time >= 2.0)
+    {
         boss->special_attack_active = 1; // Ativa o ataque especial
         boss->last_special_attack_time = current_time;
 
         // Dispara 6 balas
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < MAX_BOSS_BULLETS; j++) {
-                if (!boss_bullets[j].active) {
+        for (int i = 0; i < 3; i++)
+        {
+            for (int j = 0; j < MAX_BOSS_BULLETS; j++)
+            {
+                if (!boss_bullets[j].active)
+                {
                     boss_bullets[j].x = boss->x;
                     boss_bullets[j].y = boss->y - 10 + i * 40; // Posições espaçadas verticalmente
                     boss_bullets[j].active = 1;
@@ -64,7 +75,8 @@ void shoot_boss_special_attack(Boss *boss, BossBullet boss_bullets[], int *boss_
     }
 
     // Desativa o ataque especial após o tempo
-    if (boss->special_attack_active && current_time - boss->last_special_attack_time >= 1) {
+    if (boss->special_attack_active && current_time - boss->last_special_attack_time >= 1)
+    {
         boss->special_attack_active = 0; // Desativa o ataque especial após 1 segundo
     }
 }
@@ -76,14 +88,18 @@ void shoot_boss_special_attack_2(Boss *boss, BossBullet boss_bullets[], int *bos
     double current_time = al_get_time();
 
     // Verifica se é hora de começar o ataque especial
-    if (!boss->special_attack_active && current_time - boss->last_special_attack_time >= 3.0) {
+    if (!boss->special_attack_active && current_time - boss->last_special_attack_time >= 3.0)
+    {
         boss->special_attack_active = 1; // Ativa o ataque especial
         boss->last_special_attack_time = current_time;
 
         // Dispara 6 balas
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < MAX_BOSS_BULLETS; j++) {
-                if (!boss_bullets[j].active) {
+        for (int i = 0; i < 4; i++)
+        {
+            for (int j = 0; j < MAX_BOSS_BULLETS; j++)
+            {
+                if (!boss_bullets[j].active)
+                {
                     boss_bullets[j].x = boss->x;
                     boss_bullets[j].y = boss->y - 10 + i * 100; // Posições espaçadas verticalmente
                     boss_bullets[j].active = 1;
@@ -96,7 +112,8 @@ void shoot_boss_special_attack_2(Boss *boss, BossBullet boss_bullets[], int *bos
     }
 
     // Desativa o ataque especial após o tempo
-    if (boss->special_attack_active && current_time - boss->last_special_attack_time >= 0.5) {
+    if (boss->special_attack_active && current_time - boss->last_special_attack_time >= 0.5)
+    {
         boss->special_attack_active = 0; // Desativa o ataque especial após 0.5 segundos
     }
 }
@@ -108,9 +125,12 @@ void shoot_boss_bullet(Boss *boss, BossBullet boss_bullets[], int *boss_bullet_c
     double current_time = al_get_time();
 
     // Disparo normal
-    if (current_time - boss->last_shot_time >= BOSS_SHOT_INTERVAL && !boss->special_attack_active) {
-        for (int i = 0; i < MAX_BOSS_BULLETS; i++) {
-            if (!boss_bullets[i].active) {
+    if (current_time - boss->last_shot_time >= BOSS_SHOT_INTERVAL && !boss->special_attack_active)
+    {
+        for (int i = 0; i < MAX_BOSS_BULLETS; i++)
+        {
+            if (!boss_bullets[i].active)
+            {
                 boss_bullets[i].x = boss->x;
                 boss_bullets[i].y = boss->y + boss->height / 2 - 20;
                 boss_bullets[i].active = 1;
@@ -123,30 +143,49 @@ void shoot_boss_bullet(Boss *boss, BossBullet boss_bullets[], int *boss_bullet_c
     }
 
     // Ataque especial, dependendo da fase do jogo
-    if (game_phase == 1) {
+    if (game_phase == 1)
+    {
         shoot_boss_special_attack_2(boss, boss_bullets, boss_bullet_count);
-    } else if (game_phase == 2) {
+    }
+    else if (game_phase == 2)
+    {
         shoot_boss_special_attack(boss, boss_bullets, boss_bullet_count);
     }
 }
 
 // Verifica se o chefe deve ser ativado e começa sua espera para aparecer
-// Inicia o tempo de espera antes de ativar o chefe e permitir que ele comece a disparar
-void check_and_activate_boss(Boss *boss, double *boss_start_time, double current_time, 
-                             double *boss_shoot_start_time, bool *boss_waiting, int remaining_time, 
-                             int screen_width)
+// Modifica a função check_and_activate_boss para desativar inimigos ao ativar o boss.
+void check_and_activate_boss(Boss *boss, double *boss_start_time, double current_time,
+                             double *boss_shoot_start_time, bool *boss_waiting,
+                             double remaining_time, int screen_width, Enemy enemies[],
+                             ShootingEnemy shooting_enemies[])
 {
+    if (boss->active)
+    {
+        for (int i = 0; i < MAX_ENEMIES; i++)
+        {
+            enemies[i].active = false;
+        }
+
+        // Desativa todos os inimigos que atiram
+        for (int i = 0; i < MAX_SHOOTING_ENEMIES; i++)
+        {
+            shooting_enemies[i].active = false;
+        }
+    }
     // Verifica se o chefe deve começar a esperar
-    if (remaining_time <= 0 && !(*boss_waiting) && !(boss->active)) {
-        *boss_waiting = true;           // Marca que estamos aguardando
+    if (remaining_time <= 0 && !(*boss_waiting) && !(boss->active))
+    {
+        *boss_waiting = true;            // Marca que estamos aguardando
         *boss_start_time = current_time; // Registra o tempo inicial da espera
     }
 
     // Aguarda os 3 segundos antes de ativar o chefe
-    if (*boss_waiting && (current_time - *boss_start_time >= 2.0)) {
-        *boss_waiting = false;            // Reseta o estado de espera
-        boss->active = 1;                 // Ativa o chefe
-        boss->x = screen_width - boss->width; // Posiciona o chefe à direita da tela
+    if (*boss_waiting && (current_time - *boss_start_time >= 2.0))
+    {
+        *boss_waiting = false;                 // Reseta o estado de espera
+        boss->active = 1;                      // Ativa o chefe
+        boss->x = screen_width - boss->width;  // Posiciona o chefe à direita da tela
         *boss_shoot_start_time = current_time; // Define o tempo inicial para começar a disparar
     }
 }

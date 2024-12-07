@@ -297,7 +297,7 @@ int main()
                     // Verifica e ativa o boss, se necessário
                     check_and_activate_boss(&boss, &boss_start_time, current_time,
                                             &boss_shoot_start_time, &boss_waiting,
-                                            remaining_time, SCREEN_WIDTH);
+                                            remaining_time, SCREEN_WIDTH, enemies, shooting_enemies);
 
                     for (int i = 0; i < MAX_BOSS_BULLETS; i++)
                     {

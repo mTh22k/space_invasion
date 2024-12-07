@@ -34,8 +34,9 @@ void shoot_boss_special_attack(Boss *boss, BossBullet boss_bullets[], int *boss_
 void shoot_boss_special_attack_2(Boss *boss, BossBullet boss_bullets[], int *boss_bullet_count);
 
 // Verifica e ativa o chefe após o tempo de espera. 
-void check_and_activate_boss(Boss *boss, double *boss_start_time, double current_time, 
-                             double *boss_shoot_start_time, bool *boss_waiting, int remaining_time, 
-                             int screen_width);
+void check_and_activate_boss(Boss *boss, double *boss_start_time, double current_time,
+                             double *boss_shoot_start_time, bool *boss_waiting,
+                             double remaining_time, int screen_width, Enemy enemies[],
+                             ShootingEnemy shooting_enemies[]);
 
 #endif // BOSS_H
